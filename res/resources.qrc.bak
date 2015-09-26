@@ -1,0 +1,29 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>@256/accessories-calculator.png</file>
+        <file>@16/application-exit.png</file>
+        <file>@16/document-open.png</file>
+        <file>@16/document-page-setup.png</file>
+        <file>@16/document-revert.png</file>
+        <file>@16/document-revert-rtl.png</file>
+        <file>@16/document-save-as.png</file>
+        <file>@16/edit-clear-all.png</file>
+        <file>@16/edit-undo.png</file>
+        <file>@16/edit-undo-rtl.png</file>
+        <file>@16/go-next.png</file>
+        <file>@16/go-previous.png</file>
+        <file>@16/help-about.png</file>
+        <file>@16/help-contents.png</file>
+        <file>@16/help-faq.png</file>
+        <file>@16/mail-mark-junk.png</file>
+        <file>@16/view-refresh.png</file>
+        <file>@16/view-sort-ascending.png</file>
+        <file>@16/view-sort-descending.png</file>
+        <file>@16/zoom-in.png</file>
+        <file>@16/zoom-original.png</file>
+        <file>@16/zoom-out.png</file>
+        <file>@16/document-save.png</file>
+        <file>@16/edit-redo.png</file>
+        <file>@16/edit-redo-rtl.png</file>
+    </qresource>
+</RCC>

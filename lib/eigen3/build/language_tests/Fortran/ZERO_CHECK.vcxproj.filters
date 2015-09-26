@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Alex\Dropbox\Development\Qt\LinearOptimization\lib\eigen3\build\language_tests\Fortran\CMakeFiles\3a224f1757cb2b2ecf38f1667fcd4fd9\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{4C1348D8-F645-482F-AB6F-1A32AF71EB8B}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

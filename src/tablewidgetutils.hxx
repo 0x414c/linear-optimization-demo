@@ -4,11 +4,11 @@
 #include <QTableWidget>
 
 #include <src/tablewidgetserializable.hxx>
-#include <src/problemdataserializable.hxx>
+#include <src/linearprogramdataserializable.hxx>
 
 namespace TableWidgetUtils
 {
-  enum FillMethod { Zeroes, Random, Sequential };
+  enum struct FillMethod { Zeroes, Random, Sequential };
 
   void clearTable(QTableWidget* tableWidget, int rowStart, int columnStart);
   void clearTable(QTableWidget* tableWidget);
@@ -16,7 +16,7 @@ namespace TableWidgetUtils
   void fillTable(QTableWidget* tableWidget, FillMethod FillMethod);
   void fillTable(QTableWidget* tableWidget, TableWidgetSerializable& container);
 
-  void FillTables(QVector<QTableWidget*>& tableWidgets, ProblemDataSerializable& problemContainer);
+  void FillTables(QVector<QTableWidget*>& tableWidgets, LinearProgramDataSerializable& problemContainer);
 }
 
 #include "tablewidgetutils.txx"

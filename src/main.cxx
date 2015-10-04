@@ -21,9 +21,9 @@
 5. Выбор автоматического и пошагового режима решения задачи.
 6. В пошаговом режиме возможность возврата назад.
 7. В пошаговом режиме возможность выбора опорного элемента.
-8. Работа с обыкновенными и десятичными дробями.
-~9. Справка.
-~10. Контекстно-зависимая помощь.
+~8. Работа с обыкновенными и десятичными дробями.
+9. Справка.
+10. Контекстно-зависимая помощь.
 +11. Поддержка мыши.
 +12. Контроль данных (защита от «дурака»).
 
@@ -42,7 +42,8 @@
 4. ...
 */
 
-QApplication* create(int argc, char** argv)
+//HACK: this allows user to override style by using command-line args
+QApplication* createApplication(int argc, char** argv)
 {
   QStringList args;
   for (int i = 0; i < argc; ++i)
@@ -66,8 +67,9 @@ QApplication* create(int argc, char** argv)
   parser.process(args);
   if (!parser.isSet(styleOption))
   {
-    qDebug() << "create: forcing \"style\" value to \"Fusion\"";
-    if (QStyleFactory::keys().contains(QStringLiteral("Fusion"), Qt::CaseInsensitive)) {
+    qDebug() << "createApplication: forcing \"style\" value to \"Fusion\"";
+    if (QStyleFactory::keys().contains(QStringLiteral("Fusion"), Qt::CaseInsensitive))
+    {
       QApplication::setStyle(QStyleFactory::create(QStringLiteral("Fusion")));
     }
   }
@@ -91,7 +93,7 @@ int main(int argc, char** argv)
 //  return app.exec();
 
   QApplication::setDesktopSettingsAware(false);
-  QScopedPointer<QApplication> app(create(argc, argv));
+  QScopedPointer<QApplication> app(createApplication(argc, argv));
   MainWindow wnd;
   wnd.show();
 

@@ -3,6 +3,8 @@
 
 #include <initializer_list>
 
+#include "utils.hxx"
+
 #include "lib/eigen3/Eigen/Dense"
 
 using namespace std;
@@ -28,29 +30,36 @@ using namespace Eigen;
  * `https://en.wikipedia.org/wiki/Linear_form',
  * `https://en.wikipedia.org/wiki/Hyperplane'.
  */
-template<typename T = double, DenseIndex _dim = 1>
+template<typename T = Utils::real_t, DenseIndex _dim = 1>
 class LinearFunction
 {
   public:
-    LinearFunction() : _coeffs(Matrix<T, 1, dim>()) {}
+    LinearFunction() :
+      _coeffs(Matrix<T, 1, dim>()) {}
 
-    LinearFunction(const Matrix<T, 1, _dim>& coeffs) : _coeffs(coeffs) {}
+    LinearFunction(const Matrix<T, 1, _dim>& coeffs) :
+      _coeffs(coeffs) {}
 
-    LinearFunction(initializer_list<T> initList) : _coeffs(initList) {}
+    LinearFunction(initializer_list<T> initList) :
+      _coeffs(initList) {}
 
-    DenseIndex dim() {
+    DenseIndex dim()
+    {
       return _dim;
     }
 
-    Matrix<T, 1, _dim>& coeffs() const {
+    Matrix<T, 1, _dim>& coeffs() const
+    {
       return _coeffs;
     }
 
-    T coeffAt(DenseIndex coeffIdx) const {
+    T coeffAt(DenseIndex coeffIdx) const
+    {
       return _coeffs[coeffIdx];
     }
 
-    T evaluateAt(const Matrix<T, 1, _dim>& args) {
+    T evaluateAt(const Matrix<T, 1, _dim>& args)
+    {
       return _coeffs.dot(args);
 //      T value = T(0);
 //      for (int i = 0; i < _dim; ++i) { value += _coeffs(i) * args(i); }

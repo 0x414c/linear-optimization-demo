@@ -6,7 +6,6 @@
 class IJsonSerializable
 {
   public:
-//    JsonSerializable();
     virtual ~IJsonSerializable() = 0;
 
     virtual void read(const QJsonObject& json) = 0;

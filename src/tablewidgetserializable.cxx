@@ -10,17 +10,21 @@
 
 TableWidgetSerializable::TableWidgetSerializable() {}
 
-TableWidgetSerializable::TableWidgetSerializable(const QVector<QString>& data, int rows, int cols) {
+TableWidgetSerializable::TableWidgetSerializable(const QVector<QString>& data, int rows, int cols)
+{
   _data = data;
   _rows = rows;
   _cols = cols;
 }
 
-TableWidgetSerializable::TableWidgetSerializable(const QTableWidget* tableWidget) {
+TableWidgetSerializable::TableWidgetSerializable(const QTableWidget* tableWidget)
+{
   QVector<QString> items(tableWidget->rowCount() * tableWidget->columnCount());
   int startIdx = 0;
-  for (int i = 0; i < tableWidget->rowCount(); ++i) {
-    for (int j = 0; j < tableWidget->columnCount(); ++j) {
+  for (int i = 0; i < tableWidget->rowCount(); ++i)
+  {
+    for (int j = 0; j < tableWidget->columnCount(); ++j)
+    {
       items[startIdx++] = tableWidget->item(i, j)->text();
       qDebug() << "TableWidgetSerializable: init container [" << startIdx - 1 << "] :=" << tableWidget->item(i, j)->text();
     }
@@ -45,13 +49,13 @@ QString TableWidgetSerializable::itemAt(int idx) const
   return _data[idx];
 }
 
-
 void TableWidgetSerializable::read(const QJsonObject& json)
 {
   _data.clear();
   qDebug() << "TableWidgetSerializable: reading array [" << _dataId << "]";
   QJsonArray strings = json[_dataId].toArray();
-  for (int i = 0; i < strings.size(); ++i) {
+  for (int i = 0; i < strings.size(); ++i)
+  {
     QString string = strings[i].toString();
     qDebug() << "TableWidgetSerializable: read string [" << i << "] :=" << string;
     _data.append(string);
@@ -63,7 +67,8 @@ void TableWidgetSerializable::read(const QJsonObject& json)
 void TableWidgetSerializable::write(QJsonObject& json) const
 {
   QJsonArray dataArray;
-  foreach (const QString string, _data) {
+  foreach (const QString string, _data)
+  {
     qDebug() << "TableWidgetSerializable: writing string" << string;
     dataArray.append(string);
   }

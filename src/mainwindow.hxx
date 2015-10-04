@@ -1,14 +1,24 @@
 ﻿#ifndef MAINWINDOW_HXX
 #define MAINWINDOW_HXX
 
+#include <memory>
+#include <cmath>
+
 #include <QMainWindow>
+#include <QStandardItemModel>
 #include <QString>
 #include <QWidget>
 
-namespace Ui {
-  class MainWindow;
+#include "inumericsolver.hxx"
+#include "dantzignumericsolver.hxx"
+#include "utils.hxx"
 
-  enum DialogResult { Fail, Nothing, Success };
+using namespace std;
+using namespace Utils;
+
+namespace Ui
+{
+  class MainWindow;
 }
 
 class MainWindow : public QMainWindow
@@ -22,6 +32,9 @@ class MainWindow : public QMainWindow
   private slots:
     void on_constrsSpinBox_valueChanged(int arg1);
     void on_coeffsSpinBox_valueChanged(int arg1);
+
+    void on_realRadioButton_toggled(bool checked);
+    void on_rationalRadioButton_toggled(bool checked);
 
     void on_clearPushButton_clicked();
     void on_plotPushButton_clicked();
@@ -52,14 +65,21 @@ class MainWindow : public QMainWindow
   private:
     Ui::MainWindow* ui;
 
-    void clearContents();
-    void initializeContents();
+    ComputationMode _mode = ComputationMode::Real;
 
-    Ui::DialogResult load(QString fileName);
-    Ui::DialogResult save(QString fileName);
+    unique_ptr<DantzigNumericSolver<real_t>> _realSolver = make_unique<DantzigNumericSolver<real_t>>();
+    unique_ptr<DantzigNumericSolver<rat_t>> _ratSolver = make_unique<DantzigNumericSolver<rat_t>>();
 
-    void solve();
-    void plot();
+    void _clearTablesContents();
+    void _setTablesValidators();
+    void _setTablesHeaders();
+    void _initializeWindowContents();
+
+    DialogResult _loadData(QString fileName);
+    DialogResult _saveData(QString fileName);
+
+    void _runSolver();
+    void _plotGraph();
 };
 
 #endif // MAINWINDOW_HXX

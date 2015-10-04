@@ -24,8 +24,9 @@ class TableWidgetSerializable : public IJsonSerializable
     virtual void write(QJsonObject& json) const override;
 
   private:
-    QString _dataId = QStringLiteral("data");
+    QString _dataId = QStringLiteral("values");
     QVector<QString> _data;
+    //TODO: ?datatype tag
     int _rows;
     int _cols;
 };

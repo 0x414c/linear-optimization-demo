@@ -1,8 +1,13 @@
 ﻿#include "numericvalidator.hxx"
 
+#include <QObject>
 #include <QString>
 
-QValidator::State NumericValidator::validate(QString &input, int &pos) const
+NumericValidator::NumericValidator(QObject* parent) :
+  QValidator(parent) {}
+
+// Just example usage of `QValidator::validate'
+QValidator::State NumericValidator::validate(QString& input, int& pos) const
 {
   if (input.isEmpty()) {
     return Acceptable;

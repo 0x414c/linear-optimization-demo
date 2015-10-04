@@ -1,4 +1,4 @@
-﻿#include "problemdataserializable.hxx"
+﻿#include "linearprogramdataserializable.hxx"
 
 #include <QDebug>
 #include <QJsonArray>
@@ -7,36 +7,41 @@
 
 #include "tablewidgetserializable.hxx"
 
-ProblemDataSerializable::ProblemDataSerializable() {}
+LinearProgramDataSerializable::LinearProgramDataSerializable() {}
 
-ProblemDataSerializable::ProblemDataSerializable(const QVector<TableWidgetSerializable>& containers) {
+LinearProgramDataSerializable::LinearProgramDataSerializable(const QVector<TableWidgetSerializable>& containers)
+{
   _data = containers;
 }
 
-ProblemDataSerializable::ProblemDataSerializable(const QVector<QTableWidget*>& tableWidgets) {
+LinearProgramDataSerializable::LinearProgramDataSerializable(const QVector<QTableWidget*>& tableWidgets)
+{
   QVector<TableWidgetSerializable> containers(tableWidgets.length());
-  for (int i = 0; i < tableWidgets.length(); ++i) {
+  for (int i = 0; i < tableWidgets.length(); ++i)
+  {
     TableWidgetSerializable container(tableWidgets[i]);
     containers[i] = container;
   }
   _data = containers;
 }
 
-QVector<TableWidgetSerializable> ProblemDataSerializable::items() const
+QVector<TableWidgetSerializable> LinearProgramDataSerializable::items() const
 {
   return _data;
 }
 
-TableWidgetSerializable& ProblemDataSerializable::itemAt(int idx)
+TableWidgetSerializable& LinearProgramDataSerializable::itemAt(int idx)
 {
   return _data[idx];
 }
 
-void ProblemDataSerializable::read(const QJsonObject& json) {
+void LinearProgramDataSerializable::read(const QJsonObject& json)
+{
   _data.clear();
   qDebug() << "ProblemDataSerializable: reading array [" << _dataId << "]";
   QJsonArray containers = json[_dataId].toArray();
-  for (int i = 0; i < containers.size(); ++i) {
+  for (int i = 0; i < containers.size(); ++i)
+  {
     qDebug() << "ProblemDataSerializable: reading container [" << i << "]";
     QJsonObject containerObject = containers[i].toObject();
     TableWidgetSerializable container;
@@ -45,9 +50,11 @@ void ProblemDataSerializable::read(const QJsonObject& json) {
   }
 }
 
-void ProblemDataSerializable::write(QJsonObject& json) const {
+void LinearProgramDataSerializable::write(QJsonObject& json) const
+{
   QJsonArray dataArray;
-  foreach (const TableWidgetSerializable container, _data) {
+  foreach (const TableWidgetSerializable container, _data)
+  {
     qDebug() << "ProblemDataSerializable: writing container ...";
     QJsonObject containerObject;
     container.write(containerObject);

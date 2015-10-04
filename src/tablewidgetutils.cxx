@@ -9,7 +9,7 @@
 #include <QVector>
 
 #include "tablewidgetserializable.hxx"
-#include "problemdataserializable.hxx"
+#include "linearprogramdataserializable.hxx"
 
 using namespace std;
 
@@ -33,7 +33,7 @@ namespace TableWidgetUtils
     clearTable(tableWidget, 0, 0);
   }
 
-  void fillTable(QTableWidget* tableWidget, FillMethod FillMethod)
+  void fillTable(QTableWidget* tableWidget, FillMethod fillMethod)
   {
     minstd_rand rand;
     uniform_real_distribution<double> dist(-25, 25);
@@ -44,14 +44,14 @@ namespace TableWidgetUtils
       for (int j = 0; j < tableWidget->columnCount(); ++j)
       {
         QTableWidgetItem* item = new QTableWidgetItem;
-        switch (FillMethod) {
-          case Zeroes:
+        switch (fillMethod) {
+          case FillMethod::Zeroes:
             item->setText(QString("%1").arg(0));
             break;
-          case Random:
+          case FillMethod::Random:
             item->setText(QString("%1").arg(dist(rand)));
             break;
-          case Sequential:
+          case FillMethod::Sequential:
             item->setText(QString("%1").arg(++startIdx));
             break;
           default:
@@ -96,7 +96,7 @@ namespace TableWidgetUtils
     }
   }
 
-  void FillTables(QVector<QTableWidget*>& tableWidgets, ProblemDataSerializable& problemContainer)
+  void FillTables(QVector<QTableWidget*>& tableWidgets, LinearProgramDataSerializable& problemContainer)
   {
     for (int i = 0; i < tableWidgets.length(); ++i)
     {

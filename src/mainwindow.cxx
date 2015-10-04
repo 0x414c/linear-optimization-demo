@@ -1,6 +1,7 @@
 ﻿#include "mainwindow.hxx"
 #include "ui_mainwindow.h"
 
+#include <cstddef>
 #include <iostream>
 
 #include <QBrush>
@@ -17,21 +18,28 @@
 #include <QString>
 #include <QVector>
 
-#include "lib/qcustomplot/qcustomplot.h"
-#include "numericvalidatordelegate.hxx"
-#include "problemdataserializable.hxx"
+#include "dataconvertors.hxx" //TODO:
+#include "numericvalidatingdelegate.hxx"
+#include "linearprogramdataserializable.hxx"
 #include "tablewidgetserializable.hxx"
 #include "tablewidgetutils.hxx"
+#include "utils.hxx"
 
-using namespace Eigen;
+#include "lib/eigen3/Eigen/Dense"
+#include "lib/qcustomplot/qcustomplot.h"
+//#include "lib/boost/rational.hpp" //-> Utils::frac
+
 using namespace std;
+using namespace Utils;
+//using namespace boost;
+using namespace Eigen;
 
 MainWindow::MainWindow(QWidget* parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow)
 {
   ui->setupUi(this);
-  initializeContents();
+  _initializeWindowContents();
 }
 
 MainWindow::~MainWindow()
@@ -39,25 +47,51 @@ MainWindow::~MainWindow()
   delete ui;
 }
 
-void MainWindow::initializeContents()
+void MainWindow::_initializeWindowContents()
 {
-  ui->objFuncCoeffTableWidget->setItemDelegate(new NumericValidatorDelegate);
-  ui->constrCoeffsTableWidget->setItemDelegate(new NumericValidatorDelegate);
-  ui->rhsTableWidget->setItemDelegate(new NumericValidatorDelegate);
-
-  ui->objFuncCoeffTableWidget->setVerticalHeaderLabels(QStringList(QStringLiteral("c")));
-  ui->rhsTableWidget->setHorizontalHeaderLabels(QStringList(QStringLiteral("b")));
-
-  clearContents();
+  _clearTablesContents();
+  _setTablesHeaders();
+  _setTablesValidators();
 }
 
-void MainWindow::clearContents() {
+void MainWindow::_setTablesHeaders()
+{
+  ui->objFuncCoeffTableWidget->setVerticalHeaderLabels(QStringList(QStringLiteral("c")));
+  ui->rhsTableWidget->setHorizontalHeaderLabels(QStringList(QStringLiteral("b")));  
+}
+
+void MainWindow::_setTablesValidators()
+{
+  switch (_mode)
+  {
+    case Utils::ComputationMode::Real:
+      qDebug() << "MainWindow: switching mode to \"Real\"";
+      ui->objFuncCoeffTableWidget->setItemDelegate(new NumericValidatingDelegate<real_t>);
+      ui->constrCoeffsTableWidget->setItemDelegate(new NumericValidatingDelegate<real_t>);
+      ui->rhsTableWidget->setItemDelegate(new NumericValidatingDelegate<real_t>);
+      break;
+
+    case Utils::ComputationMode::Rational:
+      qDebug() << "MainWindow: switching mode to \"Rational\"";
+      ui->objFuncCoeffTableWidget->setItemDelegate(new NumericValidatingDelegate<Utils::rat_t>);
+      ui->constrCoeffsTableWidget->setItemDelegate(new NumericValidatingDelegate<Utils::rat_t>);
+      ui->rhsTableWidget->setItemDelegate(new NumericValidatingDelegate<Utils::rat_t>);
+      break;
+
+    default:
+      qDebug() << "MainWindow: unknown mode";
+      break;
+  }
+}
+
+void MainWindow::_clearTablesContents()
+{
   TableWidgetUtils::clearTable(ui->objFuncCoeffTableWidget);
   TableWidgetUtils::clearTable(ui->constrCoeffsTableWidget);
   TableWidgetUtils::clearTable(ui->rhsTableWidget);
 }
 
-Ui::DialogResult MainWindow::load(QString fileName)
+Utils::DialogResult MainWindow::_loadData(QString fileName)
 {
   if (!fileName.isEmpty())
   {
@@ -65,13 +99,13 @@ Ui::DialogResult MainWindow::load(QString fileName)
     if (!file.open(QIODevice::ReadOnly)) {
       qWarning("Couldn't open file.");
 
-      return Ui::DialogResult::Fail;
+      return Utils::DialogResult::Fail;
     }
     else
     {
       QByteArray saveByteArray = file.readAll();
       QJsonDocument dataJsonDocument(QJsonDocument::fromJson(saveByteArray));
-      ProblemDataSerializable dataContainer;
+      LinearProgramDataSerializable dataContainer;
       dataContainer.read(dataJsonDocument.object());
       file.flush();
       file.close();
@@ -82,16 +116,16 @@ Ui::DialogResult MainWindow::load(QString fileName)
       ui->constrsSpinBox->setValue(dataContainer.itemAt(1).rows());
       ui->coeffsSpinBox->setValue(dataContainer.itemAt(1).cols());
 
-      return Ui::DialogResult::Success;
+      return Utils::DialogResult::Success;
     }
   }
   else
   {
-    return Ui::DialogResult::Nothing;
+    return Utils::DialogResult::Nothing;
   }
 }
 
-Ui::DialogResult MainWindow::save(QString fileName)
+Utils::DialogResult MainWindow::_saveData(QString fileName)
 {
   if (!fileName.isEmpty())
   {
@@ -99,25 +133,25 @@ Ui::DialogResult MainWindow::save(QString fileName)
     if (!file.open(QIODevice::WriteOnly)) {
       qWarning("Couldn't save file.");
 
-      return Ui::DialogResult::Fail;
+      return Utils::DialogResult::Fail;
     }
     else
     {
       QJsonObject dataJsonObject;
       QVector<QTableWidget*> tableWidgets = {ui->objFuncCoeffTableWidget, ui->constrCoeffsTableWidget, ui->rhsTableWidget};
-      ProblemDataSerializable dataContainer(tableWidgets);
+      LinearProgramDataSerializable dataContainer(tableWidgets);
       dataContainer.write(dataJsonObject);
       QJsonDocument saveDoc(dataJsonObject);
       file.write(saveDoc.toJson());
       file.flush();
       file.close();
 
-      return Ui::DialogResult::Success;
+      return Utils::DialogResult::Success;
     }
   }
   else
   {
-    return Ui::DialogResult::Nothing;
+    return Utils::DialogResult::Nothing;
   }
 }
 
@@ -209,6 +243,26 @@ void MainWindow::on_coeffsSpinBox_valueChanged(int arg1)
   TableWidgetUtils::clearTable(ui->constrCoeffsTableWidget, 0, oldColumnCount);
 }
 
+void MainWindow::on_realRadioButton_toggled(bool checked)
+{
+  if (checked)
+  {
+    _mode = Utils::ComputationMode::Real;
+    _clearTablesContents();
+    _setTablesValidators();
+  }
+}
+
+void MainWindow::on_rationalRadioButton_toggled(bool checked)
+{
+  if (checked)
+  {
+    _mode = Utils::ComputationMode::Rational;
+    _clearTablesContents();
+    _setTablesValidators();
+  }
+}
+
 void MainWindow::on_action_Open_triggered()
 {
   QString fileName = QFileDialog::getOpenFileName(
@@ -221,15 +275,15 @@ void MainWindow::on_action_Open_triggered()
     QFileDialog::DontUseNativeDialog
   );
 
-  auto result = load(fileName);
-  if (result == Ui::DialogResult::Success)
+  auto result = _loadData(fileName);
+  if (result == Utils::DialogResult::Success)
   {
+    setWindowFilePath(fileName + "[*]");
     setWindowModified(true);
-    setWindowFilePath(fileName);
   }
   else
   {
-    if (result == Ui::DialogResult::Fail)
+    if (result == Utils::DialogResult::Fail)
     {
       QMessageBox::critical(
         this,
@@ -252,14 +306,14 @@ void MainWindow::on_action_Save_as_triggered()
     QFileDialog::DontUseNativeDialog
   );
 
-  auto result = save(fileName);
-  if (result == Ui::DialogResult::Success)
+  auto result = _saveData(fileName);
+  if (result == Utils::DialogResult::Success)
   {
     setWindowModified(false);
   }
   else
   {
-    if (result == Ui::DialogResult::Fail)
+    if (result == Utils::DialogResult::Fail)
     {
       QMessageBox::critical(
         this,
@@ -287,14 +341,14 @@ void MainWindow::on_action_Redo_triggered()
 
 void MainWindow::on_action_Clear_triggered()
 {
-  clearContents();
+  _clearTablesContents();
 }
 
 void MainWindow::on_action_Fill_w_random_numbers_triggered()
 {
-  TableWidgetUtils::fillTable(ui->objFuncCoeffTableWidget, TableWidgetUtils::Random);
-  TableWidgetUtils::fillTable(ui->constrCoeffsTableWidget, TableWidgetUtils::Random);
-  TableWidgetUtils::fillTable(ui->rhsTableWidget, TableWidgetUtils::Random);
+  TableWidgetUtils::fillTable(ui->objFuncCoeffTableWidget, TableWidgetUtils::FillMethod::Random);
+  TableWidgetUtils::fillTable(ui->constrCoeffsTableWidget, TableWidgetUtils::FillMethod::Random);
+  TableWidgetUtils::fillTable(ui->rhsTableWidget, TableWidgetUtils::FillMethod::Random);
 }
 
 void MainWindow::on_action_Zoom_in_triggered()
@@ -330,53 +384,63 @@ void MainWindow::on_action_About_Qt_triggered()
 
 void MainWindow::on_clearPushButton_clicked()
 {
-  clearContents();
+  _clearTablesContents();
 }
 
 void MainWindow::on_plotPushButton_clicked()
 {
-  plot();
+  _plotGraph();
 }
 
 void MainWindow::on_startPushButton_clicked()
 {
-  solve();
+  _runSolver();
 }
 
 [[deprecated("To be removed in release version.")]]
 void MainWindow::on_testPushButton_clicked()
 {
-  load(QStringLiteral("data4.json"));
-}
+  _loadData(QStringLiteral("data4.json"));
 
-[[deprecated("Needs refactoring.")]]
-void MainWindow::solve() {
-  auto A = TableWidgetUtils::getMatrix<double>(ui->constrCoeffsTableWidget);
-  auto b = TableWidgetUtils::getMatrix<double>(ui->rhsTableWidget);
-  auto c = TableWidgetUtils::getMatrix<double>(ui->objFuncCoeffTableWidget);
+  DataConvertors::toScalar<Utils::rat_t>("2");
+  DataConvertors::toScalar<Utils::rat_t>("-4");
+  DataConvertors::toScalar<Utils::rat_t>("+8");
+  DataConvertors::toScalar<Utils::rat_t>("1/2");
+  DataConvertors::toScalar<Utils::rat_t>("-1/4");
+  DataConvertors::toScalar<Utils::rat_t>("+1/8");
+  DataConvertors::toScalar<Utils::rat_t>("2/");
+
+
+  auto A = TableWidgetUtils::getMatrix<real_t>(ui->constrCoeffsTableWidget);
+  auto b = TableWidgetUtils::getMatrix<real_t>(ui->rhsTableWidget);
+  auto c = TableWidgetUtils::getMatrix<real_t>(ui->objFuncCoeffTableWidget);
 
   cerr << "c, A, b :=" << endl << c << endl << A << endl << b << endl << endl;
+  FullPivLU<Matrix<real_t, Dynamic, Dynamic>> lu(A);
+  cerr << "LU(A) := " << endl << lu.matrixLU() << endl;
 
-//  FullPivLU<Matrix<double, Dynamic, Dynamic>> lu(A);
-//  cerr << "LU(A):=" << endl << lu.matrixLU() << endl;
-
-//  auto x = A.fullPivLu().solve(b);
-//  if((A * x).isApprox(b))
-//  {
-//    cerr << "Here is a solution x to the equation Ax==b:" << endl << x << endl;
-//    double relative_error = (A * x - b).norm() / b.norm(); // norm() is L2 norm
-//    cout << "The relative error is:\n" << relative_error << endl;
-//  }
-//  else
-//  {
-//    cerr << "The equation Ax==b does not have any solution." << endl;
-//  }
-
-//  ui->debugTextBrowser->setText("Solving...\n");
+  auto x = A.fullPivLu().solve(b);
+  if((A * x).isApprox(b))
+  {
+    cerr << "Here is a solution x to the equation Ax == b" << endl << x << endl;
+    real_t relative_error = (A * x - b).norm() / b.norm(); // norm() is L2 norm
+    cout << "The relative error is:\n" << relative_error << endl;
+  }
+  else
+  {
+    cerr << "The equation Ax==b does not have any solution." << endl;
+  }
 }
 
 [[deprecated("Needs refactoring.")]]
-void MainWindow::plot() {
+void MainWindow::_runSolver() {
+  ui->debugTextBrowser->setText("Solving...\n");
+
+  _realSolver->solve();
+}
+
+[[deprecated("Needs refactoring.")]]
+void MainWindow::_plotGraph() {
   int xAxisIdx = 1;
   int yAxisIdx = 2;
   QVector<QLineF> constrsLines = { QLineF(0, 1, .5, 0), QLineF(0, .5, 1, 0), QLineF(0, .6, .6, 0) };
@@ -448,14 +512,14 @@ void MainWindow::plot() {
   }
 
   // add obj. func. plot:
-  QCPItemStraightLine *objFuncPlotLine = new QCPItemStraightLine(customPlot);
+  QCPItemStraightLine* objFuncPlotLine = new QCPItemStraightLine(customPlot);
   customPlot->addItem(objFuncPlotLine);
   objFuncPlotLine->setPen(QPen(Qt::darkBlue));
   objFuncPlotLine->point1->setCoords(objFuncLine.p1());
   objFuncPlotLine->point2->setCoords(objFuncLine.p2());
 
   // add normal vec. arrow:
-  QCPItemLine *objFuncGradientVectorArrow = new QCPItemLine(customPlot);
+  QCPItemLine* objFuncGradientVectorArrow = new QCPItemLine(customPlot);
   customPlot->addItem(objFuncGradientVectorArrow);
   objFuncGradientVectorArrow->setPen(QPen(Qt::darkRed));
   objFuncGradientVectorArrow->start->setCoords(objFuncLineNormal.p1());
@@ -463,7 +527,7 @@ void MainWindow::plot() {
   objFuncGradientVectorArrow->setHead(QCPLineEnding::esSpikeArrow);
 
   // w/ label
-  QCPItemText *objFuncGradientVectorArrowText = new QCPItemText(customPlot);
+  QCPItemText* objFuncGradientVectorArrowText = new QCPItemText(customPlot);
   customPlot->addItem(objFuncGradientVectorArrowText);
   objFuncGradientVectorArrowText->setPositionAlignment(Qt::AlignTop | Qt::AlignHCenter);
   objFuncGradientVectorArrowText->position->setType(QCPItemPosition::ptAxisRectRatio);
@@ -473,20 +537,20 @@ void MainWindow::plot() {
   objFuncGradientVectorArrowText->setSelectable(false);
 
   // add non-neg. constrs f/ x & y
-  QCPItemStraightLine *xConstrPlotLine = new QCPItemStraightLine(customPlot);
+  QCPItemStraightLine* xConstrPlotLine = new QCPItemStraightLine(customPlot);
   customPlot->addItem(xConstrPlotLine);
   xConstrPlotLine->setPen(QPen(Qt::darkGreen));
   xConstrPlotLine->point1->setCoords(QPointF(0, 0));
   xConstrPlotLine->point2->setCoords(QPointF(1, 0));
 
-  QCPItemStraightLine *yConstrPlotLine = new QCPItemStraightLine(customPlot);
+  QCPItemStraightLine* yConstrPlotLine = new QCPItemStraightLine(customPlot);
   customPlot->addItem(yConstrPlotLine);
   yConstrPlotLine->setPen(QPen(Qt::darkGreen));
   yConstrPlotLine->point1->setCoords(QPointF(0, 0));
   yConstrPlotLine->point2->setCoords(QPointF(0, 1));
 
   // add heatmap for obj. func. values
-//  QCPColorMap *colorMap = new QCPColorMap(customPlot->xAxis, customPlot->yAxis);
+//  QCPColorMap* colorMap = new QCPColorMap(customPlot->xAxis, customPlot->yAxis);
 //  customPlot->addPlottable(colorMap);
 //  int nx = 10;
 //  int ny = 10;

@@ -1,4 +1,6 @@
-﻿#include <QApplication>
+﻿#include <clocale>
+
+#include <QApplication>
 #include <QCommandLineOption>
 #include <QCommandLineParser>
 #include <QDebug>
@@ -7,7 +9,7 @@
 #include <QStringList>
 #include <QStyleFactory>
 
-#include "mainwindow.hxx"
+#include "ui/mainwindow.hxx"
 
 /*
 Лабораторная работа по методам оптимизации
@@ -21,14 +23,14 @@
 5. Выбор автоматического и пошагового режима решения задачи.
 6. В пошаговом режиме возможность возврата назад.
 7. В пошаговом режиме возможность выбора опорного элемента.
-~8. Работа с обыкновенными и десятичными дробями.
++8. Работа с обыкновенными и десятичными дробями.
 9. Справка.
 10. Контекстно-зависимая помощь.
 +11. Поддержка мыши.
 +12. Контроль данных (защита от «дурака»).
 
 Бонусы:
-~1. Графический двумерный метод решения.
++1. Графический двумерный метод решения.
 2. Графический трехмерный метод решения.
 3. Графический метод решения целочисленной задачи.
 4. Решение двойственной задачи.
@@ -42,32 +44,83 @@
 4. ...
 */
 
-//HACK: this allows user to override style by using command-line args
-QApplication* createApplication(int argc, char** argv)
+
+/*
+Code style rules:
+1. Include order:
+  "This class header" (optional)
+  <C++ headers>
+  <C headers>
+  <Qt headers>
+  "Foreign library headers"
+  "Local submodule headers"
+  "Foreign submodules headers"
+2. Indent size: 2 spaces, Tab size: 4 spaces.
+3.
+*/
+
+
+/**
+ * @brief createApplication
+ * This QApplication factory can override Qt options.
+ * It allows user to set style as usual by using command-line args,
+ * but will stick to Qt 5' `Fusion' style by default.
+ * @param argc
+ * @param argv
+ * @return
+ */
+QApplication* createApplication(int& argc, char** argv)
 {
   QStringList args;
   for (int i = 0; i < argc; ++i)
   {
     args.append(QString(argv[i]));
   }
+
+  QApplication* const app = new QApplication(argc, argv);
+  QCoreApplication::setApplicationName(QStringLiteral("Linear Optimization"));
+  QCoreApplication::setOrganizationName(QStringLiteral("0x414c!"));
+  QCoreApplication::setOrganizationDomain(QStringLiteral("www.0x414c.tk"));
+  QCoreApplication::setApplicationVersion(QStringLiteral("0.0.1"));
+  QApplication::setApplicationDisplayName(QStringLiteral("Linear Optimization"));
+
   QCommandLineParser parser;
-  QCommandLineOption styleOption(
+  const QCommandLineOption styleOption(
     QStringLiteral("style"),
-    QStringLiteral("Determines the style of the GUI application."),
-    QStringLiteral("style")
+    QStringLiteral("Sets the application GUI style. Possible values depend on your system configuration."),
+    QStringLiteral("name")
+  );
+  const QCommandLineOption stylesheetOption(
+    QStringLiteral("stylesheet"),
+    QStringLiteral("Sets the application Style Sheet. The value must be a path to a file that contains the Style Sheet."),
+    QStringLiteral("path")
+  );
+  const QCommandLineOption widgetcountOption(
+    QStringLiteral("widgetcount"),
+    QStringLiteral("Prints debug message at the end about number of widgets left undestroyed and maximum number of widgets existed at the same time.")
+  );
+  const QCommandLineOption reverseOption(
+    QStringLiteral("reverse"),
+    QStringLiteral("Sets the application's layout direction to Right-To-Left.")
+  );
+  const QCommandLineOption qmljsdebuggerOption(
+    QStringLiteral("qmljsdebugger"),
+    QStringLiteral("Activates the QML/JS debugger with a specified port. The value must be of format port:1234[,block], where block is optional and will make the application wait until a debugger connects to it."),
+    QStringLiteral("port")
   );
   parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
-  parser.setApplicationDescription(QStringLiteral("Linear Programming Tool"));
+  parser.setApplicationDescription(QStringLiteral("Linear Optimization Demonstrational Tool"));
   parser.addVersionOption();
   parser.addHelpOption();
   parser.addOption(styleOption);
-  QApplication* app = new QApplication(argc, argv);
-  QCoreApplication::setApplicationVersion(QStringLiteral("0.0.1"));
-  QCoreApplication::setApplicationName(QStringLiteral("Linear Programming"));
+  parser.addOption(stylesheetOption);
+  parser.addOption(widgetcountOption);
+  parser.addOption(reverseOption);
+  parser.addOption(qmljsdebuggerOption);
   parser.process(args);
   if (!parser.isSet(styleOption))
   {
-    qDebug() << "createApplication: forcing \"style\" value to \"Fusion\"";
+    qDebug() << "main::createApplication: setting \"style\" value to \"Fusion\"";
     if (QStyleFactory::keys().contains(QStringLiteral("Fusion"), Qt::CaseInsensitive))
     {
       QApplication::setStyle(QStyleFactory::create(QStringLiteral("Fusion")));
@@ -77,25 +130,20 @@ QApplication* createApplication(int argc, char** argv)
   return app;
 }
 
+/**
+ * @brief main
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main(int argc, char** argv)
 {
-//  QApplication::setDesktopSettingsAware(false);
-//  QApplication app(argc, argv);
-//  auto args = QCoreApplication::arguments();
-//  if (args.contains(QStringLiteral("-style"), Qt::CaseInsensitive))
-//  {
-//    if (QStyleFactory::keys().contains("Fusion", Qt::CaseInsensitive)) {
-//       QApplication::setStyle(QStyleFactory::create("Fusion"));
-//    }
-//  }
-//  MainWindow wnd;
-//  wnd.show();
-//  return app.exec();
-
+  setlocale(LC_ALL, "C");
   QApplication::setDesktopSettingsAware(false);
-  QScopedPointer<QApplication> app(createApplication(argc, argv));
+  const QScopedPointer<QApplication> app(createApplication(argc, argv));
   MainWindow wnd;
   wnd.show();
+  const int ret = app->exec();
 
-  return app->exec();
+  return ret;
 }

@@ -33,7 +33,7 @@
         </sizepolicy>
        </property>
        <property name="title">
-        <string>Linear Program Data (in canonical form where Ax = b and F(x) → min):</string>
+        <string>Linear Program Data (in canonical form where Ax=b, x≥(0) and F(x)=(c,x)→min):</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_11">
         <item row="0" column="0">
@@ -316,7 +316,7 @@
                     </sizepolicy>
                    </property>
                    <property name="text">
-                    <string>Rational (Q)</string>
+                    <string>Rational (ℚ)</string>
                    </property>
                   </widget>
                  </item>
@@ -329,7 +329,7 @@
                     </sizepolicy>
                    </property>
                    <property name="text">
-                    <string>Real (R)</string>
+                    <string>Real (ℝ)</string>
                    </property>
                    <property name="checked">
                     <bool>true</bool>
@@ -418,7 +418,7 @@
                     </sizepolicy>
                    </property>
                    <property name="text">
-                    <string>~Test</string>
+                    <string>Test</string>
                    </property>
                    <property name="icon">
                     <iconset>
@@ -464,9 +464,21 @@
             </sizepolicy>
            </property>
            <property name="title">
-            <string>Plot:</string>
+            <string>Solution Plot:</string>
            </property>
            <layout class="QGridLayout" name="gridLayout_9">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
             <item row="0" column="0">
              <layout class="QGridLayout" name="gridLayout_8" rowstretch="0" columnstretch="0">
               <item row="0" column="0">

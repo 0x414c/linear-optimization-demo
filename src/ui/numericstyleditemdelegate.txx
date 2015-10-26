@@ -13,6 +13,8 @@
 #include <QStyleOptionViewItem>
 #include <QWidget>
 
+#include "numericstyleditemdelegate.hxx"
+
 #include "../misc/utils.hxx"
 
 using namespace Utils;
@@ -24,7 +26,10 @@ NumericStyledItemDelegate<T>::NumericStyledItemDelegate(QObject* parent) :
 template<typename T>
 QWidget* NumericStyledItemDelegate<T>::createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const
 {
-  static_assert(AlwaysFalse<T>::value, "NumericStyledItemDelegate<T>: You can only use one of the specified specializations!");
+  static_assert(
+    False<T>::value,
+    "NumericStyledItemDelegate<T>: You can only use one of the specified specializations!"
+  );
 
   return nullptr;
 }

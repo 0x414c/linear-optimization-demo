@@ -56,7 +56,9 @@ Code style rules:
   "Local submodule headers"
   "Foreign submodules headers"
 2. Indent size: 2 spaces, Tab size: 4 spaces.
-3.
+3. Templates:
+  Declarations in *.hxx should be followed by inclusion of *.txx
+  file w/ corresponding definitions and/or specializations.
 */
 
 

@@ -33,7 +33,8 @@ class TableModel : public QAbstractTableModel, public IJsonSerializable
     virtual Qt::ItemFlags flags(const QModelIndex& index) const override;
 
     virtual bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
-    virtual bool setHeaderData(int section, Qt::Orientation orientation, const QVariant& value, int role = Qt::EditRole) override;
+    virtual bool setHeaderData(int section, Qt::Orientation orientation,
+                               const QVariant& value, int role = Qt::EditRole) override;
 
     virtual bool insertRows(int row, int count, const QModelIndex& parent = QModelIndex()) override;
     virtual bool removeRows(int row, int count, const QModelIndex& parent = QModelIndex()) override;
@@ -42,11 +43,12 @@ class TableModel : public QAbstractTableModel, public IJsonSerializable
 
     bool clear(const QModelIndex& parent = QModelIndex());
     bool clear(const QVariant& value, const QModelIndex& parent = QModelIndex());
-    bool clear(int rowFirst, int columnFirst, int rowLast, int columnLast, const QVariant& value, const QModelIndex& parent = QModelIndex());
+    bool clear(int rowFirst, int columnFirst, int rowLast, int columnLast,
+               const QVariant& value, const QModelIndex& parent = QModelIndex());
 
     bool resize(int newRows, int newColumns, const QModelIndex& parent = QModelIndex());
 
-    QVariant valueAt(int row, int col, const QModelIndex& parent = QModelIndex()) const; //TODO: ? use QAbstractTableModel::index
+    QVariant valueAt(int row, int col, const QModelIndex& parent = QModelIndex()) const; //TODO: ~? Use QAbstractTableModel::index
 
     virtual void read(const QJsonObject& json) override;
     virtual void write(QJsonObject& json) const override;

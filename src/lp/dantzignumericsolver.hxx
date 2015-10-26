@@ -3,7 +3,6 @@
 
 #include "inumericsolver.hxx"
 #include "linearprogramdata.hxx"
-#include "linearprogramutils.hxx"
 #include "../misc/utils.hxx"
 
 using namespace Utils;
@@ -12,7 +11,7 @@ template<typename T = real_t>
 class DantzigNumericSolver : public INumericSolver
 {
   public:
-    DantzigNumericSolver()/* = delete*/;
+    DantzigNumericSolver();
     explicit DantzigNumericSolver(const LinearProgramData<T>& linearProgramData);
 
     virtual void solve() override;

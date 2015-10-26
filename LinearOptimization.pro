@@ -1,6 +1,6 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2015-09-18T22:28:33
+# Project created by QtCreator 2015-09-18T22:28:37
 #
 #-------------------------------------------------
 
@@ -9,6 +9,10 @@ QT += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 CONFIG += c++14 warn_on
+
+QMAKE_CXXFLAGS += -m64 -march=sandybridge -msse -msse2 -msse3 \
+  -mfpmath=sse -mieee-fp -malign-double \
+  -frounding-math -fsignaling-nans -ffp-contract=off
 
 TARGET = LinearOptimization
 
@@ -22,7 +26,8 @@ DEFINES += EIGEN_MPL2_ONLY
 
 INCLUDEPATH += $$PWD/lib/boost \
   $$PWD/lib/eigen \
-  $$PWD/lib/qcustomplot
+  $$PWD/lib/qcustomplot \
+  $$PWD/lib/cppformat
 
 SOURCES += src/main.cxx \
   lib/qcustomplot/qcustomplot/qcustomplot.cpp \
@@ -32,8 +37,8 @@ SOURCES += src/main.cxx \
   src/lp/linearfunction.cxx \
   src/lp/linearprogramdata.cxx \
   src/lp/linearprogramsolution.cxx \
+  src/lp/linearprogramutils.cxx \
   src/lp/plotdata2d.cxx \
-  src/math/mathutils.cxx \
   src/misc/dataconvertors.cxx \
   src/misc/ijsonserializable.cxx \
   src/misc/utils.cxx \
@@ -44,11 +49,12 @@ SOURCES += src/main.cxx \
   src/ui/tablemodelstorage.cxx \
   src/ui/tablemodelutils.cxx
 
-HEADERS  += src/ui/mainwindow.hxx \
+HEADERS += src/ui/mainwindow.hxx \
   lib/qcustomplot/qcustomplot/qcustomplot.h \
   src/lp/dantzignumericsolver.hxx \
   src/lp/dantzignumericsolver.txx \
   src/lp/graphicalsolver2d.hxx \
+  src/lp/graphicalsolver2d.txx \
   src/lp/inumericsolver.hxx \
   src/lp/linearfunction.hxx \
   src/lp/linearprogramdata.hxx \
@@ -57,7 +63,9 @@ HEADERS  += src/ui/mainwindow.hxx \
   src/lp/linearprogramutils.hxx \
   src/lp/plotdata2d.hxx \
   src/math/mathutils.hxx \
+  src/math/mathutils.txx \
   src/misc/dataconvertors.hxx \
+  src/misc/dataconvertors.txx \
   src/misc/ijsonserializable.hxx \
   src/misc/utils.hxx \
   src/ui/numericstyleditemdelegate.hxx \

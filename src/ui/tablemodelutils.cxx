@@ -81,11 +81,13 @@ namespace TableModelUtils
       else
       {
         qDebug() << "TableModelUtils::fill: `callback' argument is empty";
+
+        return false;
       }
     }
     else
     {
-      qDebug() << "TableModelUtils::fill: `tableModel' argument is `nullptr'";
+      qDebug() << "TableModelUtils::fill: `tableModel' argument is equal to nullptr";
 
       return false;
     }

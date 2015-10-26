@@ -10,9 +10,9 @@
 namespace Utils
 {
   template<typename T1, typename... TN>
-  struct AlwaysFalse
+  struct False
   {
-    enum { value = false };
+    enum : bool { value = false };
   };
 
   enum struct DialogResult { Fail, Nothing, Success };
@@ -21,9 +21,9 @@ namespace Utils
 
   using real_t = double_t;
 
-  using integer_t = long long;
+  using integer_t = signed long long;
 
-  using rational_t = boost::rational<integer_t>; //TODO: ~ move to typedefs.hxx
+  using rational_t = boost::rational<integer_t>; //TODO: ~ Move these usings to typedefs.hxx
 }
 
 #endif // UTILS_HXX

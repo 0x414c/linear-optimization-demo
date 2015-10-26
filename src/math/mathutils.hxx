@@ -11,10 +11,19 @@ using namespace Utils;
 
 namespace MathUtils
 {
-  pair<integer_t, integer_t> rationalize(real_t x,
-                                         real_t eps = 1E-16,
-                                         uint16_t maxIterations = 50,
-                                         integer_t maxDenominator = numeric_limits<integer_t>::max());
+  template<typename R = integer_t>
+  /**
+   * @brief rationalize
+   * @param x
+   * @param tolerance
+   * @param maxIterations
+   * @param maxDenominator
+   * @return
+   */
+  pair<R, R> rationalize(real_t x, real_t tolerance = 1E-16,
+                         uint16_t maxIterations = 22, R maxDenominator = numeric_limits<R>::max());
 }
+
+#include "mathutils.txx"
 
 #endif // MATHUTILS_HXX

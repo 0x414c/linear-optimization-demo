@@ -69,9 +69,10 @@ class MainWindow : public QMainWindow
   private:
     Ui::MainWindow* ui;
 
-    Field _field = Field::Real;
     const int _modelsCount = 3;
     enum struct Model : int { ObjFunc = 0, Constrs = 1, RHS = 2 };
+
+    Field _field = Field::Real;
     QVector<TableModel*> _models;
     QVector<NumericStyledItemDelegate<real_t>*> _realNumericDelegates;
     QVector<NumericStyledItemDelegate<rational_t>*> _ratNumericDelegates;

@@ -1,6 +1,8 @@
 ﻿#ifndef LINEARPROGRAMDATA_TXX
 #define LINEARPROGRAMDATA_TXX
 
+#include "linearprogramdata.hxx"
+
 #include "eigen3/Eigen/Dense"
 
 using namespace Eigen;

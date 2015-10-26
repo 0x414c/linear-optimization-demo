@@ -52,12 +52,12 @@ class LinearFunction
       return _coeffs(coeffIdx);
     }
 
-    T evaluateAt(const Matrix<T, 1, Dynamic>& args) const
+    T valueAt(const Matrix<T, 1, Dynamic>& args) const
     {
       return _coeffs.dot(args);
     }
 
-    T evaluateAt(const Matrix<T, Dynamic, 1>& args) const
+    T valueAt(const Matrix<T, Dynamic, 1>& args) const
     {
       return _coeffs.dot(args);
     }

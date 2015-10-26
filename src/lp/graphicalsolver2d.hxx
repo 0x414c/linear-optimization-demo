@@ -10,16 +10,19 @@
 using namespace boost;
 using namespace Utils;
 
+template<typename T = real_t>
 class GraphicalSolver2D
 {
   public:
     GraphicalSolver2D() = delete;
-    explicit GraphicalSolver2D(const LinearProgramData<real_t>& linearProgramData);
+    explicit GraphicalSolver2D(const LinearProgramData<T>& linearProgramData);
 
     optional<PlotData2D> solve();
 
   private:
-    LinearProgramData<real_t> _linearProgramData;
+    LinearProgramData<T> _linearProgramData;
 };
+
+#include "graphicalsolver2d.txx"
 
 #endif // GRAPHICALSOLVER2D_HXX

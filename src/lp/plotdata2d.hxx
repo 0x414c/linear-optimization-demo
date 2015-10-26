@@ -14,11 +14,12 @@ struct PlotData2D
 {
   PlotData2D() = delete;
   PlotData2D(ResultType resultType, const QPointF& extremeVertex,
-             real_t extremeValue, const QVector<QPointF>& vertices, const QLineF& gradient);
+             qreal extremeValue, const QVector<QPointF>& vertices,
+             const QLineF& gradient);
 
   ResultType resultType;
   QPointF extremeVertex;
-  real_t extremeValue;
+  qreal extremeValue;
   QVector<QPointF> vertices;
   QLineF gradient;
 };

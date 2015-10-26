@@ -179,7 +179,7 @@ bool TableModel::setData(const QModelIndex& index, const QVariant& value, int ro
         if (index.row() < _rows && index.column() < _columns)
         {
           _values[index.row()][index.column()] = value.toString();
-          emit dataChanged(index, index, QVector<int>{role}); //TODO: !?
+          emit dataChanged(index, index, QVector<int>{role}); //TODO: ~?
 
           return true;
         }

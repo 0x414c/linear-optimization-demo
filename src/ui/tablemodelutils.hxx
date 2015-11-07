@@ -21,7 +21,7 @@ namespace TableModelUtils
 {
   enum struct FillMethod { Zeroes, Random, Sequential };
 
-  //TODO: ~? Make these functions members of `TableModel'
+  //TODO: ~ Make these functions members of `TableModel' class
   bool fillTableModel(TableModel* const tableModel, FillMethod fillMethod);
   bool fillTableModel(TableModel* const tableModel, const function<QVariant(const QVariant&)>& callback);
 
@@ -30,20 +30,21 @@ namespace TableModelUtils
   {
     static_assert(
       False<R, T>::value,
-      "TableModelUtils::convertTable<R, T>: You can only use one of the specified specializations!"
+      "TableModelUtils::convertTableModel<R, T>:"
+      " You can only use one of the specified specializations!"
     );
 
     return false;
   }
 
-  template<typename T = real_t>
+  template<typename T = Real>
   auto getColumnVector(TableModel* const tableModel)
   {
     if (tableModel != nullptr)
     {
       Matrix<T, Dynamic, 1> vec(tableModel->rowCount(), 1);
 
-      for (DenseIndex i = 0; i < vec.rows(); ++i)
+      for (DenseIndex i(0); i < vec.rows(); ++i)
       {
         vec(i) = numericCast<T>(tableModel->data(tableModel->index(i, 0)).toString());
       }
@@ -58,14 +59,14 @@ namespace TableModelUtils
     }
   }
 
-  template<typename T = real_t>
+  template<typename T = Real>
   auto getRowVector(TableModel* const tableModel)
   {
     if (tableModel != nullptr)
     {
       Matrix<T, 1, Dynamic> vec(1, tableModel->columnCount());
 
-      for (DenseIndex i = 0; i < vec.cols(); ++i)
+      for (DenseIndex i(0); i < vec.cols(); ++i)
       {
         vec(i) = numericCast<T>(tableModel->data(tableModel->index(0, i)).toString());
       }
@@ -80,16 +81,16 @@ namespace TableModelUtils
     }
   }
 
-  template<typename T = real_t>
+  template<typename T = Real>
   auto getMatrix(TableModel* const tableModel)
   {
     if (tableModel != nullptr)
     {
       Matrix<T, Dynamic, Dynamic> mat(tableModel->rowCount(), tableModel->columnCount());
 
-      for (DenseIndex i = 0; i < mat.rows(); ++i)
+      for (DenseIndex i(0); i < mat.rows(); ++i)
       {
-        for (DenseIndex j = 0; j < mat.cols(); ++j)
+        for (DenseIndex j(0); j < mat.cols(); ++j)
         {
           mat(i, j) = numericCast<T>(tableModel->data(tableModel->index(i, j)).toString());
         }

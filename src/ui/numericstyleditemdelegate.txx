@@ -21,78 +21,95 @@ using namespace Utils;
 
 template<typename T>
 NumericStyledItemDelegate<T>::NumericStyledItemDelegate(QObject* parent) :
-  StyledItemDelegate(parent) {}
+  StyledItemDelegate(parent)
+{ }
 
 template<typename T>
-QWidget* NumericStyledItemDelegate<T>::createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const
+QWidget* NumericStyledItemDelegate<T>::createEditor(QWidget* parent,
+                                                    const QStyleOptionViewItem& option,
+                                                    const QModelIndex& index) const
 {
   static_assert(
     False<T>::value,
-    "NumericStyledItemDelegate<T>: You can only use one of the specified specializations!"
+    "NumericStyledItemDelegate<T>:"
+    " You can only use one of the specified specializations!"
   );
 
   return nullptr;
 }
 
 template<>
-inline QWidget* NumericStyledItemDelegate<real_t>::createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const
+inline QWidget* NumericStyledItemDelegate<Real>::createEditor(QWidget* parent,
+                                                              const QStyleOptionViewItem& option,
+                                                              const QModelIndex& index) const
 {
-  QLineEdit* lineEdit = new QLineEdit(parent);
-  QRegExp re(QStringLiteral("^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$"));
-  QRegExpValidator* validator = new QRegExpValidator(re, parent);
+  QLineEdit* const lineEdit = new QLineEdit(parent);
+  const QRegExp re(QStringLiteral("^[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$"));
+  QRegExpValidator* const validator = new QRegExpValidator(re, parent);
   lineEdit->setValidator(validator);
 
   return lineEdit;
 }
 
 template<>
-inline QWidget* NumericStyledItemDelegate<integer_t>::createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const
+inline QWidget* NumericStyledItemDelegate<Integer>::createEditor(QWidget* parent,
+                                                                 const QStyleOptionViewItem& option,
+                                                                 const QModelIndex& index) const
 {
-  QLineEdit* lineEdit = new QLineEdit(parent);
-  QRegExp re(QStringLiteral("^[-+]?[0-9]+$"));
-  QRegExpValidator* validator = new QRegExpValidator(re, parent);
+  QLineEdit* const lineEdit = new QLineEdit(parent);
+  const QRegExp re(QStringLiteral("^[-+]?[0-9]+$"));
+  QRegExpValidator* const validator = new QRegExpValidator(re, parent);
   lineEdit->setValidator(validator);
 
   return lineEdit;
 }
 
 template<>
-inline QWidget* NumericStyledItemDelegate<rational_t>::createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const
+inline QWidget* NumericStyledItemDelegate<Rational>::createEditor(QWidget* parent,
+                                                                  const QStyleOptionViewItem& option,
+                                                                  const QModelIndex& index) const
 {
-  QLineEdit* lineEdit = new QLineEdit(parent);
-  QRegExp re(QStringLiteral("^[-+]?[0-9]+(?:\\/[0-9]*[1-9]+[0-9]*)?$"));
-  QRegExpValidator* validator = new QRegExpValidator(re, parent);
+  QLineEdit* const lineEdit = new QLineEdit(parent);
+  const QRegExp re(QStringLiteral("^[-+]?[0-9]+(?:\\/[0-9]*[1-9]+[0-9]*)?$"));
+  QRegExpValidator* const validator = new QRegExpValidator(re, parent);
   lineEdit->setValidator(validator);
 
   return lineEdit;
 }
 
 template<typename T>
-void NumericStyledItemDelegate<T>::setEditorData(QWidget* editor, const QModelIndex& index) const
+void NumericStyledItemDelegate<T>::setEditorData(QWidget* editor,
+                                                 const QModelIndex& index) const
 {
-  QString value = index.model()->data(index, Qt::EditRole).toString();
-  QLineEdit* lineEdit = qobject_cast<QLineEdit*>(editor);
+  const QString value(index.model()->data(index, Qt::EditRole).toString());
+//  const QString value(index.data().toString());
+  QLineEdit* const lineEdit = qobject_cast<QLineEdit*>(editor);
   Q_ASSERT(lineEdit);
   lineEdit->setText(value);
 }
 
 template<typename T>
-void NumericStyledItemDelegate<T>::setModelData(QWidget* editor, QAbstractItemModel* model, const QModelIndex& index) const
+void NumericStyledItemDelegate<T>::setModelData(QWidget* editor,
+                                                QAbstractItemModel* model,
+                                                const QModelIndex& index) const
 {
-  QLineEdit* lineEdit = qobject_cast<QLineEdit*>(editor);
+  QLineEdit* const lineEdit = qobject_cast<QLineEdit*>(editor);
   Q_ASSERT(lineEdit);
-  QString value = lineEdit->text();
+  const QString value(lineEdit->text());
   model->setData(index, value, Qt::EditRole);
 }
 
-//template<typename T>
-//void NumericStyledItemDelegate<T>::updateEditorGeometry(QWidget* editor, const QStyleOptionViewItem& option, const QModelIndex& index) const
-//{
-//  editor->setGeometry(option.rect);
-//}
+template<typename T>
+void NumericStyledItemDelegate<T>::updateEditorGeometry(QWidget* editor,
+                                                        const QStyleOptionViewItem& option,
+                                                        const QModelIndex& index) const
+{
+  editor->setGeometry(option.rect);
+}
 
 //template<typename T>
-//QSize NumericStyledItemDelegate<T>::sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const
+//QSize NumericStyledItemDelegate<T>::sizeHint(const QStyleOptionViewItem& option,
+//                                             const QModelIndex& index) const
 //{
 //  return QSize(10, 10);
 //}

@@ -5,6 +5,7 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <utility>
 
 #include <QBrush>
 #include <QDateTime>
@@ -28,16 +29,16 @@
 #include "tablemodelstorage.hxx"
 #include "tablemodelutils.hxx"
 #include "../lp/graphicalsolver2d.hxx"
+#include "../lp/linearprogramsolution.hxx"
+#include "../lp/linearprogramutils.hxx"
 #include "../lp/plotdata2d.hxx"
-#include "../misc/dataconvertors.hxx"
 #include "../math/mathutils.hxx"
+#include "../misc/dataconvertors.hxx"
 #include "../misc/utils.hxx"
 
 using namespace boost;
 using namespace Eigen;
-using namespace MathUtils;
 using namespace std;
-using namespace TableModelUtils;
 using namespace Utils;
 
 MainWindow::MainWindow(QWidget* parent) :
@@ -45,175 +46,218 @@ MainWindow::MainWindow(QWidget* parent) :
   ui(new Ui::MainWindow)
 {
   ui->setupUi(this);
-  _initializeWindowContents();
+  initializeWindowContents();
 }
 
 MainWindow::~MainWindow()
 {
-  _deleteWindowContents();
+  deleteWindowContents();
   delete ui;
 }
 
-void MainWindow::_initializeWindowContents()
+void MainWindow::initializeWindowContents()
 {
-  _ratNumericDelegates = QVector<NumericStyledItemDelegate<rational_t>*>(_modelsCount);
-  _realNumericDelegates = QVector<NumericStyledItemDelegate<real_t>*>(_modelsCount);
-  _models = QVector<TableModel*>(_modelsCount);
-  for (int i = 0; i < _modelsCount; ++i)
+  _ratNumericDelegates = QVector<NumericStyledItemDelegate<Rational>*>(_tableModelsCount);
+  _realNumericDelegates = QVector<NumericStyledItemDelegate<Real>*>(_tableModelsCount);
+  _tableModels = QVector<TableModel*>(_tableModelsCount);
+  for (int i(0); i < _tableModelsCount; ++i)
   {
-    _realNumericDelegates[i] = new NumericStyledItemDelegate<real_t>(this);
-    _ratNumericDelegates[i] = new NumericStyledItemDelegate<rational_t>(this);
-    _models[i] = new TableModel(this);
+    _realNumericDelegates[i] = new NumericStyledItemDelegate<Real>(this);
+    _ratNumericDelegates[i] = new NumericStyledItemDelegate<Rational>(this);
+    _tableModels[i] = new TableModel(this);
   }
 
-  _models[int(Model::ObjFunc)]->insertRow(0);
-  _models[int(Model::ObjFunc)]->insertColumns(0, 2);
-  ui->objFuncCoeffsTableView->setModel(_models[int(Model::ObjFunc)]);
+  _tableModels[int(ModelType::ObjFunc)]->insertRow(0);
+  _tableModels[int(ModelType::ObjFunc)]->insertColumns(0, 2);
+  ui->objFuncCoeffsTableView->setModel(_tableModels[int(ModelType::ObjFunc)]);
 
-  _models[int(Model::Constrs)]->insertRows(0, 2);
-  _models[int(Model::Constrs)]->insertColumns(0, 2);
-  ui->constrsCoeffsTableView->setModel(_models[int(Model::Constrs)]);
+  _tableModels[int(ModelType::Constrs)]->insertRows(0, 2);
+  _tableModels[int(ModelType::Constrs)]->insertColumns(0, 2);
+  ui->constrsCoeffsTableView->setModel(_tableModels[int(ModelType::Constrs)]);
 
-  _models[int(Model::RHS)]->insertRows(0, 2);
-  _models[int(Model::RHS)]->insertColumn(0);
-  ui->constrsRHSTableView->setModel(_models[int(Model::RHS)]);
+  _tableModels[int(ModelType::RHS)]->insertRows(0, 2);
+  _tableModels[int(ModelType::RHS)]->insertColumn(0);
+  ui->constrsRHSTableView->setModel(_tableModels[int(ModelType::RHS)]);
 
-  _clearModelsContents();
-  _setTablesHeaders();
-  _updateTableViewsDelegates();
+  clearModelsContents();
+  setTablesHeaders();
+  updateTableViewsDelegates();
 }
 
-void MainWindow::_deleteWindowContents()
+void MainWindow::deleteWindowContents()
 {
-  for (int i = 0; i < _modelsCount; ++i)
+  for (int i(0); i < _tableModelsCount; ++i)
   {
     delete _realNumericDelegates[i];
     delete _ratNumericDelegates[i];
-    delete _models[i];
+    delete _tableModels[i];
   }
 }
 
-void MainWindow::_clearModelsContents()
+void MainWindow::clearModelsContents()
 {
-  for (int i = 0; i < _modelsCount; ++i)
+  for (int i(0); i < _tableModelsCount; ++i)
   {
-    _models[i]->clear(QStringLiteral("0"));
+    _tableModels[i]->clear(QStringLiteral("0"));
   }
 }
 
-void MainWindow::_setTablesHeaders()
+void MainWindow::setTablesHeaders()
 {
-  _models[int(Model::ObjFunc)]->setHeaderData(0, Qt::Vertical, QStringLiteral("C"));
-  _models[int(Model::RHS)]->setHeaderData(0, Qt::Horizontal, QStringLiteral("B"));
+  _tableModels[int(ModelType::ObjFunc)]->setHeaderData(0, Qt::Vertical, QStringLiteral("C"));
+  _tableModels[int(ModelType::RHS)]->setHeaderData(0, Qt::Horizontal, QStringLiteral("B"));
 }
 
-void MainWindow::_updateTableViewsDelegates()
+void MainWindow::updateTableViewsDelegates()
 {
-  switch (_field)
+  switch (_currentField)
   {
     case Field::Real:
       qDebug() << "MainWindow::_updateTableViewsDelegates: switching mode to \"Real\"";
-        ui->objFuncCoeffsTableView->setItemDelegate(_realNumericDelegates[int(Model::ObjFunc)]);
-        ui->constrsCoeffsTableView->setItemDelegate(_realNumericDelegates[int(Model::Constrs)]);
-        ui->constrsRHSTableView->setItemDelegate(_realNumericDelegates[int(Model::RHS)]);
+        ui->objFuncCoeffsTableView->setItemDelegate(_realNumericDelegates[int(ModelType::ObjFunc)]);
+        ui->constrsCoeffsTableView->setItemDelegate(_realNumericDelegates[int(ModelType::Constrs)]);
+        ui->constrsRHSTableView->setItemDelegate(_realNumericDelegates[int(ModelType::RHS)]);
       break;
     case Field::Rational:
       qDebug() << "MainWindow::_updateTableViewsDelegates: switching mode to \"Rational\"";
-        ui->objFuncCoeffsTableView->setItemDelegate(_ratNumericDelegates[int(Model::ObjFunc)]);
-        ui->constrsCoeffsTableView->setItemDelegate(_ratNumericDelegates[int(Model::Constrs)]);
-        ui->constrsRHSTableView->setItemDelegate(_ratNumericDelegates[int(Model::RHS)]);
+        ui->objFuncCoeffsTableView->setItemDelegate(_ratNumericDelegates[int(ModelType::ObjFunc)]);
+        ui->constrsCoeffsTableView->setItemDelegate(_ratNumericDelegates[int(ModelType::Constrs)]);
+        ui->constrsRHSTableView->setItemDelegate(_ratNumericDelegates[int(ModelType::RHS)]);
       break;
     default:
-      qDebug() << "MainWindow::_updateTableViewsDelegates: unknown mode";
+      qWarning() << "MainWindow::_updateTableViewsDelegates: unknown mode";
       break;
   }
 }
 
-DialogResult MainWindow::_loadData(const QString& fileName)
+OperationResult MainWindow::loadData(const QString& fileName)
 {
   if (!fileName.isEmpty())
   {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) {
-      qWarning("MainWindow::_loadData: couldn't open file");
+      qWarning() << QStringLiteral("MainWindow::_loadData: couldn't open file") << fileName;
 
-      return DialogResult::Fail;
+      return OperationResult::Nothing;
     }
     else
     {
-      const QByteArray byteArray = file.readAll();
-      const QJsonDocument jsonDocument(QJsonDocument::fromJson(byteArray));
-      TableModelStorage tableModelStorage;
-      tableModelStorage.read(jsonDocument.object());
-      file.flush();
-      file.close();
-
-      if (tableModelStorage.length() == _modelsCount)
+      const QByteArray byteArray(file.readAll());
+      if (byteArray.count() > 0)
       {
-        for (int i = 0; i < _modelsCount; ++i)
+        const QJsonDocument jsonDocument(QJsonDocument::fromJson(byteArray));
+        TableModelStorage tableModelStorage;
+        const OperationResult res(tableModelStorage.read(jsonDocument.object()));
+        file.flush();
+        file.close();
+
+        if (res == OperationResult::Success)
         {
-          *_models[i] = tableModelStorage.valueAt(i);
+          if (tableModelStorage.count() == _tableModelsCount)
+          {
+            for (int i(0); i < _tableModelsCount; ++i)
+            {
+              (*_tableModels[i]) = std::move(tableModelStorage[i]); //Transfer contents...
+              (*_tableModels[i]).setParent(this); //...and change ownerhsip
+            }
+            setTablesHeaders();
+
+            ui->constrsSpinBox->setValue(_tableModels[int(ModelType::Constrs)]->rowCount());
+            ui->varsSpinBox->setValue(_tableModels[int(ModelType::Constrs)]->columnCount());
+
+            _currentField = tableModelStorage.field();
+            switch (_currentField)
+            {
+              case Field::Real:
+                ui->realRadioButton->setChecked(true);
+                break;
+              case Field::Rational:
+                ui->rationalRadioButton->setChecked(true);
+                break;
+              default:
+                qWarning() << "MainWindow::_loadData: unknown value of `Field'.";
+                return OperationResult::Fail;
+            }
+
+            return OperationResult::Success;
+          }
+          else
+          {
+            return OperationResult::Nothing;
+          }
         }
-        _setTablesHeaders();
-
-        ui->constrsSpinBox->setValue(tableModelStorage.valueAt(int(Model::Constrs)).rowCount());
-        ui->coeffsSpinBox->setValue(tableModelStorage.valueAt(int(Model::Constrs)).columnCount());
-
-        _field = tableModelStorage.field();
-        switch (_field)
+        else
         {
-          case Field::Real:
-            ui->realRadioButton->setChecked(true);
-            break;
-          case Field::Rational:
-            ui->rationalRadioButton->setChecked(true);
-            break;
-          default:
-            qDebug() << "MainWindow::_loadData: unknown mode";
-            break;
-        }
+          qWarning() << "MainWindow::_loadData: couldn't correctly parse file contents:"
+                        " the file is either incompatible or invalid.";
 
-        return DialogResult::Success;
+          return res;
+        }
       }
       else
       {
-        return DialogResult::Fail;
+        qWarning() << "MainWindow::_loadData: couldn't read file contents:"
+                      " the file is empty.";
+
+        return OperationResult::Nothing;
       }
     }
   }
   else
   {
-    return DialogResult::Nothing;
+    return OperationResult::Nothing;
   }
 }
 
-DialogResult MainWindow::_saveData(const QString& fileName)
+OperationResult MainWindow::saveData(const QString& fileName)
 {
   if (!fileName.isEmpty())
   {
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly)) {
-      qWarning("MainWindow::_saveData: couldn't save file.");
+      qWarning() << QStringLiteral("MainWindow::_saveData: couldn't save file to") << fileName;
 
-      return DialogResult::Fail;
+      return OperationResult::Nothing;
     }
     else
     {
       QJsonObject jsonObject;
-      const QVector<TableModel> models{*_models[int(Model::ObjFunc)], *_models[int(Model::Constrs)], *_models[int(Model::RHS)]}; //TODO: ~
-      TableModelStorage tableModelStorage(models, _field);
-      tableModelStorage.write(jsonObject);
-      const QJsonDocument jsonDocument(jsonObject);
-      file.write(jsonDocument.toJson());
-      file.flush();
-      file.close();
+      //TODO: ~? Use pointers here
+      TableModelStorage tableModelStorage(
+        QVector<TableModel>{
+          (*_tableModels[int(ModelType::ObjFunc)]),
+          (*_tableModels[int(ModelType::Constrs)]),
+          (*_tableModels[int(ModelType::RHS)])
+        },
+        _currentField
+      );
+      const OperationResult res(tableModelStorage.write(jsonObject));
 
-      return DialogResult::Success;
+      if (res == OperationResult::Success)
+      {
+        const QJsonDocument jsonDocument(jsonObject);
+
+        const qint64 bytesCount(file.write(jsonDocument.toJson(QJsonDocument::Indented)));
+        file.flush();
+        file.close();
+        if (bytesCount == -1)
+        {
+          return OperationResult::Fail;
+        }
+        else
+        {
+          return OperationResult::Success;
+        }
+      }
+      else
+      {
+        return res;
+      }
     }
   }
   else
   {
-    return DialogResult::Nothing;
+    return OperationResult::Nothing;
   }
 }
 
@@ -239,7 +283,7 @@ void MainWindow::on_customPlot_selectionChangedByUser()
     ui->customPlot->yAxis->setSelectedParts(QCPAxis::spAxis | QCPAxis::spTickLabels);
   }
 
-  for (int i = 0; i < ui->customPlot->plottableCount(); ++i)
+  for (int i(0); i < ui->customPlot->plottableCount(); ++i)
   {
     QCPAbstractPlottable* const plottable = ui->customPlot->plottable(i);
     QCPPlottableLegendItem* const item = ui->customPlot->legend->itemWithPlottable(plottable);
@@ -291,38 +335,38 @@ void MainWindow::on_customPlot_mouseWheel()
 
 void MainWindow::on_constrsSpinBox_valueChanged(int arg1)
 {
-  int oldRowsCount = _models[int(Model::Constrs)]->rowCount();
-  int colsCount = _models[int(Model::Constrs)]->columnCount();
+  int oldRowsCount(_tableModels[int(ModelType::Constrs)]->rowCount());
+  int colsCount(_tableModels[int(ModelType::Constrs)]->columnCount());
 
-  _models[int(Model::Constrs)]->resize(arg1, 0);
-  _models[int(Model::Constrs)]->clear(oldRowsCount, 0, arg1, colsCount, QStringLiteral("0"));
+  _tableModels[int(ModelType::Constrs)]->resize(arg1, 0);
+  _tableModels[int(ModelType::Constrs)]->clear(oldRowsCount, 0, arg1, colsCount, QStringLiteral("0"));
 
-  _models[int(Model::RHS)]->resize(arg1, 0);
-  _models[int(Model::RHS)]->clear(oldRowsCount, 0, arg1, 1, QStringLiteral("0"));
+  _tableModels[int(ModelType::RHS)]->resize(arg1, 0);
+  _tableModels[int(ModelType::RHS)]->clear(oldRowsCount, 0, arg1, 1, QStringLiteral("0"));
 }
 
-void MainWindow::on_coeffsSpinBox_valueChanged(int arg1)
+void MainWindow::on_varsSpinBox_valueChanged(int arg1)
 {
-    int oldColumnsCount = _models[int(Model::Constrs)]->columnCount();
-    int rowsCount = _models[int(Model::Constrs)]->rowCount();
+  int oldColsCount(_tableModels[int(ModelType::Constrs)]->columnCount());
+  int rowsCount(_tableModels[int(ModelType::Constrs)]->rowCount());
 
-  _models[int(Model::Constrs)]->resize(0, arg1);
-  _models[int(Model::Constrs)]->clear(0, oldColumnsCount, rowsCount, arg1, QStringLiteral("0"));
+  _tableModels[int(ModelType::Constrs)]->resize(0, arg1);
+  _tableModels[int(ModelType::Constrs)]->clear(0, oldColsCount, rowsCount, arg1, QStringLiteral("0"));
 
-  _models[int(Model::ObjFunc)]->resize(0, arg1);
-  _models[int(Model::ObjFunc)]->clear(0, oldColumnsCount, 1, arg1, QStringLiteral("0"));
+  _tableModels[int(ModelType::ObjFunc)]->resize(0, arg1);
+  _tableModels[int(ModelType::ObjFunc)]->clear(0, oldColsCount, 1, arg1, QStringLiteral("0"));
 }
 
 void MainWindow::on_realRadioButton_toggled(bool checked)
 {
   if (checked)
   {
-    _field = Field::Real;
-    for (int i = 0; i < _modelsCount; ++i)
+    _currentField = Field::Real;
+    for (int i(0); i < _tableModelsCount; ++i)
     {
-      convertTableModel<real_t, rational_t>(_models[i]);
+      TableModelUtils::convertTableModel<Real, Rational>(_tableModels[i]);
     }
-    _updateTableViewsDelegates();
+    updateTableViewsDelegates();
   }
 }
 
@@ -330,34 +374,36 @@ void MainWindow::on_rationalRadioButton_toggled(bool checked)
 {
   if (checked)
   {
-    _field = Field::Rational;
-    for (int i = 0; i < _modelsCount; ++i)
+    _currentField = Field::Rational;
+    for (int i(0); i < _tableModelsCount; ++i)
     {
-      convertTableModel<rational_t, real_t>(_models[i]);
+      TableModelUtils::convertTableModel<Rational, Real>(_tableModels[i]);
     }
-    _updateTableViewsDelegates();
+    updateTableViewsDelegates();
   }
 }
 
 void MainWindow::on_action_Open_triggered()
 {
-  QString fileName = QFileDialog::getOpenFileName(
-    this,
-    QStringLiteral("Open Data File"),
-    QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/data.json",
-    QStringLiteral("JSON files (*.json);;Text files (*.txt)"),
-    0,
-    QFileDialog::DontUseNativeDialog
+  QString fileName(
+    QFileDialog::getOpenFileName(
+      this,
+      QStringLiteral("Open Data File"),
+      QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/data.json",
+      QStringLiteral("JSON files (*.json);;Text files (*.txt)"),
+      0,
+      QFileDialog::DontUseNativeDialog
+    )
   );
 
-  auto result = _loadData(fileName);
+  OperationResult result(loadData(fileName));
   switch (result)
   {
-    case DialogResult::Success:
+    case OperationResult::Success:
       setWindowFilePath(fileName);
       setWindowModified(true); //TODO: ~
       break;
-    case DialogResult::Fail:
+    case OperationResult::Fail:
       QMessageBox::critical(
         this,
         "File Reading Error",
@@ -365,36 +411,38 @@ void MainWindow::on_action_Open_triggered()
       );
       break;
     default:
-    case DialogResult::Nothing:
+    case OperationResult::Nothing:
       break;
   }
 }
 
 void MainWindow::on_action_Save_as_triggered()
 {
-  QString fileName = QFileDialog::getSaveFileName(
-    this,
-    QStringLiteral("Save Data File As..."),
-    QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) +
-    QString("/data@%1.json").arg(QDateTime::currentDateTime().toString(QStringLiteral("dMMMyy_h-m-s"))),
-    QStringLiteral("JSON files (*.json);;Text files (*.txt)"),
-    0,
-    QFileDialog::DontUseNativeDialog
+  QString fileName(
+      QFileDialog::getSaveFileName(
+        this,
+        QStringLiteral("Save Data File As..."),
+        QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) +
+        QString("/data@%1.json").arg(QDateTime::currentDateTime().toString(QStringLiteral("dMMMyy_h-m-s"))),
+        QStringLiteral("JSON files (*.json);;Text files (*.txt)"),
+        0,
+        QFileDialog::DontUseNativeDialog
+      )
   );
 
-  auto result = _saveData(fileName);
+  OperationResult result(saveData(fileName));
   switch (result)
   {
-    case DialogResult::Success:
+    case OperationResult::Success:
       setWindowModified(false);
       break;
-    case DialogResult::Fail:
+    case OperationResult::Fail:
       QMessageBox::critical(
         this,
         "File Writing Error",
         "Could not save file to the selected location."
       );
-    case DialogResult::Nothing:
+    case OperationResult::Nothing:
     default:
       break;
   }
@@ -417,14 +465,14 @@ void MainWindow::on_action_Redo_triggered()
 
 void MainWindow::on_action_Clear_triggered()
 {
-  _clearModelsContents();
+  clearModelsContents();
 }
 
 void MainWindow::on_action_Fill_w_random_numbers_triggered()
 {
-  TableModelUtils::fillTableModel(_models[int(Model::ObjFunc)], TableModelUtils::FillMethod::Random);
-  TableModelUtils::fillTableModel(_models[int(Model::Constrs)], TableModelUtils::FillMethod::Random);
-  TableModelUtils::fillTableModel(_models[int(Model::RHS)], TableModelUtils::FillMethod::Random);
+  TableModelUtils::fillTableModel(_tableModels[int(ModelType::ObjFunc)], TableModelUtils::FillMethod::Random);
+  TableModelUtils::fillTableModel(_tableModels[int(ModelType::Constrs)], TableModelUtils::FillMethod::Random);
+  TableModelUtils::fillTableModel(_tableModels[int(ModelType::RHS)], TableModelUtils::FillMethod::Random);
 }
 
 void MainWindow::on_action_Zoom_in_triggered()
@@ -453,7 +501,7 @@ void MainWindow::on_action_About_triggered()
     this,
     QStringLiteral("About Application..."),
     QStringLiteral(
-      "<b>Linear Optimization v. 0.0.1</b>"
+      "<h3><b>Linear Optimization v. 0.0.1</b></h3>"
       "<br><br>"
       "Copyright (c) 2015 Alexey Gorishny (<a href=\"http://www.0x414c.tk\">Homepage</a>)"
       "<br><br>"
@@ -461,8 +509,8 @@ void MainWindow::on_action_About_triggered()
       "<br><br>"
       "This software uses:"
       "<ul>"
-      "<li><a href=\"http://www.qt.io\">Qt (v. 5.5.0)</a></li>"
-      "<li><a href=\"http://eigen.tuxfamily.org\">Eigen (v. 3.2.6)</a></li>"
+      "<li><a href=\"http://www.qt.io\">Qt (v. 5.5.1)</a></li>"
+      "<li><a href=\"http://eigen.tuxfamily.org\">Eigen (v. 3.2.7)</a></li>"
       "<li><a href=\"http://www.qcustomplot.com\">QCustomPlot (v. 1.3.1)</a></li>"
       "<li><a href=\"http://www.boost.org\">Boost (v. 1.59.0)</a></li>"
       "<li><a href=\"http://cppformat.github.io\">C++ Format (v. 1.1.0)</a></li>"
@@ -492,37 +540,57 @@ void MainWindow::on_action_About_Qt_triggered()
 
 void MainWindow::on_clearPushButton_clicked()
 {
-  _clearModelsContents();
+  clearModelsContents();
 }
 
 void MainWindow::on_plotPushButton_clicked()
 {
-  switch (_field)
+  switch (_currentField)
   {
     case Field::Real:
       {
-        Matrix<real_t, 1, Dynamic> objFuncCoeffs = getRowVector<real_t>(_models[int(Model::ObjFunc)]);
-        Matrix<real_t, Dynamic, Dynamic> constrsCoeffs = getMatrix<real_t>(_models[int(Model::Constrs)]);
-        Matrix<real_t, Dynamic, 1> constrsRHS = getColumnVector<real_t>(_models[int(Model::RHS)]);
+        Matrix<Real, 1, Dynamic> objFuncCoeffs(TableModelUtils::getRowVector<Real>(_tableModels[int(ModelType::ObjFunc)]));
+        Matrix<Real, Dynamic, Dynamic> constrsCoeffs(TableModelUtils::getMatrix<Real>(_tableModels[int(ModelType::Constrs)]));
+        Matrix<Real, Dynamic, 1> constrsRHS(TableModelUtils::getColumnVector<Real>(_tableModels[int(ModelType::RHS)]));
 
-        LinearProgramData<real_t> linearProgramData(objFuncCoeffs, constrsCoeffs, constrsRHS);
-        GraphicalSolver2D<real_t> graphicalSolver2D(linearProgramData);
-        optional<PlotData2D> plotData2D = graphicalSolver2D.solve();
+        LinearProgramData<Real> linearProgramData(objFuncCoeffs, constrsCoeffs, constrsRHS);
+        GraphicalSolver2D<Real> graphicalSolver2D(linearProgramData);
+        optional<PlotData2D> plotData2D(graphicalSolver2D.solve());
         if (plotData2D)
         {
-          _plotGraph(*plotData2D);
+          plotGraph(*plotData2D);
         }
         else
         {
-          QMessageBox::warning(
-            this,
-            QStringLiteral("Oops..."),
-            QStringLiteral("This linear optimization problem can not be solved by 2D graphical method.")
-          );
+          goto error;
         }
         break;
       }
     case Field::Rational:
+      {
+        Matrix<Rational, 1, Dynamic> objFuncCoeffs(TableModelUtils::getRowVector<Rational>(_tableModels[int(ModelType::ObjFunc)]));
+        Matrix<Rational, Dynamic, Dynamic> constrsCoeffs(TableModelUtils::getMatrix<Rational>(_tableModels[int(ModelType::Constrs)]));
+        Matrix<Rational, Dynamic, 1> constrsRHS(TableModelUtils::getColumnVector<Rational>(_tableModels[int(ModelType::RHS)]));
+
+        LinearProgramData<Rational> linearProgramData(objFuncCoeffs, constrsCoeffs, constrsRHS);
+        GraphicalSolver2D<Rational> graphicalSolver2D(linearProgramData);
+        optional<PlotData2D> plotData2D(graphicalSolver2D.solve());
+        if (plotData2D)
+        {
+          plotGraph(*plotData2D);
+        }
+        else
+        {
+          goto error;
+        }
+        break;
+      }
+    error:
+      QMessageBox::warning(
+        this,
+        QStringLiteral("Oops..."),
+        QStringLiteral("This linear optimization problem can not be solved by 2D graphical method.")
+      );
       break;
     default:
       break;
@@ -531,33 +599,114 @@ void MainWindow::on_plotPushButton_clicked()
 
 void MainWindow::on_startPushButton_clicked()
 {
-  //TODO: !
-  _runSolver();
+  switch (_currentField)
+  {
+    case Field::Real:
+      {
+        Matrix<Real, 1, Dynamic> objFuncCoeffs(
+          TableModelUtils::getRowVector<Real>(_tableModels[int(ModelType::ObjFunc)])
+        );
+        Matrix<Real, Dynamic, Dynamic> constrsCoeffs(
+          TableModelUtils::getMatrix<Real>(_tableModels[int(ModelType::Constrs)])
+        );
+        Matrix<Real, Dynamic, 1> constrsRHS(
+          TableModelUtils::getColumnVector<Real>(_tableModels[int(ModelType::RHS)])
+        );
+
+        LinearProgramData<Real> linearProgramData(objFuncCoeffs, constrsCoeffs, constrsRHS);
+        _realSolver->setLinearProgramData(linearProgramData);
+        optional<LinearProgramSolution<Real>> linearProgramSolution(_realSolver->solve());
+
+        if (linearProgramSolution)
+        {
+          LOG("{0}=>{1}", (*linearProgramSolution).extremePoint,
+              (*linearProgramSolution).extremeValue);
+        }
+        else
+        {
+          goto error;
+        }
+        break;
+      }
+    case Field::Rational:
+      {
+        Matrix<Rational, 1, Dynamic> objFuncCoeffs =
+            TableModelUtils::getRowVector<Rational>(_tableModels[int(ModelType::ObjFunc)]);
+        Matrix<Rational, Dynamic, Dynamic> constrsCoeffs =
+            TableModelUtils::getMatrix<Rational>(_tableModels[int(ModelType::Constrs)]);
+        Matrix<Rational, Dynamic, 1> constrsRHS =
+            TableModelUtils::getColumnVector<Rational>(_tableModels[int(ModelType::RHS)]);
+
+        LinearProgramData<Rational> linearProgramData(objFuncCoeffs, constrsCoeffs, constrsRHS);
+        _rationalSolver->setLinearProgramData(linearProgramData);
+        optional<LinearProgramSolution<Rational>> linearProgramSolution = _rationalSolver->solve();
+
+        if (linearProgramSolution)
+        {
+          LOG("{0}=>{1}", (*linearProgramSolution).extremePoint,
+              (*linearProgramSolution).extremeValue);
+        }
+        else
+        {
+          goto error;
+        }
+        break;
+      }
+    error:
+      QMessageBox::warning(
+        this,
+        QStringLiteral("Oops..."),
+        QStringLiteral("This linear optimization problem can not be solved by simplex method.")
+      );
+      break;
+    default:
+      break;
+  }
 }
 
 [[deprecated("To be removed in release version!")]]
 void MainWindow::on_testPushButton_clicked()
 {
-//  _loadData(QStringLiteral("data4.json"));
-  _loadData(QStringLiteral("data3+.json"));
-
-  real_t pi =   3.141'592'653'589'793'238'46;
-  real_t sq_2 = 1.414'213'562'373'095'048'80;
-  real_t e =    2.718'281'828'459'045'235'36;
-  for (int exp = 0; exp < 17; ++exp)
   {
-    real_t tol = pow(.1, exp);
-    auto rat_1 = rationalize<int32_t>(sq_2, tol);
-    cerr << exp << "=>" << tol << "==>" << rat_1.first << "/" << rat_1.second << ";\t\t" <<
-            endl << std::flush;
+//    _loadData(QStringLiteral("data4.json"));
+//    loadData(QStringLiteral("data3+.json"));
+    loadData(QStringLiteral("data5.json"));
+  }
+
+  {
+//    real_t pi(3.141'592'653'589'793'238'46);
+//    real_t sq_2(1.414'213'562'373'095'048'80);
+//    real_t e(2.718'281'828'459'045'235'36);
+//    for (int exp(0); exp < 17; ++exp)
+//    {
+//      real_t tol(pow(.1, exp));
+//      auto rat_1 = MathUtils::rationalize<int32_t>(sq_2, tol);
+//      cerr << exp << "=>" << tol << "==>" << rat_1.first << "/" << rat_1.second << ";\t\t" <<
+//              endl << std::flush;
+//    }
+  }
+
+  {
+//    Matrix<Real, Dynamic, Dynamic> m(TableModelUtils::getMatrix<Real>(_models[int(Model::Constrs)]));
+//    Matrix<Real, Dynamic, Dynamic> m(3, 4);
+//    m << 0, 2, -1, -4, 2, 3, -1, -11, -2, 0, -3, 22;
+//    m << 1, 2, -1, -4, 2, 3, -1, -11, -2, 0, -3, 22;
+//    Matrix<Real, 2, 2> m(2, 2);
+//    m << 3.7, -8.3, 2.3, -7.2;
+//    auto rref(reducedRowEchelonForm<Real>(m));
+//    LOG("M=\n{0}\nA=\n{1}\nP=\n{2}\n",
+//      m.format(MathematicaFormat),
+//      rref.first.format(MathematicaFormat),
+//      rref.second.format(MathematicaFormat)
+//    );
   }
 }
 
-void MainWindow::_runSolver() {
-  _realSolver->solve(); //TODO: !
+void MainWindow::runSolver() {
+  //TODO: !
 }
 
-void MainWindow::_setupCustomPlot(QCustomPlot* const customPlot)
+void MainWindow::setupCustomPlot(QCustomPlot* const customPlot)
 {
   customPlot->clearFocus();
   customPlot->clearGraphs();
@@ -605,26 +754,34 @@ void MainWindow::_setupCustomPlot(QCustomPlot* const customPlot)
 }
 
 [[deprecated("Needs refactoring.")]]
-void MainWindow::_plotGraph(const PlotData2D& plotData2D) {
+void MainWindow::plotGraph(const PlotData2D& plotData2D) {
   auto const customPlot = ui->customPlot;
-  _setupCustomPlot(customPlot);
+  setupCustomPlot(customPlot);
 
-  const QVector<QColor> plotColors{Qt::red, Qt::green, Qt::blue, Qt::cyan, Qt::magenta, Qt::yellow};
-  const int colorsCount = plotColors.length();
-  const QFont normalFont(font().family(), 9);
+  const QVector<QColor> plotColors{
+    Qt::red, Qt::green, Qt::blue,
+    Qt::cyan, Qt::magenta, Qt::yellow
+  };
+  const int colorsCount(plotColors.length());
+//  const QFont normalFont(font().family(), 9);
   const QFont boldFont(font().family(), 9, QFont::Bold);
-  const int verticesCount = plotData2D.vertices.length();
+  const int verticesCount(plotData2D.vertices.length());
+
+  if (verticesCount == 0)
+  {
+    return;
+  }
 
   //Add heatmap for obj. func. values
 //  QCPColorMap* colorMap = new QCPColorMap(customPlot->xAxis, customPlot->yAxis);
-//  int nx = 2;
-//  int ny = 2;
+//  int nx(2);
+//  int ny(2);
 //  colorMap->data()->setSize(nx, ny);
 //  colorMap->data()->setRange(QCPRange(0, 4), QCPRange(0, 3));
 //  double x, y, z;
-//  for (int xIdx = 0; xIdx < nx; ++xIdx)
+//  for (int xIdx(0); xIdx < nx; ++xIdx)
 //  {
-//    for (int yIdx = 0; yIdx <ny; ++yIdx)
+//    for (int yIdx(0); yIdx <ny; ++yIdx)
 //    {
 //      colorMap->data()->cellToCoord(xIdx, yIdx, &x, &y);
 //      z = -xIdx * yIdx;
@@ -655,8 +812,8 @@ void MainWindow::_plotGraph(const PlotData2D& plotData2D) {
 
   //Add feasible region
   QCPCurve* const feasibleRegionCurve = new QCPCurve(customPlot->xAxis, customPlot->yAxis);
-  QVector<real_t> x1(verticesCount + 1), y1(verticesCount + 1);
-  for (int i = 0; i < verticesCount; ++i)
+  QVector<Real> x1(verticesCount + 1), y1(verticesCount + 1);
+  for (int i(0); i < verticesCount; ++i)
   {
     x1[i] = plotData2D.vertices[i].x();
     y1[i] = plotData2D.vertices[i].y();
@@ -674,7 +831,7 @@ void MainWindow::_plotGraph(const PlotData2D& plotData2D) {
   customPlot->addPlottable(feasibleRegionCurve);
 
   //Add constraints
-  for (int i = 0; i < verticesCount; ++i) {
+  for (int i(0); i < verticesCount; ++i) {
     //Constraint as infinite line
     QCPItemStraightLine* const constraintAsContiniousLine = new QCPItemStraightLine(customPlot);
     constraintAsContiniousLine->setPen(QPen(Qt::gray));
@@ -684,16 +841,16 @@ void MainWindow::_plotGraph(const PlotData2D& plotData2D) {
     customPlot->addItem(constraintAsContiniousLine);
 
     //Constraint as feasible region edge
-    QVector<real_t> x(2), y(2); //add edge data
+    QVector<Real> x(2), y(2); //add edge data
     x[0] = plotData2D.vertices[i].x();
     x[1] = plotData2D.vertices[(i + 1) % verticesCount].x();
     y[0] = plotData2D.vertices[i].y();
     y[1] = plotData2D.vertices[(i + 1) % verticesCount].y();
     customPlot->addGraph(); //create graph and assign data to it
     customPlot->graph(i)->setData(x, y);
-    auto defaultColor = plotColors[i % colorsCount]; //set graph look
-//    auto brushColor = defaultColor; brushColor.setAlphaF(.25);
-//    auto selectedBrushColor = brushColor; selectedBrushColor.setAlphaF(.125);
+    auto defaultColor(plotColors[i % colorsCount]); //set graph look
+//    auto brushColor(defaultColor); brushColor.setAlphaF(.25);
+//    auto selectedBrushColor(brushColor); selectedBrushColor.setAlphaF(.125);
     customPlot->graph(i)->setPen(QPen(defaultColor));
 //    customPlot->graph(i)->setBrush(QBrush(brushColor));
     customPlot->graph(i)->setSelectedPen(QPen(QBrush(defaultColor), 2.5));
@@ -742,7 +899,7 @@ void MainWindow::_plotGraph(const PlotData2D& plotData2D) {
 
   //...w/ label
   QCPItemText* const objFuncGradientVectorArrowText = new QCPItemText(customPlot);
-  Qt::AlignmentFlag vertAlignment = plotData2D.gradient.p2().y() >= 0. ? Qt::AlignBottom : Qt::AlignTop;
+  Qt::AlignmentFlag vertAlignment(plotData2D.gradient.p2().y() >= 0. ? Qt::AlignBottom : Qt::AlignTop);
   objFuncGradientVectorArrowText->setPositionAlignment(vertAlignment | Qt::AlignHCenter);
   objFuncGradientVectorArrowText->position->setParentAnchor(objFuncGradientVectorArrow->end);
 //  objFuncGradientVectorArrowText->position->setType(QCPItemPosition::ptPlotCoords);

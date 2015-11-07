@@ -3,13 +3,18 @@
 
 #include "mathutils.hxx"
 
+#include <cmath>
+
+#include <algorithm>
 #include <limits>
 #include <utility>
 
 #include <QDebug>
 
+#include "numerictypes.hxx"
 #include "../misc/utils.hxx"
 
+using namespace NumericTypes;
 using namespace std;
 using namespace Utils;
 
@@ -18,73 +23,75 @@ namespace MathUtils
   template<typename R>
   /**
    * @brief MathUtils::rationalize
-   * Finds the "best" rational approximation of the given real number
-   * within the given constraints (Relative Error and Maximal Denominator)
+   * Finds the "best" rational approximation of the given real number `x'
+   * within the given constraints (Relative Error (Tolerance) and Maximal Denominator)
    * by using Continued Fractions method.
    * For the reference see `http://mathworld.wolfram.com/ContinuedFraction.html'.
-   * @param x
-   * @param tolerance
-   * @param maxIterations
-   * @param maxDenominator
-   * @return
+   * @param x Number to approximate.
+   * @param tolerance Tolerance value (default is `1E-16').
+   * @param maxIterations Maximum iterations count allowed.
+   * @param maxDenominator Maximum denominator value.
+   * @return Pair 〈p; q〉 where `p' / `q' ≈ `x' and `q' < `maxDenominator'.
    */
-  pair<R, R> rationalize(real_t x, real_t tolerance, uint16_t maxIterations, R maxDenominator)
+  pair<R, R>
+  rationalize(Real x, Real tolerance, uint16_t maxIterations, R maxDenominator)
   {
     static_assert(
       numeric_limits<R>::is_integer,
       "MathUtils::rationalize<R>: R should be a primitive integer type!"
     );
 
-    real_t r0 = x; //See eq. (8)
-    real_t integerPart = floor(r0);
+    Real r0(x); //See eq. (8)
+    Real integerPart(floor(r0));
 
-    if (integerPart > real_t(numeric_limits<R>::max())) //Check for upper overflow
+    if (integerPart > Real(numeric_limits<R>::max())) //Check for upper overflow
     {
-      qDebug() << "MathUtils::rationalize<R>: overflow at upper bound of R";
+      qDebug() << "MathUtils::rationalize<R>: overflow at the upper bound of R";
 
       return make_pair(numeric_limits<R>::max(), 1);
     }
     else
     {
-      if (integerPart < real_t(numeric_limits<R>::min())) //Check for lower overflow
+      if (integerPart < Real(numeric_limits<R>::min())) //Check for lower overflow
       {
-        qDebug() << "MathUtils::rationalize<R>: overflow at lower bound of R";
+        qDebug() << "MathUtils::rationalize<R>: overflow at the lower bound of R";
 
         return make_pair(numeric_limits<R>::min(), 1);
       }
       else //Now we can safely cast ⌊r0⌋ to R
       {
-        R a0 = R(integerPart); //See eq. (5)
+        R a0(integerPart); //See eq. (5)
 
-        if (fabs(r0 - a0) <= tolerance * fabs(r0)) //If we got "almost integer" `x', we should return `〈a_0; 1〉'
+        if (fabs(r0 - a0) <= tolerance * fabs(r0)) //If we got "almost integer" `x',
+                                                   //we should return `〈a_0; 1〉'
                                                    //(or the loop will stuck at division by 0.)
         {
           return make_pair(a0, 1);
         }
         else
         {
-          R p0 = 1,  q0 = 0; //See eq. (25), (26)
-          R p1 = a0, q1 = 1; //we use only p[0] and p[1] as starting coeffs
-          R pn = 0,  qn = 1; //p[n] (where n==2) will be the scratch place
-                             //(we will "shift" and reuse the coeffs rather than storing they all)
+          R p0(1),  q0(0); //See eq. (25), (26)
+          R p1(a0), q1(1); //we use only p[0] and p[1] as starting coeffs
+          R pn(0),  qn(1); //p[n] (where n==2) will be the scratch place
+                           //(we will "shift" and reuse the coeffs rather than storing they all)
 
-          uint16_t iterCount = 0;
+          uint16_t iterCount(0);
           while (true)
           {
-            real_t rn = 1. / (r0 - a0); //See eq. (9)
-            R a_n = R(floor(rn)); //See eq. (10)
-            pn = a_n * p1 + p0; //See eq. (27), (28)
-            qn = a_n * q1 + q0;
+            Real rn(Real(1.) / Real(r0 - a0)); //See eq. (9)
+            R an(floor(rn)); //See eq. (10)
+            pn = an * p1 + p0; //See eq. (27), (28)
+            qn = an * q1 + q0;
 
-            real_t cn = real_t(pn) / real_t(qn); //Look at the n-th convergent
+            Real cn(Real(pn) / Real(qn)); //Look at the n-th convergent
             if (++iterCount <= maxIterations &&
                 fabs(x - cn) > tolerance * fabs(x) &&
                 qn < maxDenominator
             )
             {
-              p0 = p1; q0 = q1; //Now "shift" the coeffs to the left
+              p0 = p1; q0 = q1; //Now "shift" all the coeffs to the left
               p1 = pn; q1 = qn;
-              a0 = a_n;
+              a0 = an;
               r0 = rn;
             }
             else
@@ -95,12 +102,9 @@ namespace MathUtils
 
           if (iterCount > maxIterations)
           {
-            qDebug() << "MathUtils::rationalize<R>: iterations limit exceeded: iterCount==" << iterCount << ">" << maxIterations << "; tolerance==" << tolerance;
+            qDebug() << "MathUtils::rationalize<R>: iterations limit exceeded: iterCount==" << iterCount <<
+                        ">" << maxIterations << "; tolerance==" << tolerance;
           }
-//          else
-//          {
-//            qDebug() << "MathUtils::rationalize<R>: iterations total:" << iterCount;
-//          }
 
           if (qn <= maxDenominator)
           {
@@ -114,6 +118,132 @@ namespace MathUtils
         }
       }
     }
+  }
+
+  template<>
+  /**
+   * @brief absoluteValue
+   * @param x
+   * @return |x|.
+   */
+  inline Real absoluteValue(Real x)
+  {
+    return Real(fabs(double(x)));
+  }
+
+  template<>
+  /**
+   * @brief absoluteValue
+   * @param x
+   * @return |x|.
+   */
+  inline Rational absoluteValue(Rational x)
+  {
+    return ((x < Rational(0)) ? -x : x);
+  }
+
+  template<>
+  /**
+   * @brief isEqualToZero
+   * @param x
+   * @return `true' if `x' ⩰ 0, `false' otherwise.
+   */
+  inline bool isEqualToZero(Real x)
+  {
+    return (
+      absoluteValue<Real>(x)
+      <=
+      Epsilon * max<Real>(Real(1.), absoluteValue<Real>(x))
+    );
+  }
+
+  template<>
+  /**
+   * @brief isEqualToZero
+   * @param x
+   * @return `true' if `x' ⩵ 0, `false' otherwise.
+   */
+  inline bool isEqualToZero(Rational x)
+  {
+    return (x.numerator() == Integer(0));
+  }
+
+  template<>
+  /**
+   * @brief isGreaterThanZero
+   * @param x
+   * @return `true' if `x' ≳ 0, `false' otherwise.
+   */
+  inline bool isGreaterThanZero(Real x)
+  {
+    return (
+      x
+      >
+      Epsilon * max<Real>(Real(1.), absoluteValue<Real>(x))
+    );
+  }
+
+  template<>
+  /**
+   * @brief isGreaterThanZero
+   * @param x
+   * @return `true' if `x' > 0, `false' otherwise.
+   */
+  inline bool isGreaterThanZero(Rational x)
+  {
+    return (x > Rational(0));
+  }
+
+  template<>
+  /**
+   * @brief isLessThanZero
+   * @param x
+   * @return `true' if `x' ≲ 0, `false' otherwise.
+   */
+  inline bool isLessThanZero(Real x)
+  {
+    return (
+      x
+      <
+      (-Epsilon) * max<Real>(Real(1.), absoluteValue<Real>(x))
+    );
+  }
+
+  template<>
+  /**
+   * @brief isLessThanZero
+   * @param x
+   * @return `true' if `x' < 0, `false' otherwise.
+   */
+  inline bool isLessThanZero(Rational x)
+  {
+    return (x < Rational(0));
+  }
+
+  template<>
+  /**
+   * @brief isGreaterOrEqualToZero
+   * @param x
+   * @return `true' if `x' >= 0, `false' otherwise.
+   */
+  inline bool isGreaterOrEqualToZero(Real x)
+  {
+    return (
+      x
+      >=
+      Epsilon * max<Real>(Real(1.), absoluteValue<Real>(x))
+    );
+  }
+
+  template<>
+  /**
+   * @brief isGreaterOrEqualToZero
+   * @param x
+   * @return `true' if `x' >= 0, `false' otherwise.
+   */
+  inline bool isGreaterOrEqualToZero(Rational x)
+  {
+    return (x >= Rational(0));
   }
 }
 

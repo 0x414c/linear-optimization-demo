@@ -1,3 +1,4 @@
 ﻿#include "ijsonserializable.hxx"
 
-IJsonSerializable::~IJsonSerializable() {}
+IJsonSerializable::~IJsonSerializable()
+{ }

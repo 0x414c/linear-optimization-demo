@@ -1,12 +1,11 @@
 ﻿#include "tablemodelutils.hxx"
 
+#include <functional>
 #include <string>
 #include <random>
 
 #include <QDebug>
 #include <QString>
-
-#include <functional>
 
 #include "tablemodel.hxx"
 
@@ -18,23 +17,32 @@ namespace TableModelUtils
   {
     if (tableModel != nullptr)
     {
-      minstd_rand rand;
-      uniform_real_distribution<double> dist(-10, 10);
-      int startIdx = 0;
+      minstd_rand rand(1337);
+      uniform_real_distribution<double> dist(-10., 10.);
+      int startIdx(0);
       tableModel->clear();
-      for (int row = 0; row < tableModel->rowCount(); ++row)
+      for (int row(0); row < tableModel->rowCount(); ++row)
       {
-        for (int col = 0; col < tableModel->columnCount(); ++col)
+        for (int col(0); col < tableModel->columnCount(); ++col)
         {
           switch (fillMethod) {
             case FillMethod::Zeroes:
-              tableModel->setData(tableModel->index(row, col), QString("%1").arg(0));
+              tableModel->setData(
+                tableModel->index(row, col),
+                QString("%1").arg(0)
+              );
               break;
             case FillMethod::Random:
-              tableModel->setData(tableModel->index(row, col), QString("%1").arg(dist(rand)));
+              tableModel->setData(
+                tableModel->index(row, col),
+                QString("%1").arg(dist(rand))
+              );
               break;
             case FillMethod::Sequential:
-              tableModel->setData(tableModel->index(row, col), QString("%1").arg(++startIdx));
+              tableModel->setData(
+                tableModel->index(row, col),
+                QString("%1").arg(startIdx++)
+              );
               break;
             default:
               break;
@@ -52,26 +60,28 @@ namespace TableModelUtils
     }
   }
 
-  bool fillTableModel(TableModel* const tableModel, const function<QVariant(const QVariant&)>& callback)
+  bool fillTableModel(TableModel* const tableModel,
+                      const function<QVariant(const QVariant&)>& callback)
   {
     if (tableModel != nullptr)
     {
       if (callback)
       {
-        for (int row = 0; row < tableModel->rowCount(); ++row)
+        for (int row(0); row < tableModel->rowCount(); ++row)
         {
-          for (int col = 0; col < tableModel->columnCount(); ++col)
+          for (int col(0); col < tableModel->columnCount(); ++col)
           {
-            auto index = tableModel->index(row, col);
-            auto data = tableModel->data(index);
+            const QModelIndex index(tableModel->index(row, col));
+            const QVariant data(tableModel->data(index));
             if (data != QStringLiteral(""))
             {
-              auto value = callback(data);
+              const QVariant value(callback(data));
               tableModel->setData(index, value);
             }
             else
             {
-              qDebug() << "TableModelUtils::fill: nothing to convert at index (" << row << ";" << col << ")";
+              qDebug() << "TableModelUtils::fill: nothing to convert at index (" <<
+                          row << ";" << col << ")";
             }
           }
         }

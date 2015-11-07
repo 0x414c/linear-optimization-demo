@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <utility>
 
 #include <QDebug>
 #include <QLocale>
@@ -14,75 +15,78 @@
 
 #include "utils.hxx"
 #include "../math/mathutils.hxx"
+#include "../math/numerictypes.hxx"
 
 using namespace std;
 using namespace MathUtils;
+using namespace NumericTypes;
 using namespace Utils;
 
 namespace DataConvertors
 {
   template<>
-  inline real_t numericCast<real_t, real_t>(const real_t& from)
+  inline Real numericCast<Real, Real>(const Real& from)
   {
-//    qDebug() << "DataConvertors::numericCast<real_t, real_t>: converted"
+//    qDebug() << "DataConvertors::numericCast<Real, Real>: converted"
 //             << from << "=>" << from;
 
     return from;
   }
 
   template<>
-  inline rational_t numericCast<rational_t, rational_t>(const rational_t& from)
+  inline Rational numericCast<Rational, Rational>(const Rational& from)
   {
-//    qDebug() << "DataConvertors::numericCast<rational_t, rational_t>: converted"
-//             << from.numerator() << "/" << from.denominator() << "=>" << from.numerator() << "/" << from.denominator();
+//    qDebug() << "DataConvertors::numericCast<Rational, Rational>: converted"
+//             << from.numerator() << "/" << from.denominator() << "=>"
+//             << from.numerator() << "/" << from.denominator();
 
     return from;
   }
 
   template<>
-  inline real_t numericCast<real_t, rational_t>(const rational_t& from)
+  inline Real numericCast<Real, Rational>(const Rational& from)
   {
-    real_t value = real_t(from.numerator()) / real_t(from.denominator());
+    Real value(Real(from.numerator()) / Real(from.denominator()));
 
-//    qDebug() << "DataConvertors::numericCast<real_t, rational_t>: converted"
+//    qDebug() << "DataConvertors::numericCast<Real, Rational>: converted"
 //             << from.numerator() << "/" << from.denominator() << "=>" << value;
 
     return value;
   }
 
   template<>
-  inline rational_t numericCast<rational_t, real_t>(const real_t& from)
+  inline Rational numericCast<Rational, Real>(const Real& from)
   {
-    auto rationalized = rationalize<integer_t>(from);
+    pair<Integer, Integer> rationalized = rationalize<Integer>(from);
 
-//    qDebug() << "DataConvertors::numericCast<rational_t, real_t>: converted"
+//    qDebug() << "DataConvertors::numericCast<Rational, Real>: converted"
 //             << from << "=>" << rationalized.first << "/" << rationalized.second;
 
-    return rational_t(rationalized.first, rationalized.second);
+    return Rational(rationalized.first, rationalized.second);
   }
 
   template<>
-  inline QString numericCast<QString, real_t>(const real_t& from)
+  inline QString numericCast<QString, Real>(const Real& from)
   {
-    QString value = QString("%1").arg(from);
+    QString value(QString("%1").arg(from));
 
-//    qDebug() << "DataConvertors::numericCast<QString, real_t>: converted"
+//    qDebug() << "DataConvertors::numericCast<QString, Real>: converted"
 //             << from << "=>" << value;
 
     return value;
   }
 
   template<>
-  inline QString numericCast<QString, rational_t>(const rational_t& from)
+  inline QString numericCast<QString, Rational>(const Rational& from)
   {
-    QString value;
-    if (from.denominator() == 1)
+    QString value; //TODO: ~ Remove assignment, just construct-and-return
+    if (from.denominator() == Integer(1))
     {
       value = QString("%1").arg(from.numerator());
     }
     else
     {
-      if (from.numerator() == 0)
+      if (from.numerator() == Integer(0))
       {
         value = QStringLiteral("0");
       }
@@ -92,26 +96,28 @@ namespace DataConvertors
       }
     }
 
-//    qDebug() << "DataConvertors::numericCast<QString, rational_t>: converted"
+//    qDebug() << "DataConvertors::numericCast<QString, Rational>: converted"
 //             << from.numerator() << "/" << from.denominator() << "=>" << value;
 
     return value;
   }
 
   template<>
-  inline real_t numericCast<real_t>(const QString& from)
+  inline Real numericCast<Real>(const QString& from)
   {
-    bool ok = false;
+    bool isOk(false);
     QLocale cLocale(QLocale::C);
-    real_t value = cLocale.toDouble(from, &ok);
-    if (!ok) {
-      qWarning(QString("DataConvertors::numericCast<real_t>: could not convert '%1'").arg(from).toLatin1().data()); //TODO: ~? Possible crash here
+    Real value(cLocale.toDouble(from, &isOk));
+    if (!isOk) {
+      qWarning() <<
+        QString("DataConvertors::numericCast<Real>: could not convert '%1'").
+        arg(from).toLatin1().data(); //TODO: ~? Possible crash here
 
-      return numeric_limits<double>::lowest();
+      return numeric_limits<Real>::lowest();
     }
     else
     {
-//      qDebug() << "DataConvertors::numericCast<real_t>: converted"
+//      qDebug() << "DataConvertors::numericCast<Real>: converted"
 //               << from << "=>" << value;
 
       return value;
@@ -119,19 +125,21 @@ namespace DataConvertors
   }
 
   template<>
-  inline integer_t numericCast<integer_t>(const QString& from)
+  inline Integer numericCast<Integer>(const QString& from)
   {
-    bool ok = false;
+    bool isOk(false);
     QLocale cLocale(QLocale::C);
-    integer_t value = cLocale.toLongLong(from, &ok);
-    if (!ok) {
-      qWarning(QString("DataConvertors::numericCast<integer_t>: could not convert '%1'").arg(from).toLatin1().data()); //TODO: ~? The same as above
+    Integer value(cLocale.toLongLong(from, &isOk));
+    if (!isOk) {
+      qWarning() <<
+        QString("DataConvertors::numericCast<Integer>: could not convert '%1'").
+        arg(from).toLatin1().data(); //TODO: ~? The same as above
 
-      return numeric_limits<integer_t>::lowest();
+      return numeric_limits<Integer>::lowest();
     }
     else
     {
-//      qDebug() << "DataConvertors::numericCast<integer_t>: converted"
+//      qDebug() << "DataConvertors::numericCast<Integer>: converted"
 //      << from << "=>" << value;
 
       return value;
@@ -139,26 +147,26 @@ namespace DataConvertors
   }
 
   template<>
-  inline rational_t numericCast<rational_t>(const QString& from)
+  inline Rational numericCast<Rational>(const QString& from)
   {
-    //We assume that the input string `from'
-    //was already validated
-    //and no zero denominator can appear in input,
-    //so this regexp `re' can be simpler
-    //(than the one contained in corresponding validator)
+    //We assume that the input string `from' was
+    //already validated and no zero denominator
+    //can appear in the input string, so this regexp
+    //`re' can be simpler
+    //(than the one contained in corresponding validator).
     QRegExp re(QStringLiteral("^([-+]?[0-9]+)(?:\\/([0-9]*))?$"));
-    int idx = re.indexIn(from);
+    int idx(re.indexIn(from));
     if (idx > -1) {
-      QString numCapture = re.cap(1);
-      QString denCapture = re.cap(2);
+      QString numCapture(re.cap(1));
+      QString denCapture(re.cap(2));
 
-      integer_t numValue = numericCast<integer_t>(numCapture);
-      integer_t denValue = 1;
+      Integer numValue(numericCast<Integer>(numCapture));
+      Integer denValue(1);
       if (denCapture != QStringLiteral(""))
       {
-        denValue = numericCast<integer_t>(denCapture);
+        denValue = numericCast<Integer>(denCapture);
       }
-      rational_t value(numValue, denValue);
+      Rational value(numValue, denValue);
 
 //      qDebug() << "DataConvertors::numericCast<rat_t>: converted"
 //      << from << "=>" << numValue << "/" << denValue;
@@ -169,7 +177,7 @@ namespace DataConvertors
     {
       qDebug() << "DataConvertors::numericCast<rat_t>: could not convert" << from;
 
-      rational_t value(numeric_limits<integer_t>::lowest());
+      Rational value(numeric_limits<Integer>::lowest());
 
       return value;
     }

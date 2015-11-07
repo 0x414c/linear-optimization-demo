@@ -3,13 +3,16 @@
 
 #include <QJsonObject>
 
+#include "utils.hxx"
+
 class IJsonSerializable
 {
   public:
-    virtual ~IJsonSerializable() = 0;
+    virtual Utils::OperationResult read(const QJsonObject& jsonObject) = 0;
+    virtual Utils::OperationResult write(QJsonObject& jsonObject) const = 0;
 
-    virtual void read(const QJsonObject& json) = 0;
-    virtual void write(QJsonObject& json) const = 0;
+  protected:
+    virtual ~IJsonSerializable() = 0;
 };
 
 #endif // IJSONSERIALIZABLE_HXX

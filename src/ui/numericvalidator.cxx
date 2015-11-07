@@ -4,7 +4,8 @@
 #include <QString>
 
 NumericValidator::NumericValidator(QObject* parent) :
-  QValidator(parent) {}
+  QValidator(parent)
+{ }
 
 //Just example usage of `QValidator::validate'
 QValidator::State NumericValidator::validate(QString& input, int& pos) const
@@ -14,10 +15,10 @@ QValidator::State NumericValidator::validate(QString& input, int& pos) const
   }
   else
   {
-    bool b = false;
-    int val = input.toInt(&b);
+    bool isOk(false);
+    int val(input.toInt(&isOk));
 
-    if ((b == true) && (val > 0) && (val < 100))
+    if ((isOk == true) && (val > 0) && (val < 100))
     {
       return Acceptable;
     }

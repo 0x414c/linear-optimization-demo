@@ -3,22 +3,27 @@
 
 #include "eigen3/Eigen/Dense"
 
+#include "../math/numerictypes.hxx"
 #include "../misc/utils.hxx"
 
-using namespace Utils;
 using namespace Eigen;
+using namespace NumericTypes;
+using namespace Utils;
 
-template<typename T = real_t>
+template<typename T = Real>
 struct LinearProgramData
 {
-  LinearProgramData();
-  LinearProgramData(const Matrix<T, 1, Dynamic>& objFuncCoeffs,
-                    const Matrix<T, Dynamic, Dynamic>& constraintsCoeffs,
+  LinearProgramData()/* = delete*/;
+  LinearProgramData(const Matrix<T, 1, Dynamic>& objectiveFunctionCoefficients,
+                    const Matrix<T, Dynamic, Dynamic>& constraintsCoefficients,
                     const Matrix<T, Dynamic, 1>& constraintsRHS);
 
-  Matrix<T, 1, Dynamic> objFuncCoeffs;
-  Matrix<T, Dynamic, Dynamic> constraintsCoeffs;
-  Matrix<T, Dynamic, 1> constraintsRHS;
+  DenseIndex constraintsCount() const;
+  DenseIndex variablesCount() const;
+
+  Matrix<T, 1, Dynamic> objectiveFunctionCoefficients/* = Matrix<T, 1, Dynamic>::Zero(1, 1)*/;
+  Matrix<T, Dynamic, Dynamic> constraintsCoefficients/* = Matrix<T, Dynamic, Dynamic>::Zero(1, 1)*/;
+  Matrix<T, Dynamic, 1> constraintsRHS/* = Matrix<T, Dynamic, 1>::Zero(1, 1)*/;
 };
 
 #include "linearprogramdata.txx"

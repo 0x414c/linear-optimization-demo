@@ -33,7 +33,7 @@
         </sizepolicy>
        </property>
        <property name="title">
-        <string>Linear Program Data (in canonical form where Ax=b, x≥(0) and F(x)=(c,x)→min):</string>
+        <string>Linear Program Data (in canonical form where Ax=b, x≥(0), b≥(0) and F(x)=(c,x)→min):</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_11">
         <item row="0" column="0">
@@ -254,7 +254,7 @@
                   </widget>
                  </item>
                  <item row="1" column="0">
-                  <widget class="QLabel" name="coeffsLabel">
+                  <widget class="QLabel" name="varsLabel">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
                      <horstretch>0</horstretch>
@@ -262,12 +262,12 @@
                     </sizepolicy>
                    </property>
                    <property name="text">
-                    <string>Coefficients (n):</string>
+                    <string>Variables (n):</string>
                    </property>
                   </widget>
                  </item>
                  <item row="1" column="1">
-                  <widget class="QSpinBox" name="coeffsSpinBox">
+                  <widget class="QSpinBox" name="varsSpinBox">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>

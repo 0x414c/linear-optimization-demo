@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorCodeStyle>
-<!-- Written by QtCreator 3.5.0, 2015-10-16T23:57:08. -->
+<!-- Written by QtCreator 3.5.0, 2015-10-30T20:20:31. -->
 <qtcreator>
  <data>
   <variable>CodeStyleData</variable>
@@ -29,7 +29,7 @@
    <value type="bool" key="IndentSwitchLabels">true</value>
    <value type="int" key="PaddingMode">2</value>
    <value type="bool" key="SpacesForTabs">true</value>
-   <value type="int" key="TabSize">4</value>
+   <value type="int" key="TabSize">2</value>
   </valuemap>
  </data>
  <data>

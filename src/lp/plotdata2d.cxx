@@ -9,11 +9,17 @@
 
 using namespace Utils;
 
-PlotData2D::PlotData2D(ResultType resultType,
-                       const QPointF& extremeVertex,
-                       qreal extremumValue,
+PlotData2D::PlotData2D()
+{ }
+
+PlotData2D::PlotData2D(SolutionType resultType,
+                       const QPointF& extremePoint,
+                       qreal extremeValue,
                        const QVector<QPointF>& vertices,
                        const QLineF& gradient) :
-  resultType(resultType), extremeVertex(extremeVertex),
-  extremeValue(extremumValue), vertices(vertices),
-  gradient(gradient) {}
+  resultType(resultType),
+  extremeVertex(extremePoint),
+  extremeValue(extremeValue),
+  vertices(vertices),
+  gradient(gradient)
+{ }

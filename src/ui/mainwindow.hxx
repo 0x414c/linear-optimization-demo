@@ -15,8 +15,10 @@
 #include "../lp/dantzignumericsolver.hxx"
 #include "../lp/inumericsolver.hxx"
 #include "../lp/plotdata2d.hxx"
+#include "../math/numerictypes.hxx"
 #include "../misc/utils.hxx"
 
+using namespace NumericTypes;
 using namespace std;
 using namespace Utils;
 
@@ -35,7 +37,7 @@ class MainWindow : public QMainWindow
 
   private slots:
     void on_constrsSpinBox_valueChanged(int arg1);
-    void on_coeffsSpinBox_valueChanged(int arg1);
+    void on_varsSpinBox_valueChanged(int arg1);
 
     void on_realRadioButton_toggled(bool checked);
     void on_rationalRadioButton_toggled(bool checked);
@@ -69,30 +71,32 @@ class MainWindow : public QMainWindow
   private:
     Ui::MainWindow* ui;
 
-    const int _modelsCount = 3;
-    enum struct Model : int { ObjFunc = 0, Constrs = 1, RHS = 2 };
+    const int _tableModelsCount = 3;
+    enum struct ModelType : int { ObjFunc = 0, Constrs = 1, RHS = 2 };
 
-    Field _field = Field::Real;
-    QVector<TableModel*> _models;
-    QVector<NumericStyledItemDelegate<real_t>*> _realNumericDelegates;
-    QVector<NumericStyledItemDelegate<rational_t>*> _ratNumericDelegates;
+    Field _currentField = Field::Real;
+    QVector<TableModel*> _tableModels;
+    QVector<NumericStyledItemDelegate<Real>*> _realNumericDelegates;
+    QVector<NumericStyledItemDelegate<Rational>*> _ratNumericDelegates;
 
-    unique_ptr<DantzigNumericSolver<real_t>> _realSolver = make_unique<DantzigNumericSolver<real_t>>();
-    unique_ptr<DantzigNumericSolver<rational_t>> _ratSolver = make_unique<DantzigNumericSolver<rational_t>>();
+    unique_ptr<DantzigNumericSolver<Real>> _realSolver =
+        make_unique<DantzigNumericSolver<Real>>();
+    unique_ptr<DantzigNumericSolver<Rational>> _rationalSolver =
+        make_unique<DantzigNumericSolver<Rational>>();
 
-    DialogResult _loadData(const QString& fileName);
-    DialogResult _saveData(const QString& fileName);
+    OperationResult loadData(const QString& fileName);
+    OperationResult saveData(const QString& fileName);
 
-    void _initializeWindowContents();
-    void _deleteWindowContents();
+    void initializeWindowContents();
+    void deleteWindowContents();
 
-    void _clearModelsContents();
-    void _setTablesHeaders();
-    void _updateTableViewsDelegates();
-    void _setupCustomPlot(QCustomPlot* const customPlot);
+    void clearModelsContents();
+    void setTablesHeaders();
+    void updateTableViewsDelegates();
+    void setupCustomPlot(QCustomPlot* const customPlot);
 
-    void _runSolver();
-    void _plotGraph(const PlotData2D& plotData2D);
+    void runSolver();
+    void plotGraph(const PlotData2D& plotData2D);
 };
 
 #endif // MAINWINDOW_HXX

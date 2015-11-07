@@ -9,12 +9,15 @@
 #include <QStyleOptionViewItem>
 #include <QWidget>
 
+#include "../math/numerictypes.hxx"
 #include "../misc/utils.hxx"
 
+using namespace NumericTypes;
 using namespace Utils;
 
 //HACK: This shim makes `moc' happy about templated classes
-class StyledItemDelegate : public QStyledItemDelegate
+class StyledItemDelegate :
+  public QStyledItemDelegate
 {
   Q_OBJECT
 
@@ -22,21 +25,30 @@ class StyledItemDelegate : public QStyledItemDelegate
     explicit StyledItemDelegate(QObject* parent = 0);
 };
 
-template<typename T = real_t>
-class NumericStyledItemDelegate : public StyledItemDelegate
+template<typename T = Real>
+class NumericStyledItemDelegate :
+  public StyledItemDelegate
 {
   public:
     explicit NumericStyledItemDelegate(QObject* parent = 0);
 
-    virtual QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option,
+    virtual QWidget* createEditor(QWidget* parent,
+                                  const QStyleOptionViewItem& option,
                                   const QModelIndex& index) const override;
 
-    virtual void setEditorData(QWidget* editor, const QModelIndex& index) const override;
-    virtual void setModelData(QWidget* editor, QAbstractItemModel* model,
+    virtual void setEditorData(QWidget* editor,
+                               const QModelIndex& index) const override;
+
+    virtual void setModelData(QWidget* editor,
+                              QAbstractItemModel* model,
                               const QModelIndex& index) const override;
 
-//    virtual void updateEditorGeometry(QWidget* editor, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
-//    virtual QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override;
+    virtual void updateEditorGeometry(QWidget* editor,
+                                      const QStyleOptionViewItem& option,
+                                      const QModelIndex& index) const override;
+
+//    virtual QSize sizeHint(const QStyleOptionViewItem& option,
+//                           const QModelIndex& index) const override;
 };
 
 #include "numericstyleditemdelegate.txx"

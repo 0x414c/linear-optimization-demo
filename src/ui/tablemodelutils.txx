@@ -13,7 +13,7 @@ using namespace Utils;
 namespace TableModelUtils
 {
   template<>
-  inline bool convertTableModel<real_t, rational_t>(TableModel* const tableModel)
+  inline bool convertTableModel<Real, Rational>(TableModel* const tableModel)
   {
     if (tableModel != nullptr)
     {
@@ -22,8 +22,8 @@ namespace TableModelUtils
         [](const QVariant& value)
         {
           return numericCast<QString>(
-            numericCast<real_t>(
-              numericCast<rational_t>(value.toString())
+            numericCast<Real>(
+              numericCast<Rational>(value.toString())
             )
           );
         }
@@ -40,7 +40,7 @@ namespace TableModelUtils
   }
 
   template<>
-  inline bool convertTableModel<rational_t, real_t>(TableModel* const tableModel)
+  inline bool convertTableModel<Rational, Real>(TableModel* const tableModel)
   {
     if (tableModel != nullptr)
     {
@@ -49,8 +49,8 @@ namespace TableModelUtils
         [](const QVariant& value)
         {
           return numericCast<QString>(
-            numericCast<rational_t>(
-              numericCast<real_t>(value.toString())
+            numericCast<Rational>(
+              numericCast<Real>(value.toString())
             )
           );
         }

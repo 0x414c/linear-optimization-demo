@@ -7,31 +7,36 @@
 #include <QVector>
 
 #include "tablemodel.hxx"
+#include "../math/numerictypes.hxx"
 #include "../misc/ijsonserializable.hxx"
 #include "../misc/utils.hxx"
 
+using namespace NumericTypes;
 using namespace Utils;
 
-class TableModelStorage : public IJsonSerializable
+class TableModelStorage :
+  virtual public IJsonSerializable
 {
   public:
     TableModelStorage();
-    explicit TableModelStorage(const QVector<TableModel>& values, Field field = Field::Real);
+    explicit TableModelStorage(const QVector<TableModel>& items, Field field = Field::Real);
 
-    QVector<TableModel>& items();
-    const TableModel& valueAt(int idx) const;
-    int length() const;
+    TableModel& operator [](int idx);
+
+    const QVector<TableModel>& items();
+    const TableModel& at(int idx) const;
+    int count() const;
 
     Field field() const;
     QString metadata() const;
 
-    virtual void read(const QJsonObject& json) override;
-    virtual void write(QJsonObject& json) const override;
+    virtual OperationResult read(const QJsonObject& jsonObject) override;
+    virtual OperationResult write(QJsonObject& jsonObject) const override;
 
   private:
     const QString _metadataHeader = QStringLiteral("1;");
-    QVector<TableModel> _values;
-    Field _field;
+    QVector<TableModel> _items = QVector<TableModel>(0);
+    Field _field = Field::Real;
 };
 
 #endif // TABLEMODELSTORAGE_HXX

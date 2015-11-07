@@ -9,21 +9,23 @@
 namespace LinearProgramUtils
 {
   /**
-   * @brief sortClockwise
-   * @param points
+   * @brief sortPointsClockwise
+   * Sorts given 2-D point in the clockwise order
+   * using polar coordinates.
+   * @param points Points vector to sort.
    */
-  void sortClockwise(QVector<QPointF>& points)
+  void sortPointsClockwise(QVector<QPointF>& points)
   {
     QPointF centroid(0., 0.);
-    for (int i = 0; i < points.length(); ++i)
+    for (int i(0); i < points.length(); ++i)
     {
       centroid += points[i];
     }
     centroid /= points.length(); //Find a center point
 
-    //Convert to polar coords on-the-fly
-    //and use the polar angles (relative to centroid) to sort
-    //all the vertices clockwise
+    //Convert to polar coords on-the-fly and
+    //use the polar angles (relative to centroid) to sort
+    //all the vertices clockwise.
     std::sort(
       points.begin(),
       points.end(),

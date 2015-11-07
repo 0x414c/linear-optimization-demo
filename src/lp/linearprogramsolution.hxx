@@ -4,28 +4,41 @@
 #include "eigen3/Eigen/Dense"
 
 #include "../misc/utils.hxx"
+#include "../math/numerictypes.hxx"
 
 using namespace Eigen;
+using namespace NumericTypes;
 using namespace Utils;
 
 /**
- * @brief The ResultType enum
+ * @brief The SolutionType enum
+ * TODO: ~ Move to its own namespace
  */
-enum struct ResultType : int { Unknown = 1, Inconsistent = 2, Unbounded = 4, Optimal = 8 };
+enum struct SolutionType : int
+{
+  Optimal = 0,
+  Unbounded = 1,
+  Incomplete = 2,
+  Inconsistent = 4,
+  Unknown = 8
+};
 
-template<typename T = real_t>
+template<typename T = Real>
 /**
  * @brief The Solution struct
  */
-struct Solution
+struct LinearProgramSolution
 {
-    Solution() = delete;
-    Solution(ResultType resultType, const Matrix<T, 1, Dynamic>& extremeVertex, const T& extremeValue) :
-      resultType(resultType), extremeVertex(extremeVertex), extremeValue(extremeValue) {}
+  LinearProgramSolution()/* = delete*/;
+  LinearProgramSolution(SolutionType resultType,
+                        const Matrix<T, 1, Dynamic>& extremePoint,
+                        const T& extremeValue);
 
-    ResultType resultType;
-    Matrix<T, 1, Dynamic> extremeVertex;
-    T extremeValue;
+  SolutionType resultType = SolutionType::Unknown;
+  Matrix<T, 1, Dynamic> extremePoint/* = Matrix<T, 1, Dynamic>::Zero(1, 1)*/;
+  T extremeValue = T(0);
 };
+
+#include "linearprogramsolution.txx"
 
 #endif // LINEARPROGRAMSOLUTION_HXX

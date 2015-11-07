@@ -8,9 +8,10 @@ QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
-CONFIG += c++14 warn_on
+CONFIG += c++14 warn_on #no_keywords
 
-QMAKE_CXXFLAGS += -m64 -march=sandybridge -msse -msse2 -msse3 \
+QMAKE_CXXFLAGS += -m64 -march=native \
+  -msse -msse2 -msse3 \
   -mfpmath=sse -mieee-fp -malign-double \
   -frounding-math -fsignaling-nans -ffp-contract=off
 
@@ -19,15 +20,17 @@ TARGET = LinearOptimization
 TEMPLATE = app
 
 CONFIG(release, debug|release) {
-  DEFINES += QT_NO_DEBUG_OUTPUT
+  DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_INFO_OUTPUT #QT_NO_WARNING_OUTPUT
 }
 
-DEFINES += EIGEN_MPL2_ONLY
+DEFINES += EIGEN_MPL2_ONLY __WITH_DEBUG_LOG__
 
 INCLUDEPATH += $$PWD/lib/boost \
+  $$PWD/lib/cppformat \
   $$PWD/lib/eigen \
-  $$PWD/lib/qcustomplot \
-  $$PWD/lib/cppformat
+  $$PWD/lib/qcustomplot
+
+LIBS += -L$$PWD/lib/cppformat/cppformat/build -lformat
 
 SOURCES += src/main.cxx \
   lib/qcustomplot/qcustomplot/qcustomplot.cpp \
@@ -56,16 +59,23 @@ HEADERS += src/ui/mainwindow.hxx \
   src/lp/graphicalsolver2d.hxx \
   src/lp/graphicalsolver2d.txx \
   src/lp/inumericsolver.hxx \
+  src/lp/inumericsolver.txx \
   src/lp/linearfunction.hxx \
   src/lp/linearprogramdata.hxx \
   src/lp/linearprogramdata.txx \
   src/lp/linearprogramsolution.hxx \
+  src/lp/linearprogramsolution.txx \
   src/lp/linearprogramutils.hxx \
+  src/lp/linearprogramutils.txx \
   src/lp/plotdata2d.hxx \
   src/math/mathutils.hxx \
   src/math/mathutils.txx \
+  src/math/numerictypes.hxx \
+  src/math/numerictypes.txx \
+  src/misc/boostextensions.hxx \
   src/misc/dataconvertors.hxx \
   src/misc/dataconvertors.txx \
+  src/misc/eigenextensions.hxx \
   src/misc/ijsonserializable.hxx \
   src/misc/utils.hxx \
   src/ui/numericstyleditemdelegate.hxx \

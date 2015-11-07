@@ -3,4 +3,6 @@
 #include <QObject>
 #include <QStyledItemDelegate>
 
-StyledItemDelegate::StyledItemDelegate(QObject* parent) : QStyledItemDelegate(parent) {}
+StyledItemDelegate::StyledItemDelegate(QObject* parent) :
+  QStyledItemDelegate(parent)
+{ }

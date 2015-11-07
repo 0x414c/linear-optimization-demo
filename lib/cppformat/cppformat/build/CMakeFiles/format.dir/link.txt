@@ -1,0 +1,2 @@
+C:/msys64/mingw64/bin/ar.exe cq libformat.a  CMakeFiles/format.dir/format.cc.obj CMakeFiles/format.dir/posix.cc.obj
+C:/msys64/mingw64/bin/ranlib.exe libformat.a

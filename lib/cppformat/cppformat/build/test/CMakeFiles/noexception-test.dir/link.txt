@@ -1,0 +1,2 @@
+C:/msys64/mingw64/bin/ar.exe cq libnoexception-test.a  CMakeFiles/noexception-test.dir/__/format.cc.obj
+C:/msys64/mingw64/bin/ranlib.exe libnoexception-test.a

@@ -19,23 +19,29 @@ class TableModelStorage :
 {
   public:
     TableModelStorage();
-    explicit TableModelStorage(const QVector<TableModel>& items, Field field = Field::Real);
+    explicit TableModelStorage(
+      const QVector<SimpleTableModel>& items, Field field = Field::Real
+    );
 
-    TableModel& operator [](int idx);
+    SimpleTableModel& operator [](int idx);
 
-    const QVector<TableModel>& items();
-    const TableModel& at(int idx) const;
     int count() const;
 
+    const QVector<SimpleTableModel>& items();
+
+    const SimpleTableModel& itemAt(int idx) const;
+
     Field field() const;
+
     QString metadata() const;
 
     virtual OperationResult read(const QJsonObject& jsonObject) override;
+
     virtual OperationResult write(QJsonObject& jsonObject) const override;
 
   private:
     const QString _metadataHeader = QStringLiteral("1;");
-    QVector<TableModel> _items = QVector<TableModel>(0);
+    QVector<SimpleTableModel> _items = QVector<SimpleTableModel>(0);
     Field _field = Field::Real;
 };
 

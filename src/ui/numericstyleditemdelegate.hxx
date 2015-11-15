@@ -15,7 +15,7 @@
 using namespace NumericTypes;
 using namespace Utils;
 
-//HACK: This shim makes `moc' happy about templated classes
+//HACK: This shim only makes `moc' happy about templated classes.
 class StyledItemDelegate :
   public QStyledItemDelegate
 {
@@ -27,28 +27,32 @@ class StyledItemDelegate :
 
 template<typename T = Real>
 class NumericStyledItemDelegate :
-  public StyledItemDelegate
+  public virtual StyledItemDelegate
 {
   public:
     explicit NumericStyledItemDelegate(QObject* parent = 0);
 
-    virtual QWidget* createEditor(QWidget* parent,
-                                  const QStyleOptionViewItem& option,
-                                  const QModelIndex& index) const override;
+    virtual QWidget* createEditor(
+      QWidget* parent, const QStyleOptionViewItem& option,
+      const QModelIndex& index
+    ) const override;
 
-    virtual void setEditorData(QWidget* editor,
-                               const QModelIndex& index) const override;
+    virtual void setEditorData(
+      QWidget* editor, const QModelIndex& index
+    ) const override;
 
-    virtual void setModelData(QWidget* editor,
-                              QAbstractItemModel* model,
-                              const QModelIndex& index) const override;
+    virtual void setModelData(
+      QWidget* editor, QAbstractItemModel* model, const QModelIndex& index
+    ) const override;
 
-    virtual void updateEditorGeometry(QWidget* editor,
-                                      const QStyleOptionViewItem& option,
-                                      const QModelIndex& index) const override;
+    virtual void updateEditorGeometry(
+      QWidget* editor, const QStyleOptionViewItem& option,
+      const QModelIndex& index
+    ) const override;
 
-//    virtual QSize sizeHint(const QStyleOptionViewItem& option,
-//                           const QModelIndex& index) const override;
+//    virtual QSize sizeHint(
+//      const QStyleOptionViewItem& option, const QModelIndex& index
+//    ) const override;
 };
 
 #include "numericstyleditemdelegate.txx"

@@ -7,18 +7,21 @@
 #include "../math/numerictypes.hxx"
 #include "../misc/utils.hxx"
 
-using namespace boost;
-using namespace NumericTypes;
-using namespace Utils;
-
-template<typename T = Real>
-class INumericSolver
+namespace LinearProgramming
 {
-  public:
-    virtual ~INumericSolver() = 0;
+  using namespace boost;
+  using namespace NumericTypes;
+  using namespace Utils;
 
-    virtual optional<LinearProgramSolution<T>> solve() = 0;
-};
+  template<typename T = Real>
+  class INumericSolver
+  {
+    public:
+      virtual ~INumericSolver() = 0;
+
+      virtual optional<LinearProgramSolution<T>> solve() = 0;
+  };
+}
 
 #include "inumericsolver.txx"
 

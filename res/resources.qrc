@@ -28,5 +28,7 @@
         <file>@16/qt_extended_16x16.png</file>
         <file>@16/view-sort-ascending(2).png</file>
         <file>@16/view-sort-descending(2).png</file>
+        <file>@16/x-office-spreadsheet-template.png</file>
+        <file>@16/go-up.png</file>
     </qresource>
 </RCC>

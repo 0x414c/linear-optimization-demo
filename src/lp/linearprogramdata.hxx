@@ -1,30 +1,53 @@
 ﻿#ifndef LINEARPROGRAMDATA_HXX
 #define LINEARPROGRAMDATA_HXX
 
-#include "eigen3/Eigen/Dense"
+#include <stdexcept>
+
+#include "eigen3/Eigen/Core"
 
 #include "../math/numerictypes.hxx"
 #include "../misc/utils.hxx"
 
-using namespace Eigen;
-using namespace NumericTypes;
-using namespace Utils;
-
-template<typename T = Real>
-struct LinearProgramData
+namespace LinearProgramming
 {
-  LinearProgramData()/* = delete*/;
-  LinearProgramData(const Matrix<T, 1, Dynamic>& objectiveFunctionCoefficients,
-                    const Matrix<T, Dynamic, Dynamic>& constraintsCoefficients,
-                    const Matrix<T, Dynamic, 1>& constraintsRHS);
+  using namespace Eigen;
+  using namespace NumericTypes;
+  using namespace Utils;
 
-  DenseIndex constraintsCount() const;
-  DenseIndex variablesCount() const;
+  template<typename T = Real>
+  /**
+   * @brief The LinearProgramData struct
+   */
+  struct LinearProgramData
+  {
+    LinearProgramData()/* = delete*/;
+    LinearProgramData(const LinearProgramData<T>& other);
+    LinearProgramData(LinearProgramData<T>&& other);
+    LinearProgramData(
+      const Matrix<T, 1, Dynamic>& objectiveFuncCoeffs,
+      const Matrix<T, Dynamic, Dynamic>& constraintsCoeffs,
+      const Matrix<T, Dynamic, 1>& constraintsRHS
+    ) throw(invalid_argument);
+    LinearProgramData(
+      Matrix<T, 1, Dynamic>&& objectiveFuncCoeffs,
+      Matrix<T, Dynamic, Dynamic>&& constraintsCoeffs,
+      Matrix<T, Dynamic, 1>&& constraintsRHS
+    ) throw(invalid_argument);
 
-  Matrix<T, 1, Dynamic> objectiveFunctionCoefficients/* = Matrix<T, 1, Dynamic>::Zero(1, 1)*/;
-  Matrix<T, Dynamic, Dynamic> constraintsCoefficients/* = Matrix<T, Dynamic, Dynamic>::Zero(1, 1)*/;
-  Matrix<T, Dynamic, 1> constraintsRHS/* = Matrix<T, Dynamic, 1>::Zero(1, 1)*/;
-};
+    const LinearProgramData<T>& operator =(const LinearProgramData<T>& other);
+    const LinearProgramData<T>& operator =(LinearProgramData<T>&& other);
+
+    DenseIndex constraintsCount() const;
+
+    DenseIndex variablesCount() const;
+
+//    static LinearProgramData<T> make(...);
+
+    Matrix<T, 1, Dynamic> objectiveFuncCoeffs;
+    Matrix<T, Dynamic, Dynamic> constraintsCoeffs;
+    Matrix<T, Dynamic, 1> constraintsRHS;
+  };
+}
 
 #include "linearprogramdata.txx"
 

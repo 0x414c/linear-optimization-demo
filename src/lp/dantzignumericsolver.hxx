@@ -8,59 +8,73 @@
 #include <vector>
 
 #include "boost/optional.hpp"
-#include "eigen3/Eigen/Dense"
+#include "eigen3/Eigen/Core"
 
 #include "inumericsolver.hxx"
 #include "linearprogramdata.hxx"
 #include "linearprogramsolution.hxx"
+#include "simplextableau.hxx"
 #include "../math/numerictypes.hxx"
 #include "../misc/utils.hxx"
+#include "../config.hxx"
 
-using namespace boost;
-using namespace Eigen;
-using namespace NumericTypes;
-using namespace std;
-using namespace Utils;
-
-template<typename T = Real>
-class DantzigNumericSolver :
-  virtual public INumericSolver<T>
+namespace LinearProgramming
 {
-  public:
-    DantzigNumericSolver()/* = delete*/;
-    explicit DantzigNumericSolver(const LinearProgramData<T>& linearProgramData);
+  using namespace boost;
+  using namespace Config::LinearProgramming;
+  using namespace Eigen;
+  using namespace NumericTypes;
+  using namespace std;
+  using namespace Utils;
 
-    virtual optional<LinearProgramSolution<T>> solve() override;
+  template<typename T = Real>
+  class DantzigNumericSolver :
+    virtual public INumericSolver<T>
+  {
+    public:
+      DantzigNumericSolver()/* = delete*/;
+      explicit DantzigNumericSolver(
+        const LinearProgramData<T>& linearProgramData
+      );
+      explicit DantzigNumericSolver(LinearProgramData<T>&& linearProgramData);
 
-    void setLinearProgramData(const LinearProgramData<T>& linearProgramData);
+      void setLinearProgramData(const LinearProgramData<T>& linearProgramData);
+      void setLinearProgramData(LinearProgramData<T>&& linearProgramData);
 
-  private:
-    LinearProgramData<T> _linearProgramData = LinearProgramData<T>();
+      virtual optional<LinearProgramSolution<T>> solve() override;
 
-    uint16_t _iterCount = uint16_t(0);
-    const uint16_t _maxIterations = uint16_t(100); //Increase this if you want to
-                                                   //solve larger-scaled programs
+    private:
+      LinearProgramData<T> _linearProgramData;
 
-    vector<DenseIndex> _freeVars;
-    vector<DenseIndex> _basicVars;
+      uint16_t _iterCount;
 
-    SolutionType optimize(Matrix<T, Dynamic, Dynamic>& tableau);
-    SolutionType iterate(Matrix<T, Dynamic, Dynamic>& tableau);
+      const uint16_t _maxIterations = MaxSimplexIterations;
 
-    void pivotize(Matrix<T, Dynamic, Dynamic>& tableau,
-                  DenseIndex rowIdx, DenseIndex colIdx);
+      SolutionType optimize(SimplexTableau<T>& tableau);
 
-    SolutionType checkPhase1Solution(const Matrix<T, Dynamic, Dynamic>& tableau) const;
-    SolutionType checkPhase2Solution(const Matrix<T, Dynamic, Dynamic>& tableau) const;
+      SolutionType iterate(SimplexTableau<T>& tableau);
 
-    bool isPivotColValid(const Matrix<T, Dynamic, Dynamic>& tableau,
-                         DenseIndex colIdx) const;
+      void pivotize(
+        SimplexTableau<T>& tableau, DenseIndex rowIdx, DenseIndex colIdx
+      );
 
-    optional<DenseIndex> computePivotColIdx(const Matrix<T, Dynamic, Dynamic>& tableau) const;
-    optional<DenseIndex> computePivotRowIdx(const Matrix<T, Dynamic, Dynamic>& tableau,
-                                            DenseIndex pivotColIdx,
-                                            bool forceToLeaveBasis = false) const;
-};
+      SolutionType checkPhase1Solution(const SimplexTableau<T>& tableau) const;
+
+      SolutionType checkPhase2Solution(const SimplexTableau<T>& tableau) const;
+
+      bool isPivotColValid(
+        const SimplexTableau<T>& tableau, DenseIndex colIdx
+      ) const;
+
+      optional<DenseIndex> computePivotColIdx(
+        const SimplexTableau<T>& tableau
+      ) const;
+
+      optional<DenseIndex> computePivotRowIdx(
+        const SimplexTableau<T>& tableau, DenseIndex pivotColIdx
+      ) const;
+  };
+}
 
 #include "dantzignumericsolver.txx"
 

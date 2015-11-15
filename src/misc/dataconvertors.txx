@@ -17,15 +17,16 @@
 #include "../math/mathutils.hxx"
 #include "../math/numerictypes.hxx"
 
-using namespace std;
-using namespace MathUtils;
-using namespace NumericTypes;
-using namespace Utils;
-
 namespace DataConvertors
 {
+  using namespace std;
+  using namespace MathUtils;
+  using namespace NumericTypes;
+  using namespace Utils;
+
   template<>
-  inline Real numericCast<Real, Real>(const Real& from)
+  inline Real
+  numericCast<Real, Real>(const Real& from)
   {
 //    qDebug() << "DataConvertors::numericCast<Real, Real>: converted"
 //             << from << "=>" << from;
@@ -34,7 +35,8 @@ namespace DataConvertors
   }
 
   template<>
-  inline Rational numericCast<Rational, Rational>(const Rational& from)
+  inline Rational
+  numericCast<Rational, Rational>(const Rational& from)
   {
 //    qDebug() << "DataConvertors::numericCast<Rational, Rational>: converted"
 //             << from.numerator() << "/" << from.denominator() << "=>"
@@ -44,7 +46,8 @@ namespace DataConvertors
   }
 
   template<>
-  inline Real numericCast<Real, Rational>(const Rational& from)
+  inline Real
+  numericCast<Real, Rational>(const Rational& from)
   {
     Real value(Real(from.numerator()) / Real(from.denominator()));
 
@@ -55,7 +58,8 @@ namespace DataConvertors
   }
 
   template<>
-  inline Rational numericCast<Rational, Real>(const Real& from)
+  inline Rational
+  numericCast<Rational, Real>(const Real& from)
   {
     pair<Integer, Integer> rationalized = rationalize<Integer>(from);
 
@@ -66,7 +70,8 @@ namespace DataConvertors
   }
 
   template<>
-  inline QString numericCast<QString, Real>(const Real& from)
+  inline QString
+  numericCast<QString, Real>(const Real& from)
   {
     QString value(QString("%1").arg(from));
 
@@ -77,7 +82,8 @@ namespace DataConvertors
   }
 
   template<>
-  inline QString numericCast<QString, Rational>(const Rational& from)
+  inline QString
+  numericCast<QString, Rational>(const Rational& from)
   {
     QString value; //TODO: ~ Remove assignment, just construct-and-return
     if (from.denominator() == Integer(1))
@@ -103,7 +109,8 @@ namespace DataConvertors
   }
 
   template<>
-  inline Real numericCast<Real>(const QString& from)
+  inline Real
+  numericCast<Real>(const QString& from)
   {
     bool isOk(false);
     QLocale cLocale(QLocale::C);
@@ -125,7 +132,8 @@ namespace DataConvertors
   }
 
   template<>
-  inline Integer numericCast<Integer>(const QString& from)
+  inline Integer
+  numericCast<Integer>(const QString& from)
   {
     bool isOk(false);
     QLocale cLocale(QLocale::C);
@@ -147,7 +155,8 @@ namespace DataConvertors
   }
 
   template<>
-  inline Rational numericCast<Rational>(const QString& from)
+  inline Rational
+  numericCast<Rational>(const QString& from)
   {
     //We assume that the input string `from' was
     //already validated and no zero denominator
@@ -175,7 +184,8 @@ namespace DataConvertors
     }
     else
     {
-      qDebug() << "DataConvertors::numericCast<rat_t>: could not convert" << from;
+      qDebug() << "DataConvertors::numericCast<rat_t>:"
+                  " could not convert" << from;
 
       Rational value(numeric_limits<Integer>::lowest());
 

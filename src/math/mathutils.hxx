@@ -6,27 +6,28 @@
 
 #include "numerictypes.hxx"
 #include "../misc/utils.hxx"
-
-using namespace NumericTypes;
-using namespace std;
-using namespace Utils;
+#include "../config.hxx"
 
 namespace MathUtils
 {
-  const Real Epsilon = 1E-16;
+  using namespace Config::MathUtils;
+  using namespace NumericTypes;
+  using namespace std;
+  using namespace Utils;
 
   template<typename R = Integer>
   pair<R, R>
-  rationalize(Real x,
-              Real tolerance = Epsilon,
-              uint16_t maxIterations = 22,
-              R maxDenominator = numeric_limits<R>::max());
+  rationalize(
+    Real x, Real tolerance = Epsilon,
+    uint16_t maxIterations = MaxRationalizeIterations,
+    R maxDenominator = numeric_limits<R>::max()
+  );
 
   template<typename T = Real>
   T absoluteValue(T x)
   {
     static_assert(
-      False<T>::value,
+      AlwaysFalse<T>::value,
       "MathUtils::absoluteValue<T>:"
       " You can only use one of the specified specializations!"
     );
@@ -38,7 +39,7 @@ namespace MathUtils
   bool isEqualToZero(T x)
   {
     static_assert(
-      False<T>::value,
+      AlwaysFalse<T>::value,
       "MathUtils::isEqualToZero<T>:"
       " You can only use one of the specified specializations!"
     );
@@ -50,7 +51,7 @@ namespace MathUtils
   bool isGreaterThanZero(T x)
   {
     static_assert(
-      False<T>::value,
+      AlwaysFalse<T>::value,
       "MathUtils::isGreaterThanZero<T>:"
       " You can only use one of the specified specializations!"
     );
@@ -62,7 +63,7 @@ namespace MathUtils
   bool isLessThanZero(T x)
   {
     static_assert(
-      False<T>::value,
+      AlwaysFalse<T>::value,
       "MathUtils::isLessThanZero<T>:"
       " You can only use one of the specified specializations!"
     );
@@ -74,7 +75,7 @@ namespace MathUtils
   bool isGreaterOrEqualToZero(T x)
   {
     static_assert(
-      False<T>::value,
+      AlwaysFalse<T>::value,
       "MathUtils::isGreaterOrEqualToZero<T>:"
       " You can only use one of the specified specializations!"
     );

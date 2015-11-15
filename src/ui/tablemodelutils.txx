@@ -7,17 +7,18 @@
 #include "../misc/dataconvertors.hxx"
 #include "../misc/utils.hxx"
 
-using namespace DataConvertors;
-using namespace Utils;
-
 namespace TableModelUtils
 {
+  using namespace DataConvertors;
+  using namespace Utils;
+
   template<>
-  inline bool convertTableModel<Real, Rational>(TableModel* const tableModel)
+  inline bool
+  convert<Real, Rational>(SimpleTableModel* const tableModel)
   {
     if (tableModel != nullptr)
     {
-      fillTableModel(
+      fill(
         tableModel,
         [](const QVariant& value)
         {
@@ -33,18 +34,20 @@ namespace TableModelUtils
     }
     else
     {
-      qDebug() << "TableModelUtils::convertTable<real_t, rational_t>: could not convert: `tableModel' argument is nullptr";
+      qDebug() << "TableModelUtils::convert<Real, Rational>:"
+                  " could not convert: `tableModel' argument is nullptr";
 
       return false;
     }
   }
 
   template<>
-  inline bool convertTableModel<Rational, Real>(TableModel* const tableModel)
+  inline bool
+  convert<Rational, Real>(SimpleTableModel* const tableModel)
   {
     if (tableModel != nullptr)
     {
-      fillTableModel(
+      fill(
         tableModel,
         [](const QVariant& value)
         {
@@ -60,11 +63,12 @@ namespace TableModelUtils
     }
     else
     {
-      qDebug() << "TableModelUtils::convertTable<rational_t, real_t>: could not convert: `tableModel' argument is nullptr";
+      qDebug() << "TableModelUtils::convertTable<Rational, Real>:"
+                  " could not convert: `tableModel' argument is nullptr";
 
       return false;
     }
-  }  
+  }
 }
 
 #endif // TABLEMODELUTILS_TXX

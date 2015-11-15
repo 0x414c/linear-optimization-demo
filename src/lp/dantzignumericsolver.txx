@@ -3,6 +3,7 @@
 
 #include "dantzignumericsolver.hxx"
 
+#include <algorithm>
 #include <functional>
 #include <iostream>
 #include <limits>
@@ -12,440 +13,556 @@
 #include <QDebug>
 
 #include "boost/optional.hpp"
-#include "eigen3/Eigen/Dense"
+#include "eigen3/Eigen/Core"
 
 #include "linearprogramdata.hxx"
 #include "linearprogramsolution.hxx"
+#include "simplextableau.hxx"
+#include "../math/mathutils.hxx"
+#include "../math/numericlimits.hxx"
 #include "../misc/eigenextensions.hxx"
 #include "../misc/utils.hxx"
 
-using namespace boost;
-using namespace Eigen;
-using namespace std;
-using namespace Utils;
-
-template<typename T>
-DantzigNumericSolver<T>::DantzigNumericSolver()
-{ }
-
-template<typename T>
-/**
- * @brief DantzigNumericSolver<T>::DantzigNumericSolver
- * Solves small-scaled linear optimization problems
- * using the Two-Phase Simplex method.
- * @param linearProgramData
- */
-DantzigNumericSolver<T>::DantzigNumericSolver(const LinearProgramData<T>& linearProgramData) :
-  _linearProgramData(linearProgramData)
-{ }
-
-//TODO: new EqualityConstraint class: Coeffs, Restriction
-//TODO: add Constant term to LinearFunction class
-//TODO: new SimplexTableau struct
-template<typename T>
-optional<LinearProgramSolution<T>>
-/**
- * @brief DantzigNumericSolver<T>::optimize
- * Finds the minimum value of the given objective linear function
- * on the given feasible region defined by system of linear equations
- *   Ax ⩵ b
- * using the two-phase Simplex method.
- * The simplex tableau is the matrix of the following form:
- * X(l) | x1 x2 .. | b
- * ----------------------
- * ~x1  |          | b1
- * ~x2  |     A    | b2
- *  ..  |          | ..
- * ----------------------
- *      | P1 P2 .. | -P0,
- * where:
- *   `l' is the current iteration index,
- *   `~x[i]' is the basic variables,
- *   `x[j]' is the free variables,
- *   `-P[0]' is the current value of the objective function,
- *   `P[i]' is the objective function coefficients,
- *   `A' is the coefficients matrix,
- *   `b' is the right-hand-side column-vector.
- */
-DantzigNumericSolver<T>::solve()
+namespace LinearProgramming
 {
-  //For result
-  optional<LinearProgramSolution<T>> ret;
+  using namespace boost;
+  using namespace Eigen;
+  using namespace MathUtils;
+  using namespace std;
+  using namespace Utils;
 
-  //Program params
-  const DenseIndex constrsCount(_linearProgramData.constraintsCount());
-  const DenseIndex varsCount(_linearProgramData.variablesCount());
+  template<typename T>
+  DantzigNumericSolver<T>::DantzigNumericSolver()
+  { }
 
-  //Initialize variables indices storage
-  _freeVars = vector<DenseIndex>(varsCount);
-  for (DenseIndex i(0); i < varsCount; ++i)
+  template<typename T>
+  /**
+   * @brief DantzigNumericSolver<T>::DantzigNumericSolver
+   * Solves small-scaled linear programs
+   * using the Two-Phase Simplex method.
+   * For the reference see:
+   * `http://en.wikipedia.org/wiki/Simplex_algorithm',
+   * `http://en.wikipedia.org/wiki/Linear_programming',
+   * `http://mathworld.wolfram.com/SimplexMethod.html',
+   * `http://mathworld.wolfram.com/LinearProgramming.html'.
+   * @param linearProgramData
+   * Source data containing
+   * constraints coefficients matrix `α',
+   * right-hand-side column-vector `β' and
+   * objective function coefficients row-vector `c'.
+   */
+  DantzigNumericSolver<T>::DantzigNumericSolver(
+    const LinearProgramData<T>& linearProgramData
+  ) :
+    _linearProgramData(linearProgramData)
+  { }
+
+  template<typename T>
+  /**
+   * @brief DantzigNumericSolver<T>::DantzigNumericSolver
+   * Solves small-scaled linear programs
+   * using the Two-Phase Simplex method.
+   * For the reference see:
+   * `http://en.wikipedia.org/wiki/Simplex_algorithm',
+   * `http://en.wikipedia.org/wiki/Linear_programming',
+   * `http://mathworld.wolfram.com/SimplexMethod.html',
+   * `http://mathworld.wolfram.com/LinearProgramming.html'.
+   * @param linearProgramData
+   * Source data containing
+   * constraints coefficients matrix `α',
+   * right-hand-side column-vector `β' and
+   * objective function coefficients row-vector `c'.
+   */
+  DantzigNumericSolver<T>::DantzigNumericSolver(
+    LinearProgramData<T>&& linearProgramData
+  ) :
+    _linearProgramData(std::move(linearProgramData))
+  { }
+
+  template<typename T>
+  /**
+   * @brief DantzigNumericSolver<T>::setLinearProgramData
+   * Updates source data using `linearProgramData'.
+   * @param linearProgramData
+   */
+  void DantzigNumericSolver<T>::setLinearProgramData(
+    const LinearProgramData<T>& linearProgramData
+  )
   {
-    _freeVars[i] = i;
-  }
-//  LOG("X :=\n{0}", _freeVars);
-  _basicVars = vector<DenseIndex>(constrsCount);
-  for (DenseIndex i(varsCount); i < varsCount + constrsCount; ++i)
-  {
-    _basicVars[i] = i;
-  }
-//  LOG("~X :=\n{0}", _basicVars);
-
-  //Let's build an auxilliary program tableau `X~'
-  Matrix<T, Dynamic, Dynamic> auxTableau(constrsCount + 1, varsCount + 1);
-  auxTableau <<
-    _linearProgramData.constraintsCoefficients,
-    _linearProgramData.constraintsRHS,
-    Matrix<T, 1, Dynamic>::Zero(1, auxTableau.cols());
-  //Fill bottom row
-  for (DenseIndex j(0); j < auxTableau.cols(); ++j)
-  {
-    auxTableau(auxTableau.rows() - 1, j) = -(auxTableau.
-                                             col(j).
-                                             head(constrsCount).
-                                             sum());
-  }
-  LOG("c := \n{0}\nA :=\n{1}\nb :=\n{2}",
-      _linearProgramData.objectiveFunctionCoefficients,
-      _linearProgramData.constraintsCoefficients,
-      _linearProgramData.constraintsRHS);
-  LOG("X~({0}) :=\n{1}", _iterCount, auxTableau);
-
-  //Solve Phase-1 do iterate() while not optimal
-  const SolutionType phase1SolutionType(optimize(auxTableau));
-  LOG("X~{0} :=\n{1}", _iterCount, auxTableau);
-  if (phase1SolutionType == SolutionType::Optimal)
-  {
-    //Recheck Phase-1 solution (f* ⩵ 0)...
-    const SolutionType auxSolutionType(checkPhase1Solution(auxTableau));
-//    if (auxSolutionType == SolutionType::Optimal)
-//    {
-//      Matrix<T, Dynamic, Dynamic> tableau(constrsCount + 1, varsCount - constrsCount + 1);
-//      tableau <<
-//        Matrix<T, Dynamic, Dynamic>::Zero(constrsCount, varsCount - constrsCount),
-//        auxTableau.col(auxTableau.cols() -1),
-//        Matrix<T, 1, Dynamic>::Zero(1, constrsCount + 1);
-//      //Fill the objective function row
-//      for (DenseIndex j(0); j < tableau.cols() - 1; ++j)
-//      {
-//        tableau(tableau.rows() - 1, j) = -(_linearProgramData.objFuncCoeffs(j) *
-//                                         tableau.
-//                                         col(j).
-//                                         head(tableau.rows() - 1).
-//                                         sum());
-//      }
-//      //Set obj. function value
-//      tableau(tableau.rows() - 1, tableau.cols() - 1) = tableau.
-//                                                        col(tableau.cols() - 1).
-//                                                        head(tableau.rows() - 1).
-//                                                        sum();
-//      //Fill the coeffs part
-////      for (DenseIndex i(0); i < tableau.rows() - 1; ++i)
-////      {
-////        for (DenseIndex j(0); j < tableau.cols() - 1; ++j)
-////        {
-////          tableau(i, j) = auxTableau(i, j);
-////        }
-////      }
-//      //Fill the RHS
-//      for (DenseIndex i(0); i < tableau.rows() - 1; ++i)
-//      {
-//        tableau(i, tableau.cols() - 1) = auxTableau(i, auxTableau.cols() - 1);
-//      }
-//      LOG("X{0} :=\n{1}", _iterCount, tableau);
-
-//      //TODO: Solve Phase-2: do iterate() while not optimal
-//      const SolutionType phase2SolutionType(optimize(tableau));
-//      LOG("X{0} :=\n{1}", _iterCount, tableau);
-//      if (phase2SolutionType == SolutionType::Optimal)
-//      {
-//        //TODO: Recheck Phase-2 solution (x >= (0)) and return solution if it is valid
-//        const SolutionType phase2SolutionType(checkPhase2Solution(tableau));
-//        if (phase2SolutionType == SolutionType::Optimal)
-//        {
-//          LinearProgramSolution<T> linearProgramSolution;
-//          LOG("X* == {0}, F* == {1}", linearProgramSolution.extremePoint,
-//              linearProgramSolution.extremeValue);
-
-//          ret = linearProgramSolution;
-//        }
-//      }
-//    }
+    _linearProgramData = linearProgramData;
   }
 
-  return ret;
-}
-
-template<typename T>
-/**
- * @brief DantzigNumericSolver<T>::setLinearProgramData
- * Updates source data.
- * @param linearProgramData
- */
-void DantzigNumericSolver<T>::setLinearProgramData(const LinearProgramData<T>& linearProgramData)
-{
-  _linearProgramData = linearProgramData;
-}
-
-template<typename T>
-/**
- * @brief DantzigNumericSolver<T>::optimize
- * Starts the Simplex algorithm on the given tableau.
- * @param tableau
- * @return
- */
-SolutionType DantzigNumericSolver<T>::optimize(Matrix<T, Dynamic, Dynamic>& tableau)
-{
-  while (true) //Iterate while the solution is incomplete
+  template<typename T>
+  /**
+   * @brief DantzigNumericSolver<T>::setLinearProgramData
+   * Updates source data using `linearProgramData'.
+   * @param linearProgramData
+   */
+  void DantzigNumericSolver<T>::setLinearProgramData(
+    LinearProgramData<T>&& linearProgramData
+  )
   {
-    const SolutionType solutionType(iterate(tableau));
+    _linearProgramData = std::move(linearProgramData);
+  }
 
-    switch (solutionType)
+  //TODO: new EqualityConstraint class: Coeffs, Restriction
+  //TODO: add Constant term to LinearFunction class
+  template<typename T>
+  /**
+   * @brief DantzigNumericSolver<T>::solve
+   * Finds the extreme (minimum) value w* and
+   * the extreme point x* of the given objective linear
+   * function w(x) = (c, x) within the given constraints
+   * defined by the following system of linear equations
+   *   αx = β,
+   * where:
+   *   M is the constraints count,
+   *   N is the variables count,
+   *   α is M × N matrix of constraints coefficients,
+   *   β is the right-hand-side column-vector of length M
+   * and non-negativity constraints
+   *   x[i] >= 0 for all i in [0; N)
+   * using the two-phase Simplex method.
+   * @return `LinearProgramSolution' instance
+   * w/ row-vector for extreme point `x*'
+   * and the extreme value `w*'.
+   */
+  optional<LinearProgramSolution<T>>
+  DantzigNumericSolver<T>::solve()
+  {
+    //For result
+    optional<LinearProgramSolution<T>> ret;
+
+    //Reset internal state
+    _iterCount = 0;
+
+    LOG(
+      "c := \n{0}\nA :=\n{1}\nb :=\n{2}",
+      _linearProgramData.objectiveFuncCoeffs,
+      _linearProgramData.constraintsCoeffs,
+      _linearProgramData.constraintsRHS
+    );
+
+    //Make new Phase-1 tableau
+    SimplexTableau<T> phase1Tableau(
+      SimplexTableau<T>::makePhase1(_linearProgramData)
+    );
+    LOG(
+      "~X({0}) :=\n{1}\n~X := {2}\nX := {3}",
+      _iterCount,
+      phase1Tableau.entries(),
+      makeString(phase1Tableau.basicVars()),
+      makeString(phase1Tableau.freeVars())
+    );
+
+    //Solve Phase-1: do `iterate()' while the solution is not optimal
+    const SolutionType phase1SolutionType(optimize(phase1Tableau));
+    LOG(
+      "~X({0}) :=\n{1}\n~X := {2}\nX := {3}",
+      _iterCount,
+      phase1Tableau.entries(),
+      makeString(phase1Tableau.basicVars()),
+      makeString(phase1Tableau.freeVars())
+    );
+    if (phase1SolutionType == SolutionType::Optimal)
     {
-      case SolutionType::Optimal:
-        return solutionType;
-      case SolutionType::Unbounded:
-        return solutionType;
-      case SolutionType::Incomplete:
-        break;
-      case SolutionType::Inconsistent:
-        return solutionType;
-      case SolutionType::Unknown:
-        return solutionType;
-      default:
-        break;
-    }
-  }
-}
-
-template<typename T>
-/**
- * @brief DantzigNumericSolver<T>::iterate
- * Executes one iteration of the Simplex method on the given tableau.
- * @param tableau
- * @return
- */
-SolutionType DantzigNumericSolver<T>::iterate(Matrix<T, Dynamic, Dynamic>& tableau)
-{
-  if (++_iterCount > _maxIterations)
-  {
-    return SolutionType::Unknown;
-  }
-  else
-  {
-    const optional<DenseIndex> pivotColIdx(computePivotColIdx(tableau));
-    if (pivotColIdx) //If (∃s: P[s] < 0)
-    {
-      const optional<DenseIndex> pivotRowIdx(computePivotRowIdx(tableau, *pivotColIdx));
-      if (pivotRowIdx) //If (∃s: P[s] < 0) ∧ (∃i: A[i, s] > 0),
-                       //the pivoting operation can be performed on the tableau
+      //Recheck Phase-1 solution (~w* == 0) and try to solve Phase-2
+      const SolutionType phase1SolutionType(
+        checkPhase1Solution(phase1Tableau)
+      );
+      if (phase1SolutionType == SolutionType::Optimal)
       {
-        pivotize(tableau, *pivotRowIdx, *pivotColIdx);
+        SimplexTableau<T> phase2Tableau(
+          SimplexTableau<T>::makePhase2(_linearProgramData, phase1Tableau)
+        );
+        LOG(
+          "X({0}) :=\n{1}\n~X := {2}\nX := {3}",
+          _iterCount,
+          phase2Tableau.entries(),
+          makeString(phase2Tableau.basicVars()),
+          makeString(phase2Tableau.freeVars())
+        );
 
-        return SolutionType::Incomplete;
-      }
-      else //If (∃s: P[s] < 0) ∧ (∀i: A[i, s] <= 0),
-           //the objective function is unbounded on the feasible region
-      {
-        return SolutionType::Unbounded;
+        //Solve Phase-2: do `iterate()' while the solution is not optimal
+        const SolutionType phase2SolutionType(optimize(phase2Tableau));
+        LOG(
+          "X({0}) :=\n{1}\n~X := {2}\nX := {3}",
+          _iterCount,
+          phase2Tableau.entries(),
+          makeString(phase2Tableau.basicVars()),
+          makeString(phase2Tableau.freeVars())
+        );
+        if (phase2SolutionType == SolutionType::Optimal)
+        {
+          //Recheck Phase-2 solution (x* >= (0))
+          const SolutionType phase2SolutionType(
+            checkPhase2Solution(phase2Tableau)
+          );
+          if (phase2SolutionType == SolutionType::Optimal)
+          {
+            LinearProgramSolution<T> linearProgramSolution(
+              SolutionType::Optimal,
+              phase2Tableau.extremePoint(),
+              phase2Tableau.extremeValue()
+            );
+            LOG(
+              "x* == {0},\nw* == {1}",
+              linearProgramSolution.extremePoint,
+              linearProgramSolution.extremeValue
+            );
+
+            ret = linearProgramSolution;
+          }
+        }
       }
     }
-    else //If (∀j: P[j] >= 0), the current iteration is the last one
-         //and the solution is optimal
+
+    return ret;
+  }
+
+  template<typename T>
+  /**
+   * @brief DantzigNumericSolver<T>::optimize
+   * Performs the Simplex algorithm steps on the given tableau.
+   * @param tableau
+   * @return
+   */
+  SolutionType
+  DantzigNumericSolver<T>::optimize(SimplexTableau<T>& tableau)
+  {
+    //Iterate while the solution is incomplete, stop if
+    //the program is unsolvable, return value decribing why it is
+    while (true)
     {
-      return SolutionType::Optimal;
+      const SolutionType solutionType(iterate(tableau));
+
+      switch (solutionType)
+      {
+        case SolutionType::Optimal:
+          return solutionType;
+        case SolutionType::Unbounded:
+          return solutionType;
+        case SolutionType::Incomplete:
+          break;
+        case SolutionType::Inconsistent:
+          return solutionType;
+        case SolutionType::Unknown:
+          return solutionType;
+        default:
+          break;
+      }
     }
   }
-}
 
-template<typename T>
-/**
- * @brief DantzigNumericSolver<T>::pivotize
- * Performs pivoting operations for the selected
- * row and column on the given tableau.
- * @param tableau
- * @param rowIdx
- * @param colIdx
- */
-void DantzigNumericSolver<T>::pivotize(Matrix<T, Dynamic, Dynamic>& tableau,
-                                       DenseIndex rowIdx, DenseIndex colIdx)
-{
-  const T pivotElement(tableau(rowIdx, colIdx)); //Store the pivot element
-  LOG("rowIdx := {0}, colIdx := {1}, pivot := {2}", rowIdx, colIdx, pivotElement);
-
-  tableau.row(rowIdx) /= pivotElement; //For the new row at the pivot position
-  tableau(rowIdx, colIdx) = T(1) / pivotElement;
-
-  for (DenseIndex i(0); i < rowIdx; ++i) //For each row above and below the pivot row
+  template<typename T>
+  /**
+   * @brief DantzigNumericSolver<T>::iterate
+   * Executes one iteration of the Simplex method on the given tableau.
+   * @param tableau
+   * @return
+   */
+  SolutionType
+  DantzigNumericSolver<T>::iterate(SimplexTableau<T>& tableau)
   {
-    const T factor(tableau(i, colIdx));
-    tableau.row(i) -= factor * tableau.row(rowIdx); //(row) = (row) - (factor) * (row)
-  }
-  for (DenseIndex i(rowIdx + 1); i < tableau.rows(); ++i)
-  {
-    const T factor(tableau(i, colIdx));
-    tableau.row(i) -= factor * tableau.row(rowIdx);
-  }
-
-  tableau.col(colIdx) /= (-pivotElement); //For the column at the pivot position
-  tableau(rowIdx, colIdx) = T(1) / pivotElement; //Restore the pivot element value
-
-  LOG("X({0}) :=\n{1}", _iterCount, tableau);
-}
-
-template<typename T>
-/**
- * @brief DantzigNumericSolver<T>::checkPhase1Solution
- * Checks if solution of Phase-1 is valid.
- * @param tableau
- * @return
- */
-SolutionType DantzigNumericSolver<T>::checkPhase1Solution(
-  const Matrix<T, Dynamic, Dynamic>& tableau) const
-{
-  const T objFuncValue(tableau(tableau.rows() - 1, tableau.cols() - 1));
-  if (isEqualToZero<T>(objFuncValue)) //If (f~)* ⩵ 0 -- The end of the Phase-1
-  {
-    return SolutionType::Optimal;
-  }
-  else
-  {
-    if (isGreaterThanZero<T>(objFuncValue)) //If (f~)* > 0 -- Inconsistent
+    if (++_iterCount > _maxIterations)
     {
-      return SolutionType::Inconsistent;
+      return SolutionType::Unknown;
     }
     else
     {
-      if (isLessThanZero<T>(objFuncValue)) //If (f~)* < 0 -- Oops... smth went wrong...
+      const optional<DenseIndex> pivotColIdx(computePivotColIdx(tableau));
+      if (pivotColIdx)
       {
-        return SolutionType::Unknown;
+        //If (∃s: P[s] < 0)
+        const optional<DenseIndex> pivotRowIdx(
+          computePivotRowIdx(tableau, *pivotColIdx)
+        );
+
+        if (pivotRowIdx)
+        {
+          //If (∃s: P[s] < 0) ∧ (∃i: α[i, s] > 0),
+          //the pivoting operation can be performed on the tableau
+          pivotize(tableau, *pivotRowIdx, *pivotColIdx);
+
+          return SolutionType::Incomplete;
+        }
+        else
+        {
+          //If (∃s: P[s] < 0) ∧ (∀i: α[i, s] <= 0),
+          //the objective function is unbounded on the feasible region
+
+          return SolutionType::Unbounded;
+        }
+      }
+      else
+      {
+        //If (∀j: P[j] >= 0), the current iteration is the last one
+        //and the solution is optimal
+
+        return SolutionType::Optimal;
       }
     }
   }
-}
 
-template<typename T>
-/**
- * @brief DantzigNumericSolver<T>::checkPhase2Solution
- * Check if solution of Phase-2 is valid.
- * @param tableau
- * @return `true' if b >= (0), `false' otherwise.
- */
-SolutionType DantzigNumericSolver<T>::checkPhase2Solution(
-  const Matrix<T, Dynamic, Dynamic>& tableau) const
-{
-  if (
-    (tableau.col(tableau.cols() - 1).
-    head(tableau.rows() - 1).
-    unaryExpr(ref(isGreaterOrEqualToZero<T>))
-    ).all()
+  template<typename T>
+  /**
+   * @brief DantzigNumericSolver<T>::pivotize
+   * Performs pivoting operations for the selected
+   * row and column of the given tableau.
+   * The pivot element is α[k, s].
+   * @param tableau
+   * @param rowIdx
+   * @param colIdx
+   */
+  void
+  DantzigNumericSolver<T>::pivotize(
+    SimplexTableau<T>& tableau, DenseIndex rowIdx, DenseIndex colIdx
   )
   {
-    return SolutionType::Inconsistent;
-  }
-  else
-  {
-    return SolutionType::Optimal;
-  }
-}
+    LOG(
+      "swap ~x{0} <> x{1}",
+      tableau.basicVars()[rowIdx],
+      tableau.freeVars()[colIdx]
+    );
+    //Swap the free and basic variable ~x[k] ↔ x[s]
+    std::swap(
+      tableau.basicVars()[rowIdx],
+      tableau.freeVars()[colIdx]
+    );
 
-template<typename T>
-/**
- * @brief DantzigNumericSolver<T>::computePivotColIdx
- * @param tableau
- * @return
- */
-optional<DenseIndex> DantzigNumericSolver<T>::computePivotColIdx(
-    const Matrix<T, Dynamic, Dynamic>& tableau) const
-{
-  optional<DenseIndex> ret;
-  T min(0);
-  DenseIndex minIdx(0);
-  bool haveNegativeCoeffs(false);
+    //Cache the value of the pivot element α[k, s]
+    const T pivotElement(tableau(rowIdx, colIdx));
+    LOG(
+      "rowIdx := {0}, colIdx := {1}, pivot := {2}",
+      rowIdx, colIdx, pivotElement
+    );
 
-  //Find the most negative coeff at the bottom row
-  for (DenseIndex colIdx(0); colIdx < tableau.cols() - 1; ++colIdx)
-  {
-    if (tableau(tableau.rows() - 1, colIdx) < min)
+    //For the new row at the pivot position
+    //(new pivot row) = (old pivot row) / (old pivot)
+    for (DenseIndex j(0); j < tableau.cols(); ++j)
     {
-      min = tableau(tableau.rows() - 1, colIdx);
-      minIdx = colIdx;
-      haveNegativeCoeffs = true;
-    }
-  }
-
-  if (haveNegativeCoeffs)
-  {
-    ret = minIdx;
-  }
-
-  return ret;
-}
-
-template<typename T>
-/**
- * @brief DantzigNumericSolver<T>::isPivotColValid
- * @param tableau
- * @param colIdx
- * @return
- */
-bool DantzigNumericSolver<T>::isPivotColValid(const Matrix<T, Dynamic, Dynamic>& tableau,
-                                              DenseIndex colIdx) const
-{
-  return (
-    tableau.
-    col(colIdx).
-    head(tableau.rows() - 1).
-    unaryExpr(ref(isGreaterThanZero<T>))
-  ).any();
-}
-
-template<typename T>
-/**
- * @brief DantzigNumericSolver<T>::computePivotRowIdx
- * Computes pivot row index for the given pivot column index.
- * @param tableau
- * @param pivotColIdx
- * @param forceToLeaveBasis
- * @return
- */
-optional<DenseIndex> DantzigNumericSolver<T>::computePivotRowIdx(
-  const Matrix<T, Dynamic, Dynamic>& tableau,
-  DenseIndex pivotColIdx,
-  bool forceToLeaveBasis) const
-{
-  optional<DenseIndex> ret;
-  T minRatio(NumericLimits::max<T>());
-  DenseIndex minRatioIdx(0);
-  bool isPivotColValid(false);
-
-  //Find the pivot row for the given column
-  for (DenseIndex rowIdx(0); rowIdx < tableau.rows() - 1; ++rowIdx)
-  {
-    //Pick only non-negative elements
-    if (isGreaterThanZero<T>(tableau(rowIdx, pivotColIdx)))
-    {
-      //Compute ratio b(i) / A(i, p)
-      const T currRatio((tableau(rowIdx, tableau.cols() - 1) / tableau(rowIdx, pivotColIdx)));
-      if (currRatio < minRatio)
+      if (j != colIdx)
       {
-        minRatio = currRatio;
-        minRatioIdx = rowIdx;
+        tableau(rowIdx, j) /= pivotElement;
       }
-      isPivotColValid = true;
     }
-  }
 
-  if (isPivotColValid)
-  {
-    if (forceToLeaveBasis)
+    //(new pivot) = 1 / (old pivot)
+    tableau(rowIdx, colIdx) = T(1) / pivotElement;
+
+    //For each row above and below the pivot row
+    for (DenseIndex i(0); i < tableau.rows(); ++i)
     {
-      //TODO: !
+      if (i != rowIdx) //skip pivot row
+      {
+        const T factor(tableau(i, colIdx));
+        for (DenseIndex j(0); j < tableau.cols(); ++j)
+        {
+          if (j != colIdx) //skip pivot column
+          {
+            //(new row) = (old row) - (factor) * (pivot row)
+            tableau(i, j) -= factor * tableau(rowIdx, j);
+          }
+        }
+      }
     }
 
-    ret = minRatioIdx;
+    //For the new column at the pivot position
+    //(new pivot column) = (old pivot column) / ((-1) * (old pivot))
+    for (DenseIndex i(0); i < tableau.rows(); ++i)
+    {
+      if (i != rowIdx)
+      {
+        tableau(i, colIdx) /= pivotElement * T(-1);
+      }
+    }
+
+    LOG(
+      "T({0}) :=\n{1}\n~X := {2}\nX := {3}",
+      _iterCount, tableau.entries(),
+      makeString(tableau.basicVars()),
+      makeString(tableau.freeVars())
+    );
   }
 
-  return ret;
+  template<typename T>
+  /**
+   * @brief DantzigNumericSolver<T>::checkPhase1Solution
+   * Checks if the solution obtained at the Phase-1 is valid.
+   * @param tableau
+   * @return
+   */
+  SolutionType
+  DantzigNumericSolver<T>::checkPhase1Solution(
+    const SimplexTableau<T>& tableau
+  ) const
+  {
+    const T objFuncValue(tableau.extremeValue());
+     //If (~w* == 0) -- The end of the Phase-1
+    if (isEqualToZero<T>(objFuncValue))
+    {
+      return SolutionType::Optimal;
+    }
+    else
+    {
+       //If (~w* > 0) -- Inconsistent (infeasible) program
+      if (isGreaterThanZero<T>(objFuncValue))
+      {
+        return SolutionType::Inconsistent;
+      }
+      else
+      {
+         //If (~w* < 0) -- Oops... smth went wrong...
+        if (isLessThanZero<T>(objFuncValue))
+        {
+          return SolutionType::Unknown;
+        }
+        else
+        {
+          return SolutionType::Unknown;
+        }
+      }
+    }
+  }
+
+  template<typename T>
+  /**
+   * @brief DantzigNumericSolver<T>::checkPhase2Solution
+   * Checks if the solution obtained at the Phase-2 is valid.
+   * @param tableau
+   * @return `true' if (β >= (0)), `false' otherwise.
+   */
+  SolutionType
+  DantzigNumericSolver<T>::checkPhase2Solution(
+    const SimplexTableau<T>& tableau
+  ) const
+  {
+    if (
+      tableau.col(tableau.cols() - 1).
+      head(tableau.rows() - 1).
+      unaryExpr(std::ref(isGreaterOrEqualToZero<T>)).
+      all()
+    )
+    {
+      return SolutionType::Optimal;
+    }
+    else
+    {
+      return SolutionType::Inconsistent;
+    }
+  }
+
+  template<typename T>
+  /**
+   * @brief DantzigNumericSolver<T>::isPivotColValid
+   * @param tableau
+   * @param colIdx
+   * @return true if (∃i: α[i, s] > 0), false otherwise.
+   */
+  bool
+  DantzigNumericSolver<T>::isPivotColValid(
+    const SimplexTableau<T>& tableau, DenseIndex colIdx
+  ) const
+  {
+    return (
+      (
+        tableau.
+        col(colIdx).
+        head(tableau.rows() - 1).
+        unaryExpr(ref(isGreaterThanZero<T>))
+      ).
+      any()
+    );
+  }
+
+  template<typename T>
+  /**
+   * @brief DantzigNumericSolver<T>::computePivotColIdx
+   * @param tableau
+   * @return min{s} for all possible s if (∃s: P[s] < 0),
+   * empty optional otherwise.
+   */
+  optional<DenseIndex>
+  DantzigNumericSolver<T>::computePivotColIdx(
+    const SimplexTableau<T>& tableau
+  ) const
+  {
+    optional<DenseIndex> ret;
+
+    T min(0);
+    DenseIndex minIdx(0);
+    bool haveNegativeCoeffs(false);
+
+    //Find the most negative coeff at the bottom row
+    for (DenseIndex colIdx(0); colIdx < tableau.cols() - 1; ++colIdx)
+    {
+      if (tableau(tableau.rows() - 1, colIdx) < min)
+      {
+        min = tableau(tableau.rows() - 1, colIdx);
+        minIdx = colIdx;
+        haveNegativeCoeffs = true;
+      }
+    }
+
+    if (haveNegativeCoeffs)
+    {
+      ret = minIdx;
+    }
+
+    return ret;
+  }
+
+  template<typename T>
+  /**
+   * @brief DantzigNumericSolver<T>::computePivotRowIdx
+   * Computes pivot row index k for the pivot column index s.
+   * @param tableau
+   * @param pivotColIdx
+   * @return k for min{β[k] / α[k, s]} if (∃i: α[k, s] > 0),
+   * empty boost::optional otherwise.
+   */
+  optional<DenseIndex>
+  DantzigNumericSolver<T>::computePivotRowIdx(
+    const SimplexTableau<T>& tableau, DenseIndex pivotColIdx
+  ) const
+  {
+    optional<DenseIndex> ret;
+
+    T minRatio(NumericLimits::max<T>());
+    DenseIndex minRatioIdx(0);
+    bool isPivotColValid(false);
+
+    //Find the pivot row index `k' for the given pivot column index `s'
+    for (DenseIndex rowIdx(0); rowIdx < tableau.rows() - 1; ++rowIdx)
+    {
+      //For the minimum-ratio-test
+      //Pick only non-negative elements (α[k, s] > 0)
+      if (isGreaterThanZero<T>(tableau(rowIdx, pivotColIdx)))
+      {
+        //Compute ratio β[k] / α[k, s]
+        const T currRatio(
+          tableau(rowIdx, tableau.cols() - 1) /
+          tableau(rowIdx, pivotColIdx)
+        );
+        //Update w/ new found minimum
+        if (currRatio < minRatio)
+        {
+          minRatio = currRatio;
+          minRatioIdx = rowIdx;
+        }
+        isPivotColValid = true;
+      }
+    }
+
+    if (isPivotColValid)
+    {
+      //TODO: ! Bland rule
+
+      ret = minRatioIdx;
+    }
+
+    return ret;
+  }
 }
 
 #endif // DANTZIGNUMERICSOLVER_TXX

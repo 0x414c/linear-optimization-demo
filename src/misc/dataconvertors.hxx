@@ -7,6 +7,7 @@
 
 using namespace Utils;
 
+//TODO: ~ Merge w/ `NumericTypes'
 namespace DataConvertors
 {
   template<typename R>
@@ -14,7 +15,7 @@ namespace DataConvertors
   R numericCast(const QString& from)
   {
     static_assert(
-      False<R>::value,
+      AlwaysFalse<R>::value,
       "DataConvertors::numericCast<R>:"
       " You can only use one of the specified specializations!"
     );
@@ -26,7 +27,7 @@ namespace DataConvertors
   R numericCast(const T& from)
   {
     static_assert(
-      False<R, T>::value,
+      AlwaysFalse<R, T>::value,
       "DataConvertors::numericCast<R, T>:"
       " You can only use one of the specified specializations!"
     );

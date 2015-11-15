@@ -12,20 +12,20 @@
 #include <QVector>
 
 #include "boost/optional.hpp"
-#include "eigen3/Eigen/Dense"
+#include "eigen3/Eigen/Core"
 
 #include "linearprogramdata.hxx"
 #include "../math/mathutils.hxx"
 #include "../misc/utils.hxx"
 
-using namespace boost;
-using namespace Eigen;
-using namespace MathUtils;
-using namespace std;
-using namespace Utils;
-
 namespace LinearProgramUtils
 {
+  using namespace boost;
+  using namespace Eigen;
+  using namespace MathUtils;
+  using namespace std;
+  using namespace Utils;
+
   template<typename T = Real>
   /**
    * @brief isPointInFeasibleRegion
@@ -38,17 +38,20 @@ namespace LinearProgramUtils
    * non-negativity constraints:
    *   x[n] >= 0 for any n in [1; N].
    * @param point Point vector.
-   * @param linearProgramData LinearProgramData containing matrices `A' and `b'.
+   * @param linearProgramData container w/ matrices `A' and `b'.
    * @return `true' if point lies within given region.
    */
-  bool isPointInFeasibleRegion(const Matrix<T, Dynamic, 1>& point,
-                               const LinearProgramData<T>& linearProgramData)
+  bool
+  isPointInFeasibleRegion(
+    const Matrix<T, Dynamic, 1>& point,
+    const LinearProgramData<T>& linearProgramData
+  )
   {
     return
       (point.array() >= 0).all()
       &&
       (
-        (linearProgramData.constraintsCoefficients * point).array()
+        (linearProgramData.constraintsCoeffs * point).array()
         <=
         linearProgramData.constraintsRHS.array()
       ).all();
@@ -61,27 +64,27 @@ namespace LinearProgramUtils
    * of the following matrix equation
    *   Ax == b.
    * The formula is
-   *   x := {{(a11*b0 - a01*b1) / (-a01*a10 + a00*a11)},
-   *         {(a10*b0 - a00*b1) / ( a01*a10 - a00*a11)}}.
+   *   x := {{(A11*b0 - A01*b1) / (-A01*A10 + A00*A11)},
+   *         {(A10*b0 - A00*b1) / ( A01*A10 - A00*A11)}}.
    * NOTE: This function handles only two-dimensional case.
    * @param coeffs Matrix `A'
    * @param RHS Matrix `b'
-   * @return Intersection point `x' as 2 × 1 column-vector.
+   * @return (optional) intersection point `x' as 2 × 1 column-vector.
    */
   optional<Matrix<T, 2, 1>>
-  findIntersection(const Matrix<T, 2, 2>& a,
-                   const Matrix<T, 2, 1>& b)
+  findIntersection(const Matrix<T, 2, 2>& A, const Matrix<T, 2, 1>& b)
   {
     Matrix<T, 2, 1> sol(2, 1);
     optional<Matrix<T, 2, 1>> ret;
 
-    T p((a(1, 1) * b(0) - a(0, 1) * b(1))),
-      q((-a(0, 1) * a(1, 0) + a(0, 0) * a(1, 1))),
-      r((a(1, 0) * b(0) - a(0, 0) * b(1))),
-      s((a(0, 1) * a(1, 0) - a(0, 0) * a(1, 1)));
+    const T q((-A(0, 1) * A(1, 0) + A(0, 0) * A(1, 1))),
+            s((A(0, 1) * A(1, 0) - A(0, 0) * A(1, 1)));
 
     if (!isEqualToZero<T>(q) && !isEqualToZero<T>(s))
     {
+      const T p((A(1, 1) * b(0) - A(0, 1) * b(1))),
+              r((A(1, 0) * b(0) - A(0, 0) * b(1)));
+
       sol <<
         p / q,
         r / s;
@@ -111,26 +114,26 @@ namespace LinearProgramUtils
    *     multiplied by a[k, j] from row k.
    * 3. Return transformed matrix A'.
    * There are many, many variants of the above algorithm.
-   * For example, in step 2a you could always select the largest element of
-   * the column as the pivot to help reduce rounding errors,
+   * For example, in step 2a you could always select the largest
+   * element of  the column as the pivot to help reduce rounding errors,
    * and you could combine steps 2c and 2d.
    * For the reference see:
    *  `http://www.di-mgt.com.au/matrixtransform.html';
-   *  `http://www.millersville.edu/~bikenaga/linear-algebra/row-reduction/row-reduction.html'.
-   * @param matrix Matrix `A' to reduce.
-   * @return Row-reduced echelon form of `A'.
+   *  `http://www.millersville.edu/~bikenaga/linear-algebra/row-reduction/
+   *   row-reduction.html'.
+   * @param matrix Matrix A to reduce.
+   * @return Row-reduced echelon form of A' with rank value of A'.
    */
-  //TODO: Sparse P
-  pair<Matrix<T, Dynamic, Dynamic>, Matrix<T, Dynamic, Dynamic>>
+  //TODO: ! Return rank.
+  pair<Matrix<T, Dynamic, Dynamic>, DenseIndex>
   reducedRowEchelonForm(const Matrix<T, Dynamic, Dynamic>& matrix)
   {
     const DenseIndex n(matrix.rows());
     const DenseIndex m(matrix.cols());
-    const DenseIndex p(n < m ? n : m); //TODO: ~!
+    DenseIndex rank(0);
 
-    Matrix<T, Dynamic, Dynamic> A(n, m), P(p, p);
+    Matrix<T, Dynamic, Dynamic> A(n, m);
     A << matrix;
-    P << Matrix<T, Dynamic, Dynamic>::Identity(p, p);
 
     DenseIndex i(0), j(0);
     //1. Deal with each row i from 1 to n in turn, ...
@@ -139,7 +142,7 @@ namespace LinearProgramUtils
       //If we had reached the end
       if (i >= n || j >= m)
       {
-        return make_pair(A, P);
+        return make_pair(A, rank);
       }
       else
       {
@@ -181,7 +184,7 @@ namespace LinearProgramUtils
               ++j;
               if (j >= m)
               {
-                return make_pair(A, P);
+                return make_pair(A, rank);
               }
               else
               {
@@ -199,7 +202,6 @@ namespace LinearProgramUtils
         if (x > i)
         {
           A.row(x).swap(A.row(i));
-          P.row(x).swap(P.row(i));
         }
 
         //4. Make the pivot equal to 1 by dividing each element
@@ -215,14 +217,16 @@ namespace LinearProgramUtils
         for (DenseIndex k(0); k < i; ++k)
         {
           const T factor(A(k, j));
-          LOG("A.row({0}) - factor * pivotRow <=> [{1}] - ({2} * [{3}])", k, A.row(k), factor, pivotRow);
+          LOG("A.row({0}) - factor * pivotRow <=> [{1}] - ({2} * [{3}])",
+              k, A.row(k), factor, pivotRow);
           A.row(k) -= factor * pivotRow;
           LOG("A.row({0}) = [{1}]", k, A.row(k));
         }
         for (DenseIndex k(i + 1); k < n; ++k)
         {
           const T factor(A(k, j));
-          LOG("A.row({0}) - factor * pivotRow <=> [{1}] - ({2} * [{3}])", k, A.row(k), factor, pivotRow);
+          LOG("A.row({0}) - factor * pivotRow <=> [{1}] - ({2} * [{3}])",
+              k, A.row(k), factor, pivotRow);
           A.row(k) -= factor * pivotRow;
           LOG("A.row({0}) = [{1}]", k, A.row(k));
         }
@@ -232,6 +236,9 @@ namespace LinearProgramUtils
         //Jump to the next column
         ++j;
       }
+      //Increase rank (because we now have 1 as pivot in the current row)
+      ++rank;
+
       //Jump to the next row
       ++i;
     }

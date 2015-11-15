@@ -1,0 +1,61 @@
+Лабораторная работа по методам оптимизации
+
+Задача: написать программу, позволяющую решать задачу линейного программирования
+ графическим и симплекс- методами.
+
+Основные требования:
++1. Возможность диалогового ввода размерности задачи и матрицы коэффициентов
+ целевой функции в канонической форме. Размерность не более 16*16.
++2. Сохранение введенной задачи в файл и чтение из файла.
+3. Возможность решения задачи с использованием заданных базисных переменных.
++4. Реализация метода искусственного базиса.
+5. Выбор автоматического и пошагового режима решения задачи.
+6. В пошаговом режиме возможность возврата назад.
+7. В пошаговом режиме возможность выбора опорного элемента.
++8. Работа с обыкновенными и десятичными дробями.
+9. Справка.
+10. Контекстно-зависимая помощь.
++11. Поддержка мыши.
++12. Контроль данных (защита от «дурака»).
+
+Бонусы:
++1. Графический двумерный метод решения.
+2. Графический трехмерный метод решения.
+3. Графический метод решения целочисленной задачи.
+4. Решение двойственной задачи.
+5. Метод Гомори решения целочисленной задачи.
+
+Программа должна быть оконным приложением. Сдается выполняемый eхe-файл,
+ все файлы проекта и откомментированные исходники.
+Нa чём писать:
++1. C++
+2. C#
+3. Java
+4. ...
+
+
+Code style rules (For Qt Creator use `../misc/CodeStyle.xml'):
+1. Headers inclusion order:
+   "This class header" (optional)
+   <C stdlib headers>
+   <C++ stdlib headers>
+   <Qt headers>
+   "Third-party library headers"
+   "Local submodule headers"
+   "Foreign submodule headers"
+2. Indent size: 2 spaces,
+   Tab size: 2 spaces.
+3. Templates:
+   Declarations in *.hxx should be followed by inclusion of *.txx
+   file w/ corresponding definitions and/or specializations.
+   The name of *.txx should be equal to the name of its `parent' *.hxx file.
+   The *.txx files should not be included explicitly.
+4. Keep in mind that characters-on-line limit is 100
+   (but stick to 80 wherever it is possible).
+5. Do not forget about `Utils::Result':
+   Return `Fail' when destructive operation failed,
+   `Nothing' when non-destructive operation failed,
+   and the `Success' when all parts of the operation is successful.
+6. Assignment is not initialization (non-static data members is an exception).
+   Prefer braced initialization syntax iff you are using `std::initializer_list'.
+7. <...>

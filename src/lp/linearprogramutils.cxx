@@ -1,7 +1,8 @@
 ﻿#include "linearprogramutils.hxx"
 
-#include <algorithm>
 #include <cmath>
+
+#include <algorithm>
 
 #include <QPointF>
 #include <QVector>
@@ -14,14 +15,15 @@ namespace LinearProgramUtils
    * using polar coordinates.
    * @param points Points vector to sort.
    */
-  void sortPointsClockwise(QVector<QPointF>& points)
+  void
+  sortPointsClockwise(QVector<QPointF>& points)
   {
     QPointF centroid(0., 0.);
-    for (int i(0); i < points.length(); ++i)
+    for (int i(0); i < points.count(); ++i)
     {
       centroid += points[i];
     }
-    centroid /= points.length(); //Find a center point
+    centroid /= points.count(); //Find a center point
 
     //Convert to polar coords on-the-fly and
     //use the polar angles (relative to centroid) to sort

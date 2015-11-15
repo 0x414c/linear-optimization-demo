@@ -8,7 +8,8 @@ NumericValidator::NumericValidator(QObject* parent) :
 { }
 
 //Just example usage of `QValidator::validate'
-QValidator::State NumericValidator::validate(QString& input, int& pos) const
+QValidator::State
+NumericValidator::validate(QString& input, int& pos) const
 {
   if (input.isEmpty()) {
     return Acceptable;

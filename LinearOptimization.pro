@@ -23,14 +23,14 @@ CONFIG(release, debug|release) {
   DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_INFO_OUTPUT #QT_NO_WARNING_OUTPUT
 }
 
-DEFINES += EIGEN_MPL2_ONLY __WITH_DEBUG_LOG__
+DEFINES += EIGEN_MPL2_ONLY FMT_HEADER_ONLY LP_WITH_DEBUG_LOG
 
 INCLUDEPATH += $$PWD/lib/boost \
   $$PWD/lib/cppformat \
   $$PWD/lib/eigen \
   $$PWD/lib/qcustomplot
 
-LIBS += -L$$PWD/lib/cppformat/cppformat/build -lformat
+#LIBS += -L$$PWD/lib/cppformat/cppformat/build -lformat
 
 SOURCES += src/main.cxx \
   lib/qcustomplot/qcustomplot/qcustomplot.cpp \
@@ -52,8 +52,9 @@ SOURCES += src/main.cxx \
   src/ui/tablemodelstorage.cxx \
   src/ui/tablemodelutils.cxx
 
-HEADERS += src/ui/mainwindow.hxx \
+HEADERS += src/main.hxx \
   lib/qcustomplot/qcustomplot/qcustomplot.h \
+  src/config.hxx \
   src/lp/dantzignumericsolver.hxx \
   src/lp/dantzignumericsolver.txx \
   src/lp/graphicalsolver2d.hxx \
@@ -68,16 +69,20 @@ HEADERS += src/ui/mainwindow.hxx \
   src/lp/linearprogramutils.hxx \
   src/lp/linearprogramutils.txx \
   src/lp/plotdata2d.hxx \
+  src/lp/simplextableau.hxx \
+  src/lp/simplextableau.txx \
   src/math/mathutils.hxx \
   src/math/mathutils.txx \
+  src/math/numericlimits.hxx \
+  src/math/numericlimits.txx \
   src/math/numerictypes.hxx \
-  src/math/numerictypes.txx \
   src/misc/boostextensions.hxx \
   src/misc/dataconvertors.hxx \
   src/misc/dataconvertors.txx \
   src/misc/eigenextensions.hxx \
   src/misc/ijsonserializable.hxx \
   src/misc/utils.hxx \
+  src/ui/mainwindow.hxx \
   src/ui/numericstyleditemdelegate.hxx \
   src/ui/numericstyleditemdelegate.txx \
   src/ui/numericvalidator.hxx \

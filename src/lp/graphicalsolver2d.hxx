@@ -7,23 +7,28 @@
 #include "plotdata2d.hxx"
 #include "../misc/utils.hxx"
 
-using namespace boost;
-using namespace Utils;
-
-template<typename T = Real>
-class GraphicalSolver2D
+namespace LinearProgramming
 {
-  public:
-    GraphicalSolver2D()/* = delete*/;
-    explicit GraphicalSolver2D(const LinearProgramData<T>& linearProgramData);
+  using namespace boost;
+  using namespace Utils;
 
-    optional<PlotData2D> solve() const;
+  template<typename T = Real>
+  class GraphicalSolver2D
+  {
+    public:
+      GraphicalSolver2D()/* = delete*/;
+      explicit GraphicalSolver2D(const LinearProgramData<T>& other);
+      explicit GraphicalSolver2D(LinearProgramData<T>&& other);
 
-    void setLinearProgramData(const LinearProgramData<T>& linearProgramData);
+      void setLinearProgramData(const LinearProgramData<T>& other);
+      void setLinearProgramData(LinearProgramData<T>&& other);
 
-  private:
-    LinearProgramData<T> _linearProgramData = LinearProgramData<T>();
-};
+      optional<PlotData2D> solve() const;
+
+    private:
+      LinearProgramData<T> _linearProgramData = LinearProgramData<T>();
+  };
+}
 
 #include "graphicalsolver2d.txx"
 

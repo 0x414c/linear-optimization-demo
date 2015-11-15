@@ -18,28 +18,36 @@
 
 namespace boost
 {
-  inline NumericTypes::Rational log(const NumericTypes::Rational& x)
+  inline NumericTypes::Rational
+  log(const NumericTypes::Rational& x)
   {
-    return DataConvertors::numericCast<NumericTypes::Rational, NumericTypes::Real>(
-      Real(std::log(double(x.numerator())))
-      /
-      Real(std::log(double(x.denominator())))
+    return (
+      DataConvertors::numericCast<NumericTypes::Rational, NumericTypes::Real>(
+        NumericTypes::Real(std::log(double(x.numerator())))
+        /
+        NumericTypes::Real(std::log(double(x.denominator())))
+      )
     );
   }
 
-  inline NumericTypes::Rational sqrt(const NumericTypes::Rational& x)
+  inline NumericTypes::Rational
+  sqrt(const NumericTypes::Rational& x)
   {
-    return DataConvertors::numericCast<NumericTypes::Rational, NumericTypes::Real>(
-      Real(std::sqrt(double(x.numerator())))
-      /
-      Real(std::sqrt(double(x.denominator())))
+    return (
+      DataConvertors::numericCast<NumericTypes::Rational, NumericTypes::Real>(
+        NumericTypes::Real(std::sqrt(double(x.numerator())))
+        /
+        NumericTypes::Real(std::sqrt(double(x.denominator())))
+      )
     );
   }
 
-  inline QDebug operator <<(QDebug debug, const NumericTypes::Rational& x)
+  inline QDebug
+  operator <<(QDebug debug, const NumericTypes::Rational& x)
   {
     QDebugStateSaver stateSaver(debug);
-    debug.nospace() << DataConvertors::numericCast<QString, NumericTypes::Rational>(x);
+    debug.nospace() <<
+      DataConvertors::numericCast<QString, NumericTypes::Rational>(x);
 
     return debug;
   }

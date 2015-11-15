@@ -4,7 +4,6 @@
 #include <memory>
 
 #include <QMainWindow>
-#include <QStandardItemModel>
 #include <QString>
 #include <QWidget>
 
@@ -18,6 +17,7 @@
 #include "../math/numerictypes.hxx"
 #include "../misc/utils.hxx"
 
+using namespace LinearProgramming;
 using namespace NumericTypes;
 using namespace std;
 using namespace Utils;
@@ -71,11 +71,17 @@ class MainWindow : public QMainWindow
   private:
     Ui::MainWindow* ui;
 
-    const int _tableModelsCount = 3;
-    enum struct ModelType : int { ObjFunc = 0, Constrs = 1, RHS = 2 };
-
     Field _currentField = Field::Real;
-    QVector<TableModel*> _tableModels;
+
+    enum struct ProgramModelType : int
+    { ObjFunc = 0, ConstrsCoeffs = 1, RHS = 2 };
+
+    enum struct SimplexModelType : int
+    { Solution = 0, FuncValue = 1, SimplexTableau = 2 };
+
+    QVector<SimpleTableModel*> _programTableModels;
+    QVector<SimpleTableModel*> _simplexTableModels;
+
     QVector<NumericStyledItemDelegate<Real>*> _realNumericDelegates;
     QVector<NumericStyledItemDelegate<Rational>*> _ratNumericDelegates;
 
@@ -87,15 +93,18 @@ class MainWindow : public QMainWindow
     OperationResult loadData(const QString& fileName);
     OperationResult saveData(const QString& fileName);
 
-    void initializeWindowContents();
-    void deleteWindowContents();
+    void setupProgramView();
+    void destroyProgramView();
 
     void clearModelsContents();
     void setTablesHeaders();
     void updateTableViewsDelegates();
-    void setupCustomPlot(QCustomPlot* const customPlot);
 
-    void runSolver();
+    void setupSimplexView();
+    void refreshSimplexView();
+    void destroySimplexView();
+
+    void setupCustomPlot(QCustomPlot* const customPlot);
     void plotGraph(const PlotData2D& plotData2D);
 };
 

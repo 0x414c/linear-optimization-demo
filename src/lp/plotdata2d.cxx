@@ -6,15 +6,14 @@
 #include <QPointF>
 #include <QVector>
 
-#include "linearprogramsolution.hxx"
-#include "../misc/utils.hxx"
+#include "solutiontype.hxx"
 
-using namespace Utils;
 
 namespace LinearProgramming
 {
   PlotData2D::PlotData2D()
   { }
+
 
   PlotData2D::PlotData2D(
     SolutionType resultType, const QPointF& extremePoint,
@@ -27,6 +26,7 @@ namespace LinearProgramming
     vertices(vertices),
     gradient(gradient)
   { }
+
 
   PlotData2D::PlotData2D(
     SolutionType resultType, const QPointF& extremePoint,

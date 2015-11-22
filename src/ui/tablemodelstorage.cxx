@@ -8,61 +8,74 @@
 #include <QStringList>
 #include <QTableWidget>
 
-#include "tablemodel.hxx"
+#include "simpletablemodel.hxx"
 #include "../math/numerictypes.hxx"
 #include "../misc/utils.hxx"
 
-using namespace NumericTypes;
-using namespace Utils;
 
-TableModelStorage::TableModelStorage()
+namespace GUI
+{
+  using namespace NumericTypes;
+  using namespace Utils;
+}
+
+
+GUI::TableModelStorage::TableModelStorage()
 { }
 
-TableModelStorage::TableModelStorage(
+
+GUI::TableModelStorage::TableModelStorage(
   const QVector<SimpleTableModel>& items, Field field
 ) :
   _items(items),
   _field(field)
 { }
 
-SimpleTableModel&
-TableModelStorage::operator [](int idx)
+
+GUI::SimpleTableModel&
+GUI::TableModelStorage::operator [](int idx)
 {
   return _items[idx];
 }
 
+
 int
-TableModelStorage::count() const
+GUI::TableModelStorage::count() const
 {
   return _items.count();
 }
 
-const QVector<SimpleTableModel>&
-TableModelStorage::items()
+
+const QVector<GUI::SimpleTableModel>&
+GUI::TableModelStorage::items()
 {
   return _items;
 }
 
-const SimpleTableModel&
-TableModelStorage::itemAt(int idx) const
+
+const GUI::SimpleTableModel&
+GUI::TableModelStorage::itemAt(int idx) const
 {
   return _items.at(idx);
 }
 
-Field
-TableModelStorage::field() const
+
+NumericTypes::Field
+GUI::TableModelStorage::field() const
 {
   return _field;
 }
 
+
 QString
-TableModelStorage::metadata() const
+GUI::TableModelStorage::metadata() const
 {
   return (_metadataHeader + QString("%1").arg(int(_field)));
 }
 
-OperationResult
-TableModelStorage::read(const QJsonObject& jsonObject)
+
+Utils::OperationResult
+GUI::TableModelStorage::read(const QJsonObject& jsonObject)
 {
   const QJsonValue metadataValue(jsonObject[QStringLiteral("metadata")]);
   if (metadataValue.type() != QJsonValue::Undefined)
@@ -94,7 +107,7 @@ TableModelStorage::read(const QJsonObject& jsonObject)
               }
               else
               {
-                qDebug() << "TableModelStorage::read: cannot read item:"
+                qDebug() << "TableModelStorage::read: cannot read `item':"
                             " stopping operation";
 
                 return res;
@@ -102,8 +115,8 @@ TableModelStorage::read(const QJsonObject& jsonObject)
             }
             else
             {
-              qDebug() << "TableModelStorage::read: cannot read item:"
-                          " item is `Undefined', stopping operation";
+              qDebug() << "TableModelStorage::read: cannot read `item':"
+                          " `item' == `Undefined', stopping operation";
 
               return OperationResult::Nothing;
             }
@@ -114,22 +127,23 @@ TableModelStorage::read(const QJsonObject& jsonObject)
         else
         {
           qDebug() << "TableModelStorage::read: cannot read:"
-                      " `items' is `Undefined'";
+                      " `items' == `Undefined'";
 
           return OperationResult::Nothing;
         }
       }
       else
       {
-        qDebug() << "TableModelStorage::read: cannot read: incompatible"
-                    " or invalid `metadata' key";
+        qDebug() << "TableModelStorage::read: cannot read: "
+                    "`metadata' != `this->metadata()'";
 
         return OperationResult::Nothing;
       }
     }
     else
     {
-      qDebug() << "TableModelStorage::read: cannot read: empty `metadata' key";
+      qDebug() << "TableModelStorage::read: cannot read:"
+                  " `metadata' == (empty)";
 
       return OperationResult::Nothing;
     }
@@ -137,14 +151,15 @@ TableModelStorage::read(const QJsonObject& jsonObject)
   else
   {
     qDebug() << "TableModelStorage::read: cannot read:"
-                " `metadata' is `Undefined'";
+                " `metadata' == `Undefined'";
 
     return OperationResult::Nothing;
   }
 }
 
-OperationResult
-TableModelStorage::write(QJsonObject& jsonObject) const
+
+Utils::OperationResult
+GUI::TableModelStorage::write(QJsonObject& jsonObject) const
 {
   QJsonArray itemsArray;
   for (const SimpleTableModel& item : _items)
@@ -157,15 +172,17 @@ TableModelStorage::write(QJsonObject& jsonObject) const
     }
     else
     {
-      qDebug() << "TableModelStorage::read: cannot write item,"
+      qDebug() << "TableModelStorage::read: cannot write `item',"
                   " stopping operation";
 
       return res;
     }
   }
-  jsonObject[QStringLiteral("metadata")] =
-    _metadataHeader + QString("%1").arg(int(_field));
+
   jsonObject[QStringLiteral("items")] = itemsArray;
+
+  jsonObject[QStringLiteral("metadata")] =
+  _metadataHeader + QString("%1").arg(int(_field));
 
   return OperationResult::Success;
 }

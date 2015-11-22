@@ -1,16 +1,20 @@
-﻿#ifndef LINEARPROGRAMDATA_TXX
+﻿#pragma once
+
+#ifndef LINEARPROGRAMDATA_TXX
 #define LINEARPROGRAMDATA_TXX
+
 
 #include <stdexcept>
 #include <utility>
 
-#include "linearprogramdata.hxx"
-
 #include "eigen3/Eigen/Core"
+
 
 namespace LinearProgramming
 {
   using namespace Eigen;
+  using namespace std;
+
 
   template<typename T>
   LinearProgramData<T>::LinearProgramData() :
@@ -19,12 +23,14 @@ namespace LinearProgramming
     constraintsRHS(Matrix<T, Dynamic, 1>::Zero(1, 1))
   { }
 
+
   template<typename T>
   LinearProgramData<T>::LinearProgramData(const LinearProgramData<T>& other) :
     objectiveFuncCoeffs(other.objectiveFuncCoeffs),
     constraintsCoeffs(other.constraintsCoeffs),
     constraintsRHS(other.constraintsRHS)
   { }
+
 
   template<typename T>
   LinearProgramData<T>::LinearProgramData(LinearProgramData<T>&& other) :
@@ -34,6 +40,7 @@ namespace LinearProgramming
     constraintsCoeffs(std::move(other.constraintsCoeffs)),
     constraintsRHS(std::move(other.constraintsRHS))
   { }
+
 
   template<typename T>
   LinearProgramData<T>::LinearProgramData(
@@ -54,6 +61,7 @@ namespace LinearProgramming
     }
   }
 
+
   template<typename T>
   LinearProgramData<T>::LinearProgramData(
     Matrix<T, 1, Dynamic>&& objFuncCoeffs,
@@ -73,6 +81,7 @@ namespace LinearProgramming
     }
   }
 
+
   template<typename T>
   const LinearProgramData<T>&
   LinearProgramData<T>::operator =(
@@ -88,6 +97,7 @@ namespace LinearProgramming
 
     return *this;
   }
+
 
   template<typename T>
   const LinearProgramData<T>&
@@ -106,12 +116,14 @@ namespace LinearProgramming
     return *this;
   }
 
+
   template<typename T>
   DenseIndex
   LinearProgramData<T>::constraintsCount() const
   {
     return constraintsCoeffs.rows();
   }
+
 
   template<typename T>
   DenseIndex
@@ -120,5 +132,6 @@ namespace LinearProgramming
     return constraintsCoeffs.cols();
   }
 }
+
 
 #endif // LINEARPROGRAMDATA_TXX

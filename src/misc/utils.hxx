@@ -1,5 +1,8 @@
-﻿#ifndef UTILS_HXX
+﻿#pragma once
+
+#ifndef UTILS_HXX
 #define UTILS_HXX
+
 
 #include <iostream>
 #include <iterator>
@@ -7,19 +10,29 @@
 #include <string>
 #include <vector>
 
+#include <QApplication>
+
 #include "eigen3/Eigen/Core"
 #include "cppformat/format.h"
+
 
 //TODO: ~ Put away all the usings from headers
 //TODO: !~ Use nested namespaces for all the modules
 namespace Utils
 {
   template<typename T1, typename... TN>
+  /**
+   * @brief The AlwaysFalse struct
+   */
   struct AlwaysFalse
   {
     enum : bool { value = false };
   };
 
+
+  /**
+   * @brief The OperationResult enum
+   */
   enum struct OperationResult : int
   {
     Success = 0,
@@ -27,11 +40,30 @@ namespace Utils
     Nothing = 2
   };
 
+
+  /**
+   * @brief MathematicaFormat
+   */
   const Eigen::IOFormat MathematicaFormat(
     Eigen::FullPrecision, 0, ", ", ",\n", "{", "}", "{", "}"
   );
 
+
+  /**
+   * @brief makeApplication
+   * @param argc
+   * @param argv
+   * @return
+   */
+  QApplication* makeApplication(int& argc, char** argv);
+
+
   template<typename T>
+  /**
+   * @brief makeString
+   * @param from
+   * @return
+   */
   std::string
   makeString(const std::vector<T>& from)
   {
@@ -45,7 +77,16 @@ namespace Utils
     return oss.str();
   }
 
+
   template <typename... Args>
+  /**
+   * @brief printDebugLog
+   * @param func
+   * @param file
+   * @param line
+   * @param format
+   * @param args
+   */
   void
   printDebugLog(
     const char* const func, const char* const file, int line,
@@ -58,6 +99,7 @@ namespace Utils
   }
 }
 
+
 #ifdef LP_WITH_DEBUG_LOG
 #define LOG(fmt,...) \
 do \
@@ -67,5 +109,6 @@ do \
 #else
 #define LOG(fmt,...) do { } while (false)
 #endif // LP_WITH_DEBUG_LOG
+
 
 #endif // UTILS_HXX

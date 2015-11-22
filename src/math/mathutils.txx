@@ -1,7 +1,8 @@
-﻿#ifndef MATHUTILS_TXX
+﻿#pragma once
+
+#ifndef MATHUTILS_TXX
 #define MATHUTILS_TXX
 
-#include "mathutils.hxx"
 
 #include <cmath>
 
@@ -12,13 +13,12 @@
 #include <QDebug>
 
 #include "numerictypes.hxx"
-#include "../misc/utils.hxx"
+
 
 namespace MathUtils
 {
   using namespace NumericTypes;
   using namespace std;
-  using namespace Utils;
 
 
   template<typename R>
@@ -40,28 +40,28 @@ namespace MathUtils
   {
     static_assert(
       numeric_limits<R>::is_integer,
-      "MathUtils::rationalize<R>: R should be a primitive integer type!"
+      "MathUtils::rationalize<R>: `R' should be a primitive integer type!"
     );
 
     Real r0(x); //See eq. (8)
     Real integerPart(floor(r0));
 
     //Check for overflow
-    if (integerPart > Real(numeric_limits<R>::max()))
+    if (integerPart > Real(NumericLimits::max<R>()))
     {
       qDebug() <<
-        "MathUtils::rationalize<R>: overflow at the upper bound of R";
+        "MathUtils::rationalize<R>: overflow at the upper bound of `R'";
 
-      return make_pair(numeric_limits<R>::max(), 1);
+      return make_pair(NumericLimits::max<R>(), 1);
     }
     else
     {
-      if (integerPart < Real(numeric_limits<R>::min()))
+      if (integerPart < Real(NumericLimits::min<R>()))
       {
         qDebug() <<
-          "MathUtils::rationalize<R>: overflow at the lower bound of R";
+          "MathUtils::rationalize<R>: overflow at the lower bound of `R'";
 
-        return make_pair(numeric_limits<R>::min(), 1);
+        return make_pair(NumericLimits::min<R>(), 1);
       }
       else
       {
@@ -111,9 +111,10 @@ namespace MathUtils
 
           if (iterCount > maxIterations)
           {
-            qDebug() << "MathUtils::rationalize<R>: iterations limit exceeded:"
-                        " iterCount==" << iterCount << ">" << maxIterations <<
-                        "; tolerance==" << tolerance;
+            qDebug() << "MathUtils::rationalize<R>: iterations limit"
+                        "`maxIterations' exceeded: `iterCount' ==" <<
+                        iterCount << ">" << maxIterations <<
+                        "; `tolerance' ==" << tolerance;
           }
 
           if (qn <= maxDenominator)
@@ -132,6 +133,7 @@ namespace MathUtils
     }
   }
 
+
   template<>
   /**
    * @brief absoluteValue
@@ -143,6 +145,7 @@ namespace MathUtils
   {
     return Real(fabs(double(x)));
   }
+
 
   template<>
   /**
@@ -156,6 +159,7 @@ namespace MathUtils
     return ((x < Rational(0)) ? -x : x);
   }
 
+
   template<>
   /**
    * @brief isEqualToZero
@@ -166,11 +170,11 @@ namespace MathUtils
   isEqualToZero(Real x)
   {
     return (
-      absoluteValue<Real>(x)
-      <=
+      absoluteValue<Real>(x) <=
       Epsilon * std::max<Real>(Real(1), absoluteValue<Real>(x))
     );
   }
+
 
   template<>
   /**
@@ -184,6 +188,7 @@ namespace MathUtils
     return (x.numerator() == Integer(0));
   }
 
+
   template<>
   /**
    * @brief isGreaterThanZero
@@ -194,11 +199,10 @@ namespace MathUtils
   isGreaterThanZero(Real x)
   {
     return (
-      x
-      >
-      Epsilon * std::max<Real>(Real(1), absoluteValue<Real>(x))
+      x > Epsilon * std::max<Real>(Real(1), absoluteValue<Real>(x))
     );
   }
+
 
   template<>
   /**
@@ -212,6 +216,7 @@ namespace MathUtils
     return (x > Rational(0));
   }
 
+
   template<>
   /**
    * @brief isLessThanZero
@@ -222,11 +227,10 @@ namespace MathUtils
   isLessThanZero(Real x)
   {
     return (
-      x
-      <
-      (-Epsilon) * std::max<Real>(Real(1), absoluteValue<Real>(x))
+      x < (-Epsilon) * std::max<Real>(Real(1), absoluteValue<Real>(x))
     );
   }
+
 
   template<>
   /**
@@ -240,6 +244,7 @@ namespace MathUtils
     return (x < Rational(0));
   }
 
+
   template<>
   /**
    * @brief isGreaterOrEqualToZero
@@ -250,11 +255,10 @@ namespace MathUtils
   isGreaterOrEqualToZero(Real x)
   {
     return (
-      x
-      >=
-      Epsilon * std::max<Real>(Real(1), absoluteValue<Real>(x))
+      x >= Epsilon * std::max<Real>(Real(1), absoluteValue<Real>(x))
     );
   }
+
 
   template<>
   /**
@@ -268,5 +272,6 @@ namespace MathUtils
     return (x >= Rational(0));
   }
 }
+
 
 #endif // MATHUTILS_TXX

@@ -1,5 +1,8 @@
-﻿#ifndef NUMERICSTYLEDITEMDELEGATE_HXX
+﻿#pragma once
+
+#ifndef NUMERICSTYLEDITEMDELEGATE_HXX
 #define NUMERICSTYLEDITEMDELEGATE_HXX
+
 
 #include <QItemDelegate>
 #include <QModelIndex>
@@ -10,51 +13,58 @@
 #include <QWidget>
 
 #include "../math/numerictypes.hxx"
-#include "../misc/utils.hxx"
 
-using namespace NumericTypes;
-using namespace Utils;
 
-//HACK: This shim only makes `moc' happy about templated classes.
-class StyledItemDelegate :
-  public QStyledItemDelegate
+namespace GUI
 {
-  Q_OBJECT
+  using namespace NumericTypes;
 
-  public:
-    explicit StyledItemDelegate(QObject* parent = 0);
-};
 
-template<typename T = Real>
-class NumericStyledItemDelegate :
-  public virtual StyledItemDelegate
-{
-  public:
-    explicit NumericStyledItemDelegate(QObject* parent = 0);
+  //HACK: This shim only makes `moc' happy about templated classes.
+  class StyledItemDelegate :
+    public virtual QStyledItemDelegate
+  {
+    Q_OBJECT
 
-    virtual QWidget* createEditor(
-      QWidget* parent, const QStyleOptionViewItem& option,
-      const QModelIndex& index
-    ) const override;
 
-    virtual void setEditorData(
-      QWidget* editor, const QModelIndex& index
-    ) const override;
+    public:
+      explicit StyledItemDelegate(QObject* parent = 0);
+  };
 
-    virtual void setModelData(
-      QWidget* editor, QAbstractItemModel* model, const QModelIndex& index
-    ) const override;
 
-    virtual void updateEditorGeometry(
-      QWidget* editor, const QStyleOptionViewItem& option,
-      const QModelIndex& index
-    ) const override;
+  template<typename T = Real>
+  class NumericStyledItemDelegate :
+    public virtual StyledItemDelegate
+  {
+    public:
+      explicit NumericStyledItemDelegate(QObject* parent = 0);
 
-//    virtual QSize sizeHint(
-//      const QStyleOptionViewItem& option, const QModelIndex& index
-//    ) const override;
-};
+      virtual QWidget* createEditor(
+        QWidget* parent, const QStyleOptionViewItem& option,
+        const QModelIndex& index
+      ) const override;
+
+      virtual void setEditorData(
+        QWidget* editor, const QModelIndex& index
+      ) const override;
+
+      virtual void setModelData(
+        QWidget* editor, QAbstractItemModel* model, const QModelIndex& index
+      ) const override;
+
+      virtual void updateEditorGeometry(
+        QWidget* editor, const QStyleOptionViewItem& option,
+        const QModelIndex& index
+      ) const override;
+
+  //    virtual QSize sizeHint(
+  //      const QStyleOptionViewItem& option, const QModelIndex& index
+  //    ) const override;
+  };
+}
+
 
 #include "numericstyleditemdelegate.txx"
+
 
 #endif // NUMERICSTYLEDITEMDELEGATE_HXX

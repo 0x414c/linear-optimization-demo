@@ -1,4 +1,4 @@
-﻿#include "tablemodel.hxx"
+﻿#include "simpletablemodel.hxx"
 
 #include <utility>
 
@@ -16,11 +16,13 @@
 
 #include "../misc/utils.hxx"
 
-SimpleTableModel::SimpleTableModel(QObject* parent) :
+
+GUI::SimpleTableModel::SimpleTableModel(QObject* parent) :
   QAbstractTableModel(parent)
 { }
 
-SimpleTableModel::SimpleTableModel(int rows, int cols, QObject* parent) :
+
+GUI::SimpleTableModel::SimpleTableModel(int rows, int cols, QObject* parent) :
   QAbstractTableModel(parent),
   _rows(rows),
   _cols(cols),
@@ -29,10 +31,12 @@ SimpleTableModel::SimpleTableModel(int rows, int cols, QObject* parent) :
   )
 { }
 
-SimpleTableModel::SimpleTableModel(const SimpleTableModel& other) :
+
+GUI::SimpleTableModel::SimpleTableModel(const SimpleTableModel& other) :
   QAbstractTableModel(other.parent()),
   _rows(other._rows),
   _cols(other._cols),
+  _isReadOnly(other._isReadOnly),
   _haveCustomVerticalHeaderData(other._haveCustomVerticalHeaderData),
   _haveCustomHorizontalHeaderData(other._haveCustomHorizontalHeaderData),
   _values(other._values),
@@ -40,10 +44,12 @@ SimpleTableModel::SimpleTableModel(const SimpleTableModel& other) :
   _verticalHeaderData(other._verticalHeaderData)
 { }
 
-SimpleTableModel::SimpleTableModel(SimpleTableModel&& other) :
+
+GUI::SimpleTableModel::SimpleTableModel(SimpleTableModel&& other) :
   QAbstractTableModel(other.parent()),
   _rows(other._rows),
   _cols(other._cols),
+  _isReadOnly(other._isReadOnly),
   _haveCustomVerticalHeaderData(other._haveCustomVerticalHeaderData),
   _haveCustomHorizontalHeaderData(other._haveCustomHorizontalHeaderData),
   _values(std::move(other._values)),
@@ -51,27 +57,30 @@ SimpleTableModel::SimpleTableModel(SimpleTableModel&& other) :
   _verticalHeaderData(std::move(other._verticalHeaderData))
 {
 //We don't need to re-initialize object at rvalue.
-//  otherTableModel._rows = 0;
-//  otherTableModel._cols = 0;
-//  otherTableModel._values = QVector<QVector<QString>>(0);
-//  otherTableModel._haveCustomHorizontalHeaderData = false;
-//  otherTableModel._haveCustomVerticalHeaderData = false;
-//  otherTableModel._horizontalHeaderData = QVector<QString>(0);
-//  otherTableModel._verticalHeaderData = QVector<QString>(0);
-//  otherTableModel.setParent(0);
+//  other._rows = 0;
+//  other._cols = 0;
+//  other._isReadOnly = false;
+//  other._haveCustomHorizontalHeaderData = false;
+//  other._haveCustomVerticalHeaderData = false;
+//  other._values = QVector<QVector<QString>>(0);
+//  other._horizontalHeaderData = QVector<QString>(0);
+//  other._verticalHeaderData = QVector<QString>(0);
+//  other.setParent(0);
 }
 
-const SimpleTableModel&
-SimpleTableModel::operator =(const SimpleTableModel& other)
+
+const GUI::SimpleTableModel&
+GUI::SimpleTableModel::operator =(const SimpleTableModel& other)
 {
   if (this != &other)
   {
     beginResetModel();
     _rows = other._rows;
     _cols = other._cols;
-    _values = other._values;
+    _isReadOnly = other._isReadOnly;
     _haveCustomHorizontalHeaderData = other._haveCustomHorizontalHeaderData;
     _haveCustomVerticalHeaderData = other._haveCustomVerticalHeaderData;
+    _values = other._values;
     _horizontalHeaderData = other._horizontalHeaderData;
     _verticalHeaderData = other._verticalHeaderData;
     setParent(other.parent());
@@ -81,38 +90,42 @@ SimpleTableModel::operator =(const SimpleTableModel& other)
   return *this;
 }
 
-const SimpleTableModel&
-SimpleTableModel::operator =(SimpleTableModel&& other)
+
+const GUI::SimpleTableModel&
+GUI::SimpleTableModel::operator =(SimpleTableModel&& other)
 {
   if (this != &other)
   {
     beginResetModel();
     _rows = other._rows;
     _cols = other._cols;
-    _values = std::move(other._values);
+    _isReadOnly = other._isReadOnly;
     _haveCustomHorizontalHeaderData = other._haveCustomHorizontalHeaderData;
     _haveCustomVerticalHeaderData = other._haveCustomVerticalHeaderData;
+    _values = std::move(other._values);
     _horizontalHeaderData = std::move(other._horizontalHeaderData);
     _verticalHeaderData = std::move(other._verticalHeaderData);
     setParent(other.parent());
     endResetModel();
 
 //We don't need to re-initialize object at rvalue.
-//    otherTableModel._rows = 0;
-//    otherTableModel._cols = 0;
-//    otherTableModel._values = QVector<QVector<QString>>(0);
-//    otherTableModel._haveCustomHorizontalHeaderData = false;
-//    otherTableModel._haveCustomVerticalHeaderData = false;
-//    otherTableModel._horizontalHeaderData = QVector<QString>(0);
-//    otherTableModel._verticalHeaderData = QVector<QString>(0);
-//    otherTableModel.setParent(0);
+//    other._rows = 0;
+//    other._cols = 0;
+//    other._isReadOnly = false;
+//    other._haveCustomHorizontalHeaderData = false;
+//    other._haveCustomVerticalHeaderData = false;
+//    other._values = QVector<QVector<QString>>(0);
+//    other._horizontalHeaderData = QVector<QString>(0);
+//    other._verticalHeaderData = QVector<QString>(0);
+//    other.setParent(0);
   }
 
   return *this;
 }
 
+
 int
-SimpleTableModel::rowCount(const QModelIndex& parent) const
+GUI::SimpleTableModel::rowCount(const QModelIndex& parent) const
 {
   if (!parent.isValid())
   {
@@ -124,8 +137,9 @@ SimpleTableModel::rowCount(const QModelIndex& parent) const
   }
 }
 
+
 int
-SimpleTableModel::columnCount(const QModelIndex& parent) const
+GUI::SimpleTableModel::columnCount(const QModelIndex& parent) const
 {
   if (!parent.isValid())
   {
@@ -137,8 +151,9 @@ SimpleTableModel::columnCount(const QModelIndex& parent) const
   }
 }
 
+
 QVariant
-SimpleTableModel::data(const QModelIndex& index, int role) const
+GUI::SimpleTableModel::data(const QModelIndex& index, int role) const
 {
   if (!index.isValid())
   {
@@ -166,8 +181,9 @@ SimpleTableModel::data(const QModelIndex& index, int role) const
   }
 }
 
+
 QVariant
-SimpleTableModel::headerData(
+GUI::SimpleTableModel::headerData(
   int section, Qt::Orientation orientation, int role
 ) const
 {
@@ -220,8 +236,9 @@ SimpleTableModel::headerData(
   }
 }
 
+
 Qt::ItemFlags
-SimpleTableModel::flags(const QModelIndex& index) const
+GUI::SimpleTableModel::flags(const QModelIndex& index) const
 {
   if (!index.isValid())
   {
@@ -229,12 +246,20 @@ SimpleTableModel::flags(const QModelIndex& index) const
   }
   else
   {
-    return (QAbstractTableModel::flags(index) | Qt::ItemIsEditable);
+    if (_isReadOnly)
+    {
+      return (QAbstractTableModel::flags(index) & ~Qt::ItemIsEditable);
+    }
+    else
+    {
+      return (QAbstractTableModel::flags(index) | Qt::ItemIsEditable);
+    }
   }
 }
 
+
 bool
-SimpleTableModel::setData(
+GUI::SimpleTableModel::setData(
   const QModelIndex& index, const QVariant& value, int role
 )
 {
@@ -265,8 +290,9 @@ SimpleTableModel::setData(
   }
 }
 
+
 bool
-SimpleTableModel::setHeaderData(
+GUI::SimpleTableModel::setHeaderData(
   int section, Qt::Orientation orientation, const QVariant& value, int role
 )
 {
@@ -305,8 +331,11 @@ SimpleTableModel::setHeaderData(
   }
 }
 
+
 bool
-SimpleTableModel::insertRows(int row, int count, const QModelIndex& parent)
+GUI::SimpleTableModel::insertRows(
+  int row, int count, const QModelIndex& parent
+)
 {
   if (!parent.isValid())
   {
@@ -330,8 +359,11 @@ SimpleTableModel::insertRows(int row, int count, const QModelIndex& parent)
   }
 }
 
+
 bool
-SimpleTableModel::removeRows(int row, int count, const QModelIndex& parent)
+GUI::SimpleTableModel::removeRows(
+  int row, int count, const QModelIndex& parent
+)
 {
   if (!parent.isValid())
   {
@@ -358,8 +390,11 @@ SimpleTableModel::removeRows(int row, int count, const QModelIndex& parent)
   }
 }
 
+
 bool
-SimpleTableModel::insertColumns(int col, int count, const QModelIndex& parent)
+GUI::SimpleTableModel::insertColumns(
+  int col, int count, const QModelIndex& parent
+)
 {
   if (!parent.isValid())
   {
@@ -382,8 +417,11 @@ SimpleTableModel::insertColumns(int col, int count, const QModelIndex& parent)
   }
 }
 
+
 bool
-SimpleTableModel::removeColumns(int col, int count, const QModelIndex& parent)
+GUI::SimpleTableModel::removeColumns(
+  int col, int count, const QModelIndex& parent
+)
 {
   if (!parent.isValid())
   {
@@ -413,8 +451,9 @@ SimpleTableModel::removeColumns(int col, int count, const QModelIndex& parent)
   }
 }
 
+
 bool
-SimpleTableModel::clear(const QModelIndex& parent)
+GUI::SimpleTableModel::clear(const QModelIndex& parent)
 {
   if (!parent.isValid())
   {
@@ -433,8 +472,9 @@ SimpleTableModel::clear(const QModelIndex& parent)
   }
 }
 
+
 bool
-SimpleTableModel::clear(const QVariant& value, const QModelIndex& parent)
+GUI::SimpleTableModel::clear(const QVariant& value, const QModelIndex& parent)
 {
   if (!parent.isValid())
   {
@@ -453,8 +493,9 @@ SimpleTableModel::clear(const QVariant& value, const QModelIndex& parent)
   }
 }
 
+
 bool
-SimpleTableModel::clear(
+GUI::SimpleTableModel::clear(
   int rowFirst, int colFirst, int rowLast, int colLast,
   const QVariant& value, const QModelIndex& parent
 )
@@ -492,8 +533,11 @@ SimpleTableModel::clear(
   }
 }
 
+
 bool
-SimpleTableModel::resize(int newRows, int newCols, const QModelIndex& parent)
+GUI::SimpleTableModel::resize(
+  int newRows, int newCols, const QModelIndex& parent
+)
 {
   if (!parent.isValid())
   {
@@ -543,8 +587,11 @@ SimpleTableModel::resize(int newRows, int newCols, const QModelIndex& parent)
   }
 }
 
+
 QVariant
-SimpleTableModel::valueAt(int row, int col, const QModelIndex &parent) const
+GUI::SimpleTableModel::valueAt(
+  int row, int col, const QModelIndex &parent
+) const
 {
   if (!parent.isValid())
   {
@@ -563,8 +610,34 @@ SimpleTableModel::valueAt(int row, int col, const QModelIndex &parent) const
   }
 }
 
-OperationResult
-SimpleTableModel::read(const QJsonObject& jsonObject)
+
+bool
+GUI::SimpleTableModel::readOnly() const
+{
+  return _isReadOnly;
+}
+
+
+bool
+GUI::SimpleTableModel::setReadOnly(bool isReadOnly)
+{
+  if (_isReadOnly != isReadOnly)
+  {
+//    beginResetModel();
+    _isReadOnly = isReadOnly;
+//    endResetModel();
+
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+
+Utils::OperationResult
+GUI::SimpleTableModel::read(const QJsonObject& jsonObject)
 {
   const QJsonValue rowsValue(jsonObject[QStringLiteral("rows")]);
   if (rowsValue.type() != QJsonValue::Undefined)
@@ -596,8 +669,8 @@ SimpleTableModel::read(const QJsonObject& jsonObject)
               }
               else
               {
-                qDebug() << "TableModel::read: cannot read value:"
-                            " value is `Undefined', stopping operation";
+                qDebug() << "TableModel::read: cannot read `value':"
+                            " `value' == `Undefined', stopping operation";
 
                 return OperationResult::Fail;
               }
@@ -620,29 +693,29 @@ SimpleTableModel::read(const QJsonObject& jsonObject)
       }
       else
       {
-        qDebug() << "TableModel::read: cannot read: `values' is `Undefined'";
+        qDebug() << "TableModel::read: cannot read: `values' == `Undefined'";
 
         return OperationResult::Nothing;
       }
     }
     else
     {
-      qDebug() << "TableModel::read: cannot read: `cols' is `Undefined'";
+      qDebug() << "TableModel::read: cannot read: `cols' == `Undefined'";
 
       return OperationResult::Nothing;
     }
   }
   else
   {
-    qDebug() << "TableModel::read: cannot read: `rows' is `Undefined'";
+    qDebug() << "TableModel::read: cannot read: `rows' == `Undefined'";
 
     return OperationResult::Nothing;
   }
 }
 
 
-OperationResult
-SimpleTableModel::write(QJsonObject& jsonObject) const
+Utils::OperationResult
+GUI::SimpleTableModel::write(QJsonObject& jsonObject) const
 {
   QJsonArray valuesArray;
   for (const QVector<QString>& row : _values)
@@ -652,6 +725,7 @@ SimpleTableModel::write(QJsonObject& jsonObject) const
       valuesArray.append(col);
     }
   }
+
   jsonObject[QStringLiteral("values")] = valuesArray;
   jsonObject[QStringLiteral("rows")] = _rows;
   jsonObject[QStringLiteral("cols")] = _cols;

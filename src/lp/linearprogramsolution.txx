@@ -1,20 +1,26 @@
-﻿#ifndef LINEARPROGRAMSOLUTION_TXX
+﻿#pragma once
+
+#ifndef LINEARPROGRAMSOLUTION_TXX
 #define LINEARPROGRAMSOLUTION_TXX
+
 
 #include <utility>
 
-#include "linearprogramsolution.hxx"
+#include "solutiontype.hxx"
 
 #include "eigen3/Eigen/Core"
+
 
 namespace LinearProgramming
 {
   using namespace Eigen;
 
+
   template<typename T>
   LinearProgramSolution<T>::LinearProgramSolution() :
     extremePoint(Matrix<T, 1, Dynamic>::Zero(1, 1))
   { }
+
 
   template<typename T>
   LinearProgramSolution<T>::LinearProgramSolution(
@@ -25,6 +31,7 @@ namespace LinearProgramming
     extremeValue(other.extremeValue)
   { }
 
+
   template<typename T>
   LinearProgramSolution<T>::LinearProgramSolution(
     LinearProgramSolution<T>&& other
@@ -33,6 +40,7 @@ namespace LinearProgramming
     extremePoint(std::move(other.extremePoint)),
     extremeValue(other.extremeValue)
   { }
+
 
   template<typename T>
   LinearProgramSolution<T>::LinearProgramSolution(
@@ -45,6 +53,7 @@ namespace LinearProgramming
     extremeValue(extremeValue)
   { }
 
+
   template<typename T>
   LinearProgramSolution<T>::LinearProgramSolution(
     SolutionType solutionType,
@@ -55,6 +64,7 @@ namespace LinearProgramming
     extremePoint(std::move(extremePoint)),
     extremeValue(extremeValue)
   { }
+
 
   template<typename T>
   const LinearProgramSolution<T>&
@@ -72,6 +82,7 @@ namespace LinearProgramming
     return *this;
   }
 
+
   template<typename T>
   const LinearProgramSolution<T>&
   LinearProgramSolution<T>::operator =(
@@ -88,5 +99,6 @@ namespace LinearProgramming
     return *this;
   }
 }
+
 
 #endif // LINEARPROGRAMSOLUTION_TXX

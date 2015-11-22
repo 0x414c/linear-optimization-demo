@@ -1,5 +1,8 @@
-﻿#ifndef LINEARFUNCTION_HXX
+﻿#pragma once
+
+#ifndef LINEARFUNCTION_HXX
 #define LINEARFUNCTION_HXX
+
 
 #include <utility>
 
@@ -7,13 +10,13 @@
 
 #include "../math/numerictypes.hxx"
 #include "../misc/eigenextensions.hxx"
-#include "../misc/utils.hxx"
+
 
 namespace LinearProgramming
 {
   using namespace Eigen;
   using namespace NumericTypes;
-  using namespace Utils;
+
 
   /**
    * @brief The `LinearFunction' templated class
@@ -41,13 +44,16 @@ namespace LinearProgramming
     public:
       LinearFunction() = delete;
 
+
       explicit LinearFunction(const Matrix<T, 1, N>& coeffs) :
         _coeffs(coeffs)
       { }
 
+
       explicit LinearFunction(Matrix<T, 1, N>&& coeffs) :
         _coeffs(std::move(coeffs))
       { }
+
 
       DenseIndex
       dim() const
@@ -55,11 +61,13 @@ namespace LinearProgramming
         return _coeffs.cols();
       }
 
+
       const Matrix<T, 1, N>&
       coeffs() const
       {
         return _coeffs;
       }
+
 
       const T&
       coeffAt(DenseIndex coeffIdx) const
@@ -73,11 +81,13 @@ namespace LinearProgramming
         return _coeffs(coeffIdx);
       }
 
+
       T
       operator ()(const Matrix<T, N, 1>& args) const
       {
         return valueAt(args);
       }
+
 
       T
       valueAt(const Matrix<T, N, 1>& args) const
@@ -85,9 +95,11 @@ namespace LinearProgramming
         return _coeffs.dot(args);
       }
 
+
     private:
       Matrix<T, 1, N> _coeffs;
   };
 }
+
 
 #endif // LINEARFUNCTION_HXX

@@ -1,5 +1,8 @@
-﻿#ifndef EIGENEXTENSIONS_HXX
+﻿#pragma once
+
+#ifndef EIGENEXTENSIONS_HXX
 #define EIGENEXTENSIONS_HXX
+
 
 #include <cmath>
 
@@ -8,11 +11,13 @@
 #include "boostextensions.hxx"
 #include "../math/numerictypes.hxx"
 
+
 /**
  * Include this header to all files that use
  * operations on `Matrix<Rational>' type.
  * Contents of this header is not intended for end-user.
  */
+
 
 namespace Eigen
 {
@@ -35,5 +40,6 @@ namespace Eigen
     };
   };
 }
+
 
 #endif // EIGENEXTENSIONS_HXX

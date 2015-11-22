@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QStyledItemDelegate>
 
-StyledItemDelegate::StyledItemDelegate(QObject* parent) :
+
+GUI::StyledItemDelegate::StyledItemDelegate(QObject* parent) :
   QStyledItemDelegate(parent)
 { }

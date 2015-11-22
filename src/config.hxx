@@ -1,9 +1,13 @@
-﻿#ifndef CONFIG_HXX
+﻿#pragma once
+
+#ifndef CONFIG_HXX
 #define CONFIG_HXX
+
 
 #include <cstdint>
 
 #include "math/numerictypes.hxx"
+
 
 namespace Config
 {
@@ -11,9 +15,15 @@ namespace Config
   {
     constexpr int ProgramModelsCount = 3;
     constexpr int SimplexModelsCount = 3;
+
+    constexpr int DefaultConstraints = 3;
+    constexpr int DefaultVariables = 3;
+    constexpr int MinConstraints = 1;
+    constexpr int MinVariables = 1;
     constexpr int MaxConstraints = 16;
     constexpr int MaxVariables = 16;
   }
+
 
   namespace LinearProgramming
   {
@@ -22,11 +32,13 @@ namespace Config
     constexpr uint16_t MaxSimplexIterations = 48;
   }
 
+
   namespace MathUtils
   {
     constexpr NumericTypes::Real Epsilon = 1E-8;
     constexpr uint16_t MaxRationalizeIterations = 22;
   }
+
 
   namespace TableModelUtils
   {
@@ -35,5 +47,6 @@ namespace Config
     constexpr double DistMax = 10.;
   }
 }
+
 
 #endif // CONFIG_HXX

@@ -6,14 +6,18 @@
 
 #include <QDebug>
 #include <QString>
+#include <QVariant>
 
-#include "tablemodel.hxx"
+#include "simpletablemodel.hxx"
 #include "../config.hxx"
+
 
 namespace TableModelUtils
 {
   using namespace Config::TableModelUtils;
+  using GUI::SimpleTableModel;
   using namespace std;
+
 
   bool
   fill(SimpleTableModel* const tableModel, FillMethod fillMethod)
@@ -54,11 +58,37 @@ namespace TableModelUtils
     }
     else
     {
-      qDebug() << "TableModelUtils::fill: `tableModel' argument is `nullptr'";
+      qDebug() << "TableModelUtils::fill: `tableModel' == `nullptr'";
 
       return false;
     }
   }
+
+
+  bool
+  fill(SimpleTableModel* const tableModel, const QString& value)
+  {
+    if (tableModel != nullptr)
+    {
+      for (int row(0); row < tableModel->rowCount(); ++row)
+      {
+        for (int col(0); col < tableModel->columnCount(); ++col)
+        {
+          const QModelIndex index(tableModel->index(row, col));
+          tableModel->setData(index, value);
+        }
+      }
+
+      return true;
+    }
+    else
+    {
+      qDebug() << "TableModelUtils::fill: `tableModel' == `nullptr'";
+
+      return false;
+    }
+  }
+
 
   bool
   fill(
@@ -83,8 +113,8 @@ namespace TableModelUtils
             }
             else
             {
-              qDebug() << "TableModelUtils::fill: nothing to convert"
-                          " at index (" << row << ";" << col << ")";
+              qDebug() << "TableModelUtils::fill: `tableModel->data(index(" <<
+                          row << "," << col << "))' == (empty)";
             }
           }
         }
@@ -93,14 +123,14 @@ namespace TableModelUtils
       }
       else
       {
-        qDebug() << "TableModelUtils::fill: `callback' argument is empty";
+        qDebug() << "TableModelUtils::fill: `callback' == (empty)";
 
         return false;
       }
     }
     else
     {
-      qDebug() << "TableModelUtils::fill: `tableModel' argument is `nullptr'";
+      qDebug() << "TableModelUtils::fill: `tableModel' == `nullptr'";
 
       return false;
     }

@@ -1,5 +1,8 @@
-﻿#ifndef LINEARPROGRAMUTILS_HXX
-#define LINEARPROGRAMUTILS_HXX
+﻿#pragma once
+
+#ifndef LINEARPROGRAMMINGUTILS_HXX
+#define LINEARPROGRAMMINGUTILS_HXX
+
 
 #include <utility>
 
@@ -11,16 +14,16 @@
 
 #include "linearprogramdata.hxx"
 #include "../math/numerictypes.hxx"
-#include "../misc/utils.hxx"
 
-namespace LinearProgramUtils
+
+namespace LinearProgrammingUtils
 {
   using namespace boost;
   using namespace Eigen;
   using namespace LinearProgramming;
   using namespace NumericTypes;
   using namespace std;
-  using namespace Utils;
+
 
   template<typename T = Real>
   bool isPointInFeasibleRegion(
@@ -41,6 +44,8 @@ namespace LinearProgramUtils
   void sortPointsClockwise(QVector<QPointF>& points);
 }
 
-#include "linearprogramutils.txx"
 
-#endif // LINEARPROGRAMUTILS_HXX
+#include "linearprogrammingutils.txx"
+
+
+#endif // LINEARPROGRAMMINGUTILS_HXX

@@ -1,7 +1,8 @@
-﻿#ifndef INUMERICSOLVER_TXX
+﻿#pragma once
+
+#ifndef INUMERICSOLVER_TXX
 #define INUMERICSOLVER_TXX
 
-#include "inumericsolver.hxx"
 
 namespace LinearProgramming
 {
@@ -9,5 +10,6 @@ namespace LinearProgramming
   INumericSolver<T>::~INumericSolver()
   { }
 }
+
 
 #endif // INUMERICSOLVER_TXX

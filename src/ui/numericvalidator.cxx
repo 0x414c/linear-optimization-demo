@@ -3,13 +3,15 @@
 #include <QObject>
 #include <QString>
 
-NumericValidator::NumericValidator(QObject* parent) :
+
+GUI::NumericValidator::NumericValidator(QObject* parent) :
   QValidator(parent)
 { }
 
+
 //Just example usage of `QValidator::validate'
 QValidator::State
-NumericValidator::validate(QString& input, int& pos) const
+GUI::NumericValidator::validate(QString& input, int& pos) const
 {
   if (input.isEmpty()) {
     return Acceptable;
@@ -17,7 +19,7 @@ NumericValidator::validate(QString& input, int& pos) const
   else
   {
     bool isOk(false);
-    int val(input.toInt(&isOk));
+    const int val(input.toInt(&isOk));
 
     if ((isOk == true) && (val > 0) && (val < 100))
     {

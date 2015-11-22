@@ -1,5 +1,8 @@
-﻿#ifndef SIMPLEXTABLEAU_HXX
+﻿#pragma once
+
+#ifndef SIMPLEXTABLEAU_HXX
 #define SIMPLEXTABLEAU_HXX
+
 
 #include <cstdlib>
 
@@ -9,8 +12,12 @@
 
 #include "eigen3/Eigen/Core"
 
+#include "dantzignumericsolver_fwd.hxx"
+#include "dantzignumericsolvercontroller_fwd.hxx"
 #include "linearprogramdata.hxx"
+#include "solutionphase.hxx"
 #include "../math/numerictypes.hxx"
+
 
 namespace LinearProgramming
 {
@@ -18,10 +25,6 @@ namespace LinearProgramming
   using namespace NumericTypes;
   using namespace std;
 
-  /**
-   * @brief The Phase enum
-   */
-  enum struct Phase : int { One = 1, Two = 2 };
 
   template<typename T = Real>
   /**
@@ -30,17 +33,23 @@ namespace LinearProgramming
   class SimplexTableau
   {
     public:
+      friend DantzigNumericSolver<T>;
+
+      friend DantzigNumericSolverController<T>;
+
+
+      [[deprecated("Only for internal usage."
+                   " Use factory methods `makePhase...' instead!")]]
+      SimplexTableau();
+
       SimplexTableau(const SimplexTableau<T>& simplexTableau);
       SimplexTableau(SimplexTableau<T>&& simplexTableau);
 
       T& operator ()(DenseIndex rowIdx, DenseIndex colIdx);
       const T& operator ()(DenseIndex rowIdx, DenseIndex colIdx) const;
 
-      Block<Matrix<T, Dynamic, Dynamic>>
-//      Matrix<T, Dynamic, Dynamic>&
-      entries();
-      Block<const Matrix<T, Dynamic, Dynamic>>
-//      const Matrix<T, Dynamic, Dynamic>&
+      Block<Matrix<T, Dynamic, Dynamic>, Dynamic, Dynamic> entries();
+      const Block<const Matrix<T, Dynamic, Dynamic>, Dynamic, Dynamic>
       entries() const;
 
       typename
@@ -57,7 +66,7 @@ namespace LinearProgramming
 
       DenseIndex cols() const;
 
-      Phase phase() const;
+      SolutionPhase phase() const;
 
       vector<DenseIndex>& basicVars();
       const vector<DenseIndex>& basicVars() const;
@@ -73,29 +82,47 @@ namespace LinearProgramming
 
       T extremeValue() const;
 
-      static SimplexTableau<T> makePhase1(
+
+      static SimplexTableau<T> makePhaseOne(
         const LinearProgramData<T>& linearProgramData
       );
 
-      static SimplexTableau<T> makePhase2(
+      static SimplexTableau<T> makePhaseTwo(
         const LinearProgramData<T>& linearProgramData,
         const SimplexTableau<T>& phase1Tableau
       ) throw(invalid_argument);
 
-//      std::ostream& operator<< (
-//        std::ostream& os, const SimplexTableau<T>& tableau
-//      );
 
     private:
-      SimplexTableau()/* = delete*/;
+      /**
+       * @brief _phase
+       * Marks the phase of the Simplex algorithm
+       * for which the tableau was created.
+       */
+      SolutionPhase _phase;
 
-      Phase _phase;
+      /**
+       * @brief _basicVars
+       * Maps row indices to the basic variables indices.
+       */
       vector<DenseIndex> _basicVars;
+
+      /**
+       * @brief _freeVars
+       * Maps columns indices to the free variables indices.
+       */
       vector<DenseIndex> _freeVars;
+
+      /**
+       * @brief _entries
+       * Stores all the entries of the tableau.
+       */
       Matrix<T, Dynamic, Dynamic> _entries;
   };
 }
 
+
 #include "simplextableau.txx"
+
 
 #endif // SIMPLEXTABLEAU_HXX

@@ -1,18 +1,22 @@
-﻿#ifndef LINEARPROGRAMDATA_HXX
+﻿#pragma once
+
+#ifndef LINEARPROGRAMDATA_HXX
 #define LINEARPROGRAMDATA_HXX
+
 
 #include <stdexcept>
 
 #include "eigen3/Eigen/Core"
 
 #include "../math/numerictypes.hxx"
-#include "../misc/utils.hxx"
+
 
 namespace LinearProgramming
 {
   using namespace Eigen;
   using namespace NumericTypes;
-  using namespace Utils;
+  using namespace std;
+
 
   template<typename T = Real>
   /**
@@ -21,8 +25,10 @@ namespace LinearProgramming
   struct LinearProgramData
   {
     LinearProgramData()/* = delete*/;
+
     LinearProgramData(const LinearProgramData<T>& other);
     LinearProgramData(LinearProgramData<T>&& other);
+
     LinearProgramData(
       const Matrix<T, 1, Dynamic>& objectiveFuncCoeffs,
       const Matrix<T, Dynamic, Dynamic>& constraintsCoeffs,
@@ -41,14 +47,19 @@ namespace LinearProgramming
 
     DenseIndex variablesCount() const;
 
-//    static LinearProgramData<T> make(...);
+//    static LinearProgramData<T> make(...); //TODO: ~
+
 
     Matrix<T, 1, Dynamic> objectiveFuncCoeffs;
+
     Matrix<T, Dynamic, Dynamic> constraintsCoeffs;
+
     Matrix<T, Dynamic, 1> constraintsRHS;
   };
 }
 
+
 #include "linearprogramdata.txx"
+
 
 #endif // LINEARPROGRAMDATA_HXX

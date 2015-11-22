@@ -1,7 +1,8 @@
-﻿#ifndef GRAPHICALSOLVER2D_TXX
+﻿#pragma once
+
+#ifndef GRAPHICALSOLVER2D_TXX
 #define GRAPHICALSOLVER2D_TXX
 
-#include "graphicalsolver2d.hxx"
 
 #include <iostream>
 #include <limits>
@@ -16,24 +17,25 @@
 #include "eigen3/Eigen/Core"
 
 #include "linearfunction.hxx"
-#include "linearprogramutils.hxx"
+#include "linearprogrammingutils.hxx"
 #include "linearprogramsolution.hxx"
 #include "plotdata2d.hxx"
 #include "../misc/dataconvertors.hxx"
-#include "../misc/utils.hxx"
+
 
 namespace LinearProgramming
 {
   using namespace boost;
   using namespace DataConvertors;
   using namespace Eigen;
-  using namespace LinearProgramUtils;
+  using namespace LinearProgrammingUtils;
   using namespace std;
-  using namespace Utils;
+
 
   template<typename T>
   GraphicalSolver2D<T>::GraphicalSolver2D()
   { }
+
 
   template<typename T>
   GraphicalSolver2D<T>::GraphicalSolver2D(
@@ -42,12 +44,14 @@ namespace LinearProgramming
     _linearProgramData(linearProgramData)
   { }
 
+
   template<typename T>
   GraphicalSolver2D<T>::GraphicalSolver2D(
     LinearProgramData<T>&& linearProgramData
   ) :
     _linearProgramData(std::move(linearProgramData))
   { }
+
 
   template<typename T>
   void GraphicalSolver2D<T>::setLinearProgramData(
@@ -57,6 +61,7 @@ namespace LinearProgramming
     _linearProgramData = linearProgramData;
   }
 
+
   template<typename T>
   void GraphicalSolver2D<T>::setLinearProgramData(
     LinearProgramData<T>&& linearProgramData
@@ -64,6 +69,7 @@ namespace LinearProgramming
   {
     _linearProgramData = std::move(linearProgramData);
   }
+
 
   /**
    * @brief GraphicalSolver2D::solve
@@ -106,27 +112,38 @@ namespace LinearProgramming
     optional<PlotData2D> ret;
 
     //Find column-basis
-    //Its column count (== free variables count) should be equal to 2 for 2D graphical method.
+    //Its column count (== free variables count) should
+    //be equal to 2 for 2D graphical method.
     Matrix<T, Dynamic, Dynamic> augm(constrsCount, varsCount + 1);
     augm <<
       _linearProgramData.constraintsCoeffs,
       _linearProgramData.constraintsRHS;
 
-    //For the system `Ax == b' to be consistent rank(A) should be equal to rank(A⊔b)
-    const int rankA(2), rankAb(2);
-    qDebug() << "The rank of A is " << rankA << "\nThe rank of A⊔b is " << rankAb;
+    //For the system `Ax == b' to be consistent rank(A)
+    //should be equal to rank(A⊔b)
+    const DenseIndex rankA(
+      reducedRowEchelonForm<T>(_linearProgramData.constraintsCoeffs).second
+    );
+    const rankAb(reducedRowEchelonForm<T>(augm).second);
+
+    qDebug() << "The rank of A is " << rankA <<
+                "\nThe rank of A⊔b is " << rankAb;
+
     if (rankA != rankAb || rankA == 0)
     {
       qDebug() << "GraphicalSolver2D<T>::solve: inconsistent system";
+
       plotData2D.resultType = SolutionType::Inconsistent;
 
       return ret;
     }
 
-    const int nullityA(2);
+    const int nullityA(varsCount - rankA);
     if (nullityA != 2)
     {
-      qDebug() << "GraphicalSolver2D<T>::solve: cannot solve this system by using 2D solver";
+      qDebug() << "GraphicalSolver2D<T>::solve: cannot solve this linear"
+                  " program by using 2D graphical solver";
+
       plotData2D.resultType = SolutionType::Unknown;
 
       return ret;
@@ -232,5 +249,6 @@ namespace LinearProgramming
     return ret;
   }
 }
+
 
 #endif // GRAPHICALSOLVER2D_TXX

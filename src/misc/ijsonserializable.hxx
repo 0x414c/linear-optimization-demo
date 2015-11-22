@@ -1,9 +1,13 @@
-﻿#ifndef IJSONSERIALIZABLE_HXX
+﻿#pragma once
+
+#ifndef IJSONSERIALIZABLE_HXX
 #define IJSONSERIALIZABLE_HXX
+
 
 #include <QJsonObject>
 
 #include "utils.hxx"
+
 
 class IJsonSerializable
 {
@@ -14,5 +18,6 @@ class IJsonSerializable
   protected:
     virtual ~IJsonSerializable() = 0;
 };
+
 
 #endif // IJSONSERIALIZABLE_HXX

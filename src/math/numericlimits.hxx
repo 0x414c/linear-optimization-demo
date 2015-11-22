@@ -1,9 +1,14 @@
-﻿#ifndef NUMERICLIMITS_HXX
+﻿#pragma once
+
+#ifndef NUMERICLIMITS_HXX
 #define NUMERICLIMITS_HXX
+
 
 #include "numerictypes.hxx"
 #include "../misc/utils.hxx"
 
+
+//TODO: ~? Convert to struct w/ static members
 namespace NumericLimits
 {
   template<typename T = NumericTypes::Real>
@@ -18,6 +23,7 @@ namespace NumericLimits
     return T(0);
   }
 
+
   template<typename T = NumericTypes::Real>
   T min()
   {
@@ -31,6 +37,8 @@ namespace NumericLimits
   }
 }
 
+
 #include "numericlimits.txx"
+
 
 #endif // NUMERICLIMITS_HXX

@@ -1,15 +1,20 @@
-﻿#ifndef DATACONVERTORS_HXX
+﻿#pragma once
+
+#ifndef DATACONVERTORS_HXX
 #define DATACONVERTORS_HXX
+
 
 #include <QString>
 
 #include "utils.hxx"
 
-using namespace Utils;
 
-//TODO: ~ Merge w/ `NumericTypes'
+//TODO: ~? Merge w/ `NumericTypes'
 namespace DataConvertors
 {
+  using namespace Utils;
+
+
   template<typename R>
   //TODO: ~? Use the second template only
   R numericCast(const QString& from)
@@ -23,6 +28,7 @@ namespace DataConvertors
     return R(0);
   }
 
+
   template<typename R, typename T>
   R numericCast(const T& from)
   {
@@ -33,9 +39,11 @@ namespace DataConvertors
     );
 
     return R(0);
-  }  
+  }
 }
 
+
 #include "dataconvertors.txx"
+
 
 #endif // DATACONVERTORS_HXX

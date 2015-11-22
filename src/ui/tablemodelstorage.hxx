@@ -1,48 +1,61 @@
-﻿#ifndef TABLEMODELSTORAGE_HXX
+﻿#pragma once
+
+#ifndef TABLEMODELSTORAGE_HXX
 #define TABLEMODELSTORAGE_HXX
+
 
 #include <QJsonObject>
 #include <QString>
 #include <QTableWidget>
 #include <QVector>
 
-#include "tablemodel.hxx"
+#include "simpletablemodel.hxx"
 #include "../math/numerictypes.hxx"
 #include "../misc/ijsonserializable.hxx"
 #include "../misc/utils.hxx"
 
-using namespace NumericTypes;
-using namespace Utils;
 
-class TableModelStorage :
-  virtual public IJsonSerializable
+namespace GUI
 {
-  public:
-    TableModelStorage();
-    explicit TableModelStorage(
-      const QVector<SimpleTableModel>& items, Field field = Field::Real
-    );
+  using namespace NumericTypes;
+  using Utils::OperationResult;
 
-    SimpleTableModel& operator [](int idx);
 
-    int count() const;
+  class TableModelStorage :
+    public virtual IJsonSerializable
+  {
+    public:
+      TableModelStorage();
 
-    const QVector<SimpleTableModel>& items();
+      explicit TableModelStorage(
+        const QVector<SimpleTableModel>& items, Field field = Field::Real
+      );
 
-    const SimpleTableModel& itemAt(int idx) const;
+      SimpleTableModel& operator [](int idx);
 
-    Field field() const;
+      int count() const;
 
-    QString metadata() const;
+      const QVector<SimpleTableModel>& items();
 
-    virtual OperationResult read(const QJsonObject& jsonObject) override;
+      const SimpleTableModel& itemAt(int idx) const;
 
-    virtual OperationResult write(QJsonObject& jsonObject) const override;
+      Field field() const;
 
-  private:
-    const QString _metadataHeader = QStringLiteral("1;");
-    QVector<SimpleTableModel> _items = QVector<SimpleTableModel>(0);
-    Field _field = Field::Real;
-};
+      QString metadata() const;
+
+      virtual OperationResult read(const QJsonObject& jsonObject) override;
+
+      virtual OperationResult write(QJsonObject& jsonObject) const override;
+
+
+    private:
+      const QString _metadataHeader = QStringLiteral("1;");
+
+      QVector<SimpleTableModel> _items = QVector<SimpleTableModel>(0);
+
+      Field _field = Field::Real;
+  };
+}
+
 
 #endif // TABLEMODELSTORAGE_HXX

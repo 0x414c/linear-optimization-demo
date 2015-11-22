@@ -1,12 +1,16 @@
-﻿#ifndef MATHUTILS_HXX
+﻿#pragma once
+
+#ifndef MATHUTILS_HXX
 #define MATHUTILS_HXX
 
-#include <limits>
+
 #include <utility>
 
+#include "numericlimits.hxx"
 #include "numerictypes.hxx"
-#include "../misc/utils.hxx"
 #include "../config.hxx"
+#include "../misc/utils.hxx"
+
 
 namespace MathUtils
 {
@@ -15,16 +19,19 @@ namespace MathUtils
   using namespace std;
   using namespace Utils;
 
+
   template<typename R = Integer>
   pair<R, R>
   rationalize(
     Real x, Real tolerance = Epsilon,
     uint16_t maxIterations = MaxRationalizeIterations,
-    R maxDenominator = numeric_limits<R>::max()
+    R maxDenominator = NumericLimits::max<R>()
   );
 
+
   template<typename T = Real>
-  T absoluteValue(T x)
+  T
+  absoluteValue(T x)
   {
     static_assert(
       AlwaysFalse<T>::value,
@@ -35,8 +42,11 @@ namespace MathUtils
     return T(0);
   }
 
+
+  //TODO: ~? Replace all the `is*' funcs w/ single comparison func
   template<typename T = Real>
-  bool isEqualToZero(T x)
+  bool
+  isEqualToZero(T x)
   {
     static_assert(
       AlwaysFalse<T>::value,
@@ -47,8 +57,10 @@ namespace MathUtils
     return false;
   }
 
+
   template<typename T = Real>
-  bool isGreaterThanZero(T x)
+  bool
+  isGreaterThanZero(T x)
   {
     static_assert(
       AlwaysFalse<T>::value,
@@ -59,8 +71,10 @@ namespace MathUtils
     return false;
   }
 
+
   template<typename T = Real>
-  bool isLessThanZero(T x)
+  bool
+  isLessThanZero(T x)
   {
     static_assert(
       AlwaysFalse<T>::value,
@@ -71,8 +85,10 @@ namespace MathUtils
     return false;
   }
 
+
   template<typename T = Real>
-  bool isGreaterOrEqualToZero(T x)
+  bool
+  isGreaterOrEqualToZero(T x)
   {
     static_assert(
       AlwaysFalse<T>::value,
@@ -84,6 +100,8 @@ namespace MathUtils
   }
 }
 
+
 #include "mathutils.txx"
+
 
 #endif // MATHUTILS_HXX

@@ -1,7 +1,11 @@
-﻿#ifndef NUMERICTYPES_HXX
+﻿#pragma once
+
+#ifndef NUMERICTYPES_HXX
 #define NUMERICTYPES_HXX
 
+
 #include "boost/rational.hpp"
+
 
 namespace NumericTypes
 {
@@ -13,5 +17,6 @@ namespace NumericTypes
 
   using Rational = boost::rational<Integer>;
 }
+
 
 #endif // NUMERICTYPES_HXX

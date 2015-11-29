@@ -47,6 +47,8 @@ namespace GUI
 
       virtual Qt::ItemFlags flags(const QModelIndex& index) const override;
 
+      bool setFlags(const QModelIndex& index, Qt::ItemFlags flags);
+
       virtual QVariant data(
         const QModelIndex& index, int role = Qt::DisplayRole
       ) const override;
@@ -98,9 +100,13 @@ namespace GUI
         int row, int col, const QModelIndex& parent = QModelIndex()
       ) const;
 
-      bool readOnly() const;
+      bool editable() const;
 
-      bool setReadOnly(bool isReadOnly = true);
+      bool setEditable(bool isReadOnly = true);
+
+      bool selectable() const;
+
+      bool setSelectable(bool isSelectable = true);
 
       virtual OperationResult read(const QJsonObject& jsonObject) override;
 
@@ -111,7 +117,8 @@ namespace GUI
       int _rows = 0;
       int _cols = 0;
 
-      bool _isReadOnly = false;
+      bool _isEditable = true;
+      bool _isSelectable = true;
 
       bool _haveCustomVerticalHeaderData = false;
       bool _haveCustomHorizontalHeaderData = false;
@@ -120,6 +127,14 @@ namespace GUI
 
       QVector<QString> _horizontalHeaderData = QVector<QString>(0);
       QVector<QString> _verticalHeaderData = QVector<QString>(0);
+
+      QVector<QVector<Qt::ItemFlags>> _flags =
+        QVector<QVector<Qt::ItemFlags>>(0);
+
+
+      bool _clearFlags(const QModelIndex& parent = QModelIndex());
+
+      bool _resetFlags(const QModelIndex& parent = QModelIndex());
   };
 }
 

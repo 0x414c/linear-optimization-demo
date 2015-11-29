@@ -4,6 +4,9 @@
 #define INUMERICSOLVER_TXX
 
 
+#include "inumericsolver.hxx"
+
+
 namespace LinearProgramming
 {
   template<typename T>

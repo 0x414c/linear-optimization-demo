@@ -46,6 +46,19 @@ namespace MathUtils
   //TODO: ~? Replace all the `is*' funcs w/ single comparison func
   template<typename T = Real>
   bool
+  isEqual(T x, T y)
+  {
+    static_assert(
+      AlwaysFalse<T>::value,
+      "MathUtils::isEqual<T>:"
+      " You can only use one of the specified specializations!"
+    );
+
+    return false;
+  }
+
+  template<typename T = Real>
+  bool
   isEqualToZero(T x)
   {
     static_assert(
@@ -88,11 +101,11 @@ namespace MathUtils
 
   template<typename T = Real>
   bool
-  isGreaterOrEqualToZero(T x)
+  isGreaterThanOrEqualToZero(T x)
   {
     static_assert(
       AlwaysFalse<T>::value,
-      "MathUtils::isGreaterOrEqualToZero<T>:"
+      "MathUtils::isGreaterThanOrEqualToZero<T>:"
       " You can only use one of the specified specializations!"
     );
 

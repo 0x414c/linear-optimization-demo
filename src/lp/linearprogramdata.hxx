@@ -30,12 +30,12 @@ namespace LinearProgramming
     LinearProgramData(LinearProgramData<T>&& other);
 
     LinearProgramData(
-      const Matrix<T, 1, Dynamic>& objectiveFuncCoeffs,
+      const Matrix<T, 1, Dynamic>& objectiveFunctionCoeffs,
       const Matrix<T, Dynamic, Dynamic>& constraintsCoeffs,
       const Matrix<T, Dynamic, 1>& constraintsRHS
     ) throw(invalid_argument);
     LinearProgramData(
-      Matrix<T, 1, Dynamic>&& objectiveFuncCoeffs,
+      Matrix<T, 1, Dynamic>&& objectiveFunctionCoeffs,
       Matrix<T, Dynamic, Dynamic>&& constraintsCoeffs,
       Matrix<T, Dynamic, 1>&& constraintsRHS
     ) throw(invalid_argument);
@@ -50,7 +50,7 @@ namespace LinearProgramming
 //    static LinearProgramData<T> make(...); //TODO: ~
 
 
-    Matrix<T, 1, Dynamic> objectiveFuncCoeffs;
+    Matrix<T, 1, Dynamic> objectiveFunctionCoeffs;
 
     Matrix<T, Dynamic, Dynamic> constraintsCoeffs;
 

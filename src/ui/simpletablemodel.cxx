@@ -28,20 +28,25 @@ GUI::SimpleTableModel::SimpleTableModel(int rows, int cols, QObject* parent) :
   _cols(cols),
   _values(
     QVector<QVector<QString>>(rows, QVector<QString>(cols, QStringLiteral("")))
-  )
-{ }
+  ),
+  _flags(QVector<QVector<Qt::ItemFlags>>(rows, QVector<Qt::ItemFlags>(cols)))
+{
+  _clearFlags();
+}
 
 
 GUI::SimpleTableModel::SimpleTableModel(const SimpleTableModel& other) :
   QAbstractTableModel(other.parent()),
   _rows(other._rows),
   _cols(other._cols),
-  _isReadOnly(other._isReadOnly),
+  _isEditable(other._isEditable),
+  _isSelectable(other._isSelectable),
   _haveCustomVerticalHeaderData(other._haveCustomVerticalHeaderData),
   _haveCustomHorizontalHeaderData(other._haveCustomHorizontalHeaderData),
   _values(other._values),
   _horizontalHeaderData(other._horizontalHeaderData),
-  _verticalHeaderData(other._verticalHeaderData)
+  _verticalHeaderData(other._verticalHeaderData),
+  _flags(other._flags)
 { }
 
 
@@ -49,24 +54,15 @@ GUI::SimpleTableModel::SimpleTableModel(SimpleTableModel&& other) :
   QAbstractTableModel(other.parent()),
   _rows(other._rows),
   _cols(other._cols),
-  _isReadOnly(other._isReadOnly),
+  _isEditable(other._isEditable),
+  _isSelectable(other._isSelectable),
   _haveCustomVerticalHeaderData(other._haveCustomVerticalHeaderData),
   _haveCustomHorizontalHeaderData(other._haveCustomHorizontalHeaderData),
   _values(std::move(other._values)),
   _horizontalHeaderData(std::move(other._horizontalHeaderData)),
-  _verticalHeaderData(std::move(other._verticalHeaderData))
-{
-//We don't need to re-initialize object at rvalue.
-//  other._rows = 0;
-//  other._cols = 0;
-//  other._isReadOnly = false;
-//  other._haveCustomHorizontalHeaderData = false;
-//  other._haveCustomVerticalHeaderData = false;
-//  other._values = QVector<QVector<QString>>(0);
-//  other._horizontalHeaderData = QVector<QString>(0);
-//  other._verticalHeaderData = QVector<QString>(0);
-//  other.setParent(0);
-}
+  _verticalHeaderData(std::move(other._verticalHeaderData)),
+  _flags(std::move(other._flags))
+{ }
 
 
 const GUI::SimpleTableModel&
@@ -77,12 +73,14 @@ GUI::SimpleTableModel::operator =(const SimpleTableModel& other)
     beginResetModel();
     _rows = other._rows;
     _cols = other._cols;
-    _isReadOnly = other._isReadOnly;
+    _isEditable = other._isEditable;
+    _isSelectable = other._isSelectable;
     _haveCustomHorizontalHeaderData = other._haveCustomHorizontalHeaderData;
     _haveCustomVerticalHeaderData = other._haveCustomVerticalHeaderData;
     _values = other._values;
     _horizontalHeaderData = other._horizontalHeaderData;
     _verticalHeaderData = other._verticalHeaderData;
+    _flags = other._flags;
     setParent(other.parent());
     endResetModel();
   }
@@ -99,25 +97,16 @@ GUI::SimpleTableModel::operator =(SimpleTableModel&& other)
     beginResetModel();
     _rows = other._rows;
     _cols = other._cols;
-    _isReadOnly = other._isReadOnly;
+    _isEditable = other._isEditable;
+    _isSelectable = other._isSelectable,
     _haveCustomHorizontalHeaderData = other._haveCustomHorizontalHeaderData;
     _haveCustomVerticalHeaderData = other._haveCustomVerticalHeaderData;
     _values = std::move(other._values);
     _horizontalHeaderData = std::move(other._horizontalHeaderData);
     _verticalHeaderData = std::move(other._verticalHeaderData);
+    _flags = std::move(other._flags);
     setParent(other.parent());
     endResetModel();
-
-//We don't need to re-initialize object at rvalue.
-//    other._rows = 0;
-//    other._cols = 0;
-//    other._isReadOnly = false;
-//    other._haveCustomHorizontalHeaderData = false;
-//    other._haveCustomVerticalHeaderData = false;
-//    other._values = QVector<QVector<QString>>(0);
-//    other._horizontalHeaderData = QVector<QString>(0);
-//    other._verticalHeaderData = QVector<QString>(0);
-//    other.setParent(0);
   }
 
   return *this;
@@ -166,10 +155,12 @@ GUI::SimpleTableModel::data(const QModelIndex& index, int role) const
       switch (role)
       {
 //        case Qt::SizeHintRole:
-//          return QSize(10, 5); //TODO: ~
+//          return QSize(10, 5); //TODO: ~ Auto-resize
+
         case Qt::DisplayRole:
         case Qt::EditRole:
           return _values.at(index.row()).at(index.column());
+
         default:
           return QVariant();
       }
@@ -177,82 +168,6 @@ GUI::SimpleTableModel::data(const QModelIndex& index, int role) const
     else
     {
       return QVariant();
-    }
-  }
-}
-
-
-QVariant
-GUI::SimpleTableModel::headerData(
-  int section, Qt::Orientation orientation, int role
-) const
-{
-  switch (role)
-  {
-//    case Qt::SizeHintRole:
-//      switch (orientation) {
-//        case Qt::Horizontal:
-//          return QSize(16, 18); //TODO: ~
-//        case Qt::Vertical:
-//          return QSize(12, 16);
-//        default:
-//          return QSize();
-//      }
-    case Qt::DisplayRole:
-      switch (orientation)
-      {
-        case Qt::Horizontal:
-          if (_haveCustomHorizontalHeaderData)
-          {
-            if (section >= 0 && section < _horizontalHeaderData.count())
-            {
-              QVariant ret(_horizontalHeaderData.at(section));
-              if (ret != QStringLiteral(""))
-              {
-                return ret;
-              }
-            }
-          }
-          goto defaultCase;
-        case Qt::Vertical:
-          if (_haveCustomVerticalHeaderData)
-          {
-            if (section >= 0 && section < _verticalHeaderData.count())
-            {
-              QVariant ret(_verticalHeaderData.at(section));
-              if (ret != QStringLiteral(""))
-              {
-                return ret;
-              }
-            }
-          }
-          goto defaultCase;
-        default:
-        defaultCase:
-          return QString("%1").arg(section + 1);
-      }
-    default:
-      return QVariant();
-  }
-}
-
-
-Qt::ItemFlags
-GUI::SimpleTableModel::flags(const QModelIndex& index) const
-{
-  if (!index.isValid())
-  {
-    return Qt::NoItemFlags;
-  }
-  else
-  {
-    if (_isReadOnly)
-    {
-      return (QAbstractTableModel::flags(index) & ~Qt::ItemIsEditable);
-    }
-    else
-    {
-      return (QAbstractTableModel::flags(index) | Qt::ItemIsEditable);
     }
   }
 }
@@ -284,9 +199,69 @@ GUI::SimpleTableModel::setData(
         {
           return false;
         }
+
       default:
         return false;
     }
+  }
+}
+
+
+QVariant
+GUI::SimpleTableModel::headerData(
+  int section, Qt::Orientation orientation, int role
+) const
+{
+  switch (role)
+  {
+//    case Qt::SizeHintRole:
+//      switch (orientation) {
+//        case Qt::Horizontal:
+//          return QSize(16, 18); //TODO: ~ Auto-resize
+//        case Qt::Vertical:
+//          return QSize(12, 16);
+//        default:
+//          return QSize();
+//      }
+
+    case Qt::DisplayRole:
+      switch (orientation)
+      {
+        case Qt::Horizontal:
+          if (_haveCustomHorizontalHeaderData)
+          {
+            if (section >= 0 && section < _horizontalHeaderData.count())
+            {
+              QVariant ret(_horizontalHeaderData.at(section));
+              if (ret != QStringLiteral(""))
+              {
+                return ret;
+              }
+            }
+          }
+          goto automatic;
+
+        case Qt::Vertical:
+          if (_haveCustomVerticalHeaderData)
+          {
+            if (section >= 0 && section < _verticalHeaderData.count())
+            {
+              QVariant ret(_verticalHeaderData.at(section));
+              if (ret != QStringLiteral(""))
+              {
+                return ret;
+              }
+            }
+          }
+          goto automatic;
+
+        default:
+        automatic:
+          return QString("%1").arg(section + 1);
+      }
+
+    default:
+      return QVariant();
   }
 }
 
@@ -304,7 +279,7 @@ GUI::SimpleTableModel::setHeaderData(
         case Qt::Horizontal:
           if (section >= 0 && section < _cols)
           {
-            int oldLength(_horizontalHeaderData.length());
+            const int oldLength(_horizontalHeaderData.length());
             _horizontalHeaderData.resize(_cols);
             _horizontalHeaderData[section] = value.toString();
             _haveCustomHorizontalHeaderData = true;
@@ -312,10 +287,11 @@ GUI::SimpleTableModel::setHeaderData(
 
             return true;
           }
+
         case Qt::Vertical:
           if (section >= 0 && section < _rows)
           {
-            int oldLength(_verticalHeaderData.length());
+            const int oldLength(_verticalHeaderData.length());
             _verticalHeaderData.resize(_rows);
             _verticalHeaderData[section] = value.toString();
             _haveCustomVerticalHeaderData = true;
@@ -323,11 +299,77 @@ GUI::SimpleTableModel::setHeaderData(
 
             return true;
           }
+
         default:
           return false;
       }
+
     default:
       return false;
+  }
+}
+
+
+Qt::ItemFlags
+GUI::SimpleTableModel::flags(const QModelIndex& index) const
+{
+  if (!index.isValid())
+  {
+    return Qt::NoItemFlags;
+  }
+  else
+  {
+    if (index.row() < _rows && index.column() < _cols)
+    {
+      Qt::ItemFlags ret(_flags.at(index.row()).at(index.column()));
+
+      if (_isEditable)
+      {
+        ret |= Qt::ItemIsEditable;
+      }
+      else
+      {
+        ret &= ~Qt::ItemIsEditable;
+      }
+
+      if (_isSelectable)
+      {
+        ret |= Qt::ItemIsSelectable;
+      }
+      else
+      {
+        ret &= ~Qt::ItemIsSelectable;
+      }
+
+      return ret;
+    }
+    else
+    {
+      return Qt::NoItemFlags;
+    }
+  }
+}
+
+
+bool
+GUI::SimpleTableModel::setFlags(const QModelIndex& index, Qt::ItemFlags flags)
+{
+  if (!index.isValid())
+  {
+    return false;
+  }
+  else
+  {
+    if (index.row() < _rows && index.column() < _cols)
+    {
+      _flags[index.row()][index.column()] = flags;
+
+      return true;
+    }
+    else
+    {
+      return false;
+    }
   }
 }
 
@@ -340,6 +382,7 @@ GUI::SimpleTableModel::insertRows(
   if (!parent.isValid())
   {
     beginInsertRows(parent, row, row + count - 1);
+
     for (int i(0); i < count; ++i)
     {
       _values.insert(row, QVector<QString>(_cols));
@@ -349,7 +392,19 @@ GUI::SimpleTableModel::insertRows(
       }
     }
     _rows += count;
+
     endInsertRows();
+
+    for (int i(0); i < count; ++i)
+    {
+      _flags.insert(row, QVector<Qt::ItemFlags>(_cols));
+      for (int col(0); col < _cols; ++col)
+      {
+        _flags[row][col] = QAbstractTableModel::flags(
+                             QAbstractTableModel::index(row, col, parent)
+                           );
+      }
+    }
 
     return true;
   }
@@ -370,12 +425,19 @@ GUI::SimpleTableModel::removeRows(
     if (count <= _rows)
     {
       beginRemoveRows(parent, row, row + count - 1);
+
       for (int i(0); i < count; ++i)
       {
         _values.removeAt(row);
       }
       _rows -= count;
+
       endRemoveRows();
+
+      for (int i(0); i < count; ++i)
+      {
+        _flags.removeAt(row);
+      }
 
       return true;
     }
@@ -399,6 +461,7 @@ GUI::SimpleTableModel::insertColumns(
   if (!parent.isValid())
   {
     beginInsertColumns(parent, col, col + count - 1);
+
     for (int row(0); row < _rows; ++row)
     {
       for (int i(0); i < count; ++i)
@@ -407,7 +470,21 @@ GUI::SimpleTableModel::insertColumns(
       }
     }
     _cols += count;
+
     endInsertColumns();
+
+    for (int row(0); row < _rows; ++row)
+    {
+      for (int i(0); i < count; ++i)
+      {
+        _flags[row].insert(
+          col,
+          QAbstractTableModel::flags(
+            QAbstractTableModel::index(row, col, parent)
+          )
+        );
+      }
+    }
 
     return true;
   }
@@ -428,6 +505,7 @@ GUI::SimpleTableModel::removeColumns(
     if (count <= _cols)
     {
       beginRemoveColumns(parent, col, col + count - 1);
+
       for (int row(0); row < _rows; ++row)
       {
         for (int i(0); i < count; ++i)
@@ -436,7 +514,16 @@ GUI::SimpleTableModel::removeColumns(
         }
       }
       _cols -= count;
+
       endRemoveColumns();
+
+      for (int row(0); row < _rows; ++row)
+      {
+        for (int i(0); i < count; ++i)
+        {
+          _flags[row].removeAt(col);
+        }
+      }
 
       return true;
     }
@@ -458,11 +545,15 @@ GUI::SimpleTableModel::clear(const QModelIndex& parent)
   if (!parent.isValid())
   {
     beginResetModel();
+
     for (int row(0); row < _rows; ++row)
     {
       _values[row].fill(QStringLiteral(""));
     }
+
     endResetModel();
+
+    _clearFlags(parent);
 
     return true;
   }
@@ -479,11 +570,15 @@ GUI::SimpleTableModel::clear(const QVariant& value, const QModelIndex& parent)
   if (!parent.isValid())
   {
     beginResetModel();
+
     for (int row(0); row < _rows; ++row)
     {
       _values[row].fill(value.toString());
     }
+
     endResetModel();
+
+    _clearFlags(parent);
 
     return true;
   }
@@ -514,11 +609,22 @@ GUI::SimpleTableModel::clear(
           _values[row][col] = value.toString();
         }
       }
+
       emit dataChanged(
         QAbstractTableModel::index(rowFirst, colFirst, parent),
         QAbstractTableModel::index(rowLast, colLast, parent),
-        QVector<int>{Qt::DisplayRole | Qt::EditRole}
+        QVector<int>{Qt::DisplayRole, Qt::EditRole}
       );
+
+      for (int row(rowFirst); row < rowLast; ++row)
+      {
+        for (int col(colFirst); col < colLast; ++col)
+        {
+          _flags[row][col] = QAbstractTableModel::flags(
+                               QAbstractTableModel::index(row, col, parent)
+                             );
+        }
+      }
 
       return true;
     }
@@ -612,19 +718,44 @@ GUI::SimpleTableModel::valueAt(
 
 
 bool
-GUI::SimpleTableModel::readOnly() const
+GUI::SimpleTableModel::editable() const
 {
-  return _isReadOnly;
+  return _isEditable;
 }
 
 
 bool
-GUI::SimpleTableModel::setReadOnly(bool isReadOnly)
+GUI::SimpleTableModel::setEditable(bool isEditable)
 {
-  if (_isReadOnly != isReadOnly)
+  if (_isEditable != isEditable)
   {
 //    beginResetModel();
-    _isReadOnly = isReadOnly;
+    _isEditable = isEditable;
+//    endResetModel();
+
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+
+bool
+GUI::SimpleTableModel::selectable() const
+{
+  return _isSelectable;
+}
+
+
+bool
+GUI::SimpleTableModel::setSelectable(bool isSelectable)
+{
+  if (_isSelectable != isSelectable)
+  {
+//    beginResetModel();
+    _isSelectable = isSelectable;
 //    endResetModel();
 
     return true;
@@ -678,6 +809,7 @@ GUI::SimpleTableModel::read(const QJsonObject& jsonObject)
           }
           _rows = rowsCount;
           _cols = colsCount;
+          _resetFlags();
           endResetModel();
 
           return OperationResult::Success;
@@ -731,4 +863,54 @@ GUI::SimpleTableModel::write(QJsonObject& jsonObject) const
   jsonObject[QStringLiteral("cols")] = _cols;
 
   return OperationResult::Success;
+}
+
+
+bool
+GUI::SimpleTableModel::_clearFlags(const QModelIndex& parent)
+{
+  if (!parent.isValid())
+  {
+    for (int row(0); row < _rows; ++row)
+    {
+      for (int col(0); col < _cols; ++col)
+      {
+        _flags[row][col] = QAbstractTableModel::flags(
+                             QAbstractTableModel::index(row, col, parent)
+                           );
+      }
+    }
+
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+
+bool
+GUI::SimpleTableModel::_resetFlags(const QModelIndex& parent)
+{
+  if (!parent.isValid())
+  {
+    _flags.resize(_rows);
+    for (int row = 0; row < _rows; ++row)
+    {
+      _flags[row].resize(_cols);
+      for (int col(0); col < _cols; ++col)
+      {
+        _flags[row][col] = QAbstractTableModel::flags(
+                             QAbstractTableModel::index(row, col, parent)
+                           );
+      }
+    }
+
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }

@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include "boost/optional.hpp"
 #include "eigen3/Eigen/Core"
 
 #include "dantzignumericsolver_fwd.hxx"
@@ -23,6 +24,7 @@
 
 namespace LinearProgramming
 {
+  using namespace boost;
   using namespace Config::LinearProgramming;
   using namespace Eigen;
   using namespace NumericTypes;
@@ -109,12 +111,21 @@ namespace LinearProgramming
 
 
       void
-      next() throw(out_of_range)
+      next(optional<pair<DenseIndex, DenseIndex>> pivotIdx) throw(out_of_range)
       {
         if (hasNext())
         {
           SimplexTableau<T> tableau(current());
-          const SolutionType solutionType(_solver->iterate(tableau));
+          SolutionType solutionType;
+
+          if (pivotIdx)
+          {
+            solutionType = _solver->iterate(tableau, *pivotIdx);
+          }
+          else
+          {
+            solutionType = _solver->iterate(tableau);
+          }
 
           switch (solutionType)
           {
@@ -142,17 +153,22 @@ namespace LinearProgramming
                       }
                     }
                     break;
+
                   case SolutionPhase::Two:
                     goto end;
+
                   default:
                     break;
                 }
               }
               break;
+
             case SolutionType::Unbounded:
               goto end;
+
             case SolutionType::Inconsistent:
               goto end;
+
             case SolutionType::Incomplete:
               {
                 _tableausList.push_back(std::move(tableau));
@@ -160,12 +176,15 @@ namespace LinearProgramming
                 _wasAdvanced = true;
               }
               break;
+
             case SolutionType::Unknown:
               goto end;
+
             end:
               _hasNext = false;
               _wasAdvanced = false;
               break;
+
             default:
               break;
           }
@@ -209,7 +228,7 @@ namespace LinearProgramming
 
 
       bool
-      wasAdvanced() const
+      stateChanged() const
       {
         return _wasAdvanced;
       }

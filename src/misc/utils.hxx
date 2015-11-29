@@ -16,8 +16,6 @@
 #include "cppformat/format.h"
 
 
-//TODO: ~ Put away all the usings from headers
-//TODO: !~ Use nested namespaces for all the modules
 namespace Utils
 {
   template<typename T1, typename... TN>

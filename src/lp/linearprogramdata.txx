@@ -4,6 +4,8 @@
 #define LINEARPROGRAMDATA_TXX
 
 
+#include "linearprogramdata.hxx"
+
 #include <stdexcept>
 #include <utility>
 
@@ -18,7 +20,7 @@ namespace LinearProgramming
 
   template<typename T>
   LinearProgramData<T>::LinearProgramData() :
-    objectiveFuncCoeffs(Matrix<T, 1, Dynamic>::Zero(1, 1)),
+    objectiveFunctionCoeffs(Matrix<T, 1, Dynamic>::Zero(1, 1)),
     constraintsCoeffs(Matrix<T, Dynamic, Dynamic>::Zero(1, 1)),
     constraintsRHS(Matrix<T, Dynamic, 1>::Zero(1, 1))
   { }
@@ -26,7 +28,7 @@ namespace LinearProgramming
 
   template<typename T>
   LinearProgramData<T>::LinearProgramData(const LinearProgramData<T>& other) :
-    objectiveFuncCoeffs(other.objectiveFuncCoeffs),
+    objectiveFunctionCoeffs(other.objectiveFunctionCoeffs),
     constraintsCoeffs(other.constraintsCoeffs),
     constraintsRHS(other.constraintsRHS)
   { }
@@ -34,8 +36,8 @@ namespace LinearProgramming
 
   template<typename T>
   LinearProgramData<T>::LinearProgramData(LinearProgramData<T>&& other) :
-    objectiveFuncCoeffs(
-      std::move(other.objectiveFuncCoeffs)
+    objectiveFunctionCoeffs(
+      std::move(other.objectiveFunctionCoeffs)
     ),
     constraintsCoeffs(std::move(other.constraintsCoeffs)),
     constraintsRHS(std::move(other.constraintsRHS))
@@ -48,7 +50,7 @@ namespace LinearProgramming
       const Matrix<T, Dynamic, Dynamic>& constraintsCoeffs,
       const Matrix<T, Dynamic, 1>& constraintsRHS
   ) throw(invalid_argument) :
-    objectiveFuncCoeffs(objFuncCoeffs),
+    objectiveFunctionCoeffs(objFuncCoeffs),
     constraintsCoeffs(constraintsCoeffs),
     constraintsRHS(constraintsRHS)
   {
@@ -68,7 +70,7 @@ namespace LinearProgramming
     Matrix<T, Dynamic, Dynamic>&& constraintsCoeffs,
     Matrix<T, Dynamic, 1>&& constraintsRHS
   ) throw(invalid_argument) :
-    objectiveFuncCoeffs(std::move(objFuncCoeffs)),
+    objectiveFunctionCoeffs(std::move(objFuncCoeffs)),
     constraintsCoeffs(std::move(constraintsCoeffs)),
     constraintsRHS(std::move(constraintsRHS))
   {
@@ -90,7 +92,7 @@ namespace LinearProgramming
   {
     if (this != &other)
     {
-      objectiveFuncCoeffs = other.objectiveFuncCoeffs;
+      objectiveFunctionCoeffs = other.objectiveFunctionCoeffs;
       constraintsCoeffs = other.constraintsCoeffs;
       constraintsRHS = other.constraintsRHS;
     }
@@ -107,8 +109,8 @@ namespace LinearProgramming
   {
     if (this != &other)
     {
-      objectiveFuncCoeffs =
-        std::move(other.objectiveFuncCoeffs);
+      objectiveFunctionCoeffs =
+        std::move(other.objectiveFunctionCoeffs);
       constraintsCoeffs = std::move(other.constraintsCoeffs);
       constraintsRHS = std::move(other.constraintsRHS);
     }

@@ -20,9 +20,14 @@ namespace LinearProgramming
 
   /**
    * @brief The `LinearFunction' templated class
-   * represents linear forms on a field w/ elements of type `T':
-   *   F(X1, X2, ..., XN) := C1*X1 + C2 * X2 + ... + CN*XN == (C, X),
-   * where X := <X1, ..., XN>, C := <C1, ..., CN>,
+   * represents linear functions on a field w/ elements of type `T':
+   *   F(x1, x2, ..., xN) ==
+   *   c1 * x1 + c2 * X2 + ... + cN*xN + d ==
+   *   (c, x) + d,
+   * where:
+   *   x := (x1, ..., xN),
+   *   c := (c1, ..., cN),
+   *   d is the constant term,
    * and operation (*, *) denotes the dot product.
    * This class is using `Eigen' library for internal
    * representation of function coefficents vector `C'.
@@ -45,13 +50,15 @@ namespace LinearProgramming
       LinearFunction() = delete;
 
 
-      explicit LinearFunction(const Matrix<T, 1, N>& coeffs) :
-        _coeffs(coeffs)
+      explicit LinearFunction(
+        const Matrix<T, 1, N>& coeffs, T constTerm = T(0)
+      ) :
+        _coeffs(coeffs), _constTerm(constTerm)
       { }
 
 
-      explicit LinearFunction(Matrix<T, 1, N>&& coeffs) :
-        _coeffs(std::move(coeffs))
+      explicit LinearFunction(Matrix<T, 1, N>&& coeffs, T constTerm = T(0)) :
+        _coeffs(std::move(coeffs)), _constTerm(constTerm)
       { }
 
 
@@ -69,6 +76,7 @@ namespace LinearProgramming
       }
 
 
+//      typename Matrix<T, N, 1>::CoeffReturnType
       const T&
       coeffAt(DenseIndex coeffIdx) const
       {
@@ -82,6 +90,20 @@ namespace LinearProgramming
       }
 
 
+      const T&
+      constTerm() const
+      {
+        return _constTerm;
+      }
+
+
+      T&
+      constTerm()
+      {
+        return _constTerm;
+      }
+
+
       T
       operator ()(const Matrix<T, N, 1>& args) const
       {
@@ -92,12 +114,14 @@ namespace LinearProgramming
       T
       valueAt(const Matrix<T, N, 1>& args) const
       {
-        return _coeffs.dot(args);
+        return (_coeffs.dot(args) + _constTerm);
       }
 
 
     private:
       Matrix<T, 1, N> _coeffs;
+
+      T _constTerm = T(0);
   };
 }
 

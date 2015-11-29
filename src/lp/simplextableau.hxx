@@ -15,6 +15,7 @@
 #include "dantzignumericsolver_fwd.hxx"
 #include "dantzignumericsolvercontroller_fwd.hxx"
 #include "linearprogramdata.hxx"
+#include "optimizationgoaltype.hxx"
 #include "solutionphase.hxx"
 #include "../math/numerictypes.hxx"
 
@@ -80,7 +81,9 @@ namespace LinearProgramming
 
       Matrix<T, 1, Dynamic> extremePoint() const;
 
-      T extremeValue() const;
+      T extremeValue(
+        OptimizationGoalType goalType = OptimizationGoalType::Minimize
+      ) const;
 
 
       static SimplexTableau<T> makePhaseOne(

@@ -15,6 +15,7 @@
 
 #include "simpletablemodel.hxx"
 #include "../lp/simplextableau.hxx"
+#include "../math/mathutils.hxx"
 #include "../math/numerictypes.hxx"
 #include "../misc/dataconvertors.hxx"
 
@@ -25,6 +26,7 @@ namespace TableModelUtils
   using namespace Eigen;
   using GUI::SimpleTableModel;
   using namespace LinearProgramming;
+  using namespace MathUtils;
   using namespace std;
   using namespace NumericTypes;
 
@@ -155,6 +157,56 @@ namespace TableModelUtils
     );
 
     return false;
+  }
+
+
+  template<typename T = Real>
+  bool
+  setFlags(
+    SimpleTableModel* const tableModel,
+    const Matrix<T, Dynamic, Dynamic>& matrix,
+    const function<bool(const T&)>& callback,
+    Qt::ItemFlags flags) throw(invalid_argument)
+  {
+    if (tableModel == nullptr)
+    {
+      throw invalid_argument("`tableModel' == `nullptr'");
+    }
+
+    if (
+      tableModel->rowCount() != matrix.rows() ||
+      tableModel->columnCount() != matrix.cols()
+    )
+    {
+      throw invalid_argument("Inconsistent `tableModel'"
+                             " and `tableau' dimensions");
+    }
+
+    if (!callback)
+    {
+      throw invalid_argument("`callback' == (empty)");
+    }
+
+    for (DenseIndex row(0); row < matrix.rows(); ++row)
+    {
+      for (DenseIndex col(0); col < matrix.cols(); ++col)
+      {
+        const QModelIndex index(tableModel->index(row, col));
+        const bool res(callback(matrix(row, col)));
+        const Qt::ItemFlags oldFlags(tableModel->flags(index));
+
+        if (res)
+        {
+          tableModel->setFlags(index, oldFlags | flags);
+        }
+        else
+        {
+          tableModel->setFlags(index, oldFlags & ~flags);
+        }
+      }
+    }
+
+    return true;
   }
 
 

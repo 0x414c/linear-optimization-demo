@@ -4,6 +4,8 @@
 #define MATHUTILS_TXX
 
 
+#include "mathutils.hxx"
+
 #include <cmath>
 
 #include <algorithm>
@@ -162,6 +164,39 @@ namespace MathUtils
 
   template<>
   /**
+   * @brief isEqual
+   * @param x
+   * @param y
+   * @return
+   */
+  inline bool
+  isEqual(Real x, Real y)
+  {
+    return (
+      absoluteValue<Real>(x - y) <=
+      Epsilon * std::max(
+        {Real(1), absoluteValue<Real>(x), absoluteValue<Real>(y)}
+      )
+    );
+  }
+
+
+  template<>
+  /**
+   * @brief isEqual
+   * @param x
+   * @param y
+   * @return
+   */
+  inline bool
+  isEqual(Rational x, Rational y)
+  {
+    return (x == y);
+  }
+
+
+  template<>
+  /**
    * @brief isEqualToZero
    * @param x
    * @return `true' if (x ~= 0), `false' otherwise.
@@ -252,7 +287,7 @@ namespace MathUtils
    * @return `true' if (x >= 0), `false' otherwise.
    */
   inline bool
-  isGreaterOrEqualToZero(Real x)
+  isGreaterThanOrEqualToZero(Real x)
   {
     return (
       x >= Epsilon * std::max<Real>(Real(1), absoluteValue<Real>(x))
@@ -267,7 +302,7 @@ namespace MathUtils
    * @return `true' if (x >= 0), `false' otherwise.
    */
   inline bool
-  isGreaterOrEqualToZero(Rational x)
+  isGreaterThanOrEqualToZero(Rational x)
   {
     return (x >= Rational(0));
   }

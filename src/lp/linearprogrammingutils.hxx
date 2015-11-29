@@ -26,9 +26,10 @@ namespace LinearProgrammingUtils
 
 
   template<typename T = Real>
-  bool isPointInFeasibleRegion(
-    const Matrix<T, Dynamic, 1>& point,
-    const LinearProgramData<T>& linearProgramData
+  bool isSolutionFeasible(
+    const Matrix<T, Dynamic, 1>& x,
+    const Matrix<T, Dynamic, Dynamic>& A,
+    const Matrix<T, Dynamic, 1>& b
   );
 
   //TODO: ~ Move all the following functions to the `MathUtils' namespace
@@ -39,7 +40,7 @@ namespace LinearProgrammingUtils
 
   template<typename T = Real>
   pair<Matrix<T, Dynamic, Dynamic>, DenseIndex>
-  reducedRowEchelonForm(const Matrix<T, Dynamic, Dynamic>& matrix);
+  reducedRowEchelonForm(const Matrix<T, Dynamic, Dynamic>& A);
 
   void sortPointsClockwise(QVector<QPointF>& points);
 }

@@ -4,9 +4,12 @@
 #define DANTZIGNUMERICSOLVER_TXX
 
 
+#include "dantzignumericsolver.hxx"
+
 #include <algorithm>
 #include <functional>
 #include <iostream>
+#include <list>
 #include <utility>
 #include <vector>
 
@@ -48,9 +51,11 @@ namespace LinearProgramming
    * `http://en.wikipedia.org/wiki/Linear_programming',
    * `http://mathworld.wolfram.com/SimplexMethod.html',
    * `http://mathworld.wolfram.com/LinearProgramming.html'.
+   * Introduction to algorithms / Thomas H. Cormen ... [et al.]. -— 3rd ed.,
+   * Кормен, Томаc Х. и др. Алгоритмы: построение и анализ, 3-е изд.
    * @param linearProgramData
    * Source data containing constraints coefficients
-   * matrix `α', right-hand-side column-vector `β' and
+   * matrix `A', right-hand-side column-vector `b' and
    * objective function coefficients row-vector `c'.
    */
   DantzigNumericSolver<T>::DantzigNumericSolver(
@@ -69,10 +74,12 @@ namespace LinearProgramming
    * `http://en.wikipedia.org/wiki/Simplex_algorithm',
    * `http://en.wikipedia.org/wiki/Linear_programming',
    * `http://mathworld.wolfram.com/SimplexMethod.html',
-   * `http://mathworld.wolfram.com/LinearProgramming.html'.
+   * `http://mathworld.wolfram.com/LinearProgramming.html',
+   * Introduction to algorithms / Thomas H. Cormen ... [et al.]. -— 3rd ed.,
+   * Кормен, Томаc Х. и др. Алгоритмы: построение и анализ, 3-е изд.
    * @param linearProgramData
    * Source data containing constraints coefficients
-   * matrix `α', right-hand-side column-vector `β' and
+   * matrix `A', right-hand-side column-vector `b' and
    * objective function coefficients row-vector `c'.
    */
   DantzigNumericSolver<T>::DantzigNumericSolver(
@@ -156,8 +163,8 @@ namespace LinearProgramming
     optional<LinearProgramSolution<T>> ret;
 
     LOG(
-      "c := \n{0}\nA :=\n{1}\nb :=\n{2}",
-      _linearProgramData.objectiveFuncCoeffs,
+      "c := \n{0},\nA :=\n{1},\nb :=\n{2}",
+      _linearProgramData.objectiveFunctionCoeffs,
       _linearProgramData.constraintsCoeffs,
       _linearProgramData.constraintsRHS
     );
@@ -168,7 +175,7 @@ namespace LinearProgramming
     );
 
     LOG(
-      "~X({0}) :=\n{1}\n~x := {2}\nx := {3}",
+      "~X({0}) :=\n{1},\n~x := {2},\n x := {3}",
       _iterCount,
       phase1Tableau.entries(),
       makeString(phase1Tableau.basicVars()),
@@ -179,14 +186,14 @@ namespace LinearProgramming
     const SolutionType phase1SolutionType(optimize(phase1Tableau));
 
     LOG(
-      "~X({0}) :=\n{1}\n~x := {2}\nx := {3}",
+      "~X({0}) :=\n{1},\n~x := {2},\n x := {3}",
       _iterCount,
       phase1Tableau.entries(),
       makeString(phase1Tableau.basicVars()),
       makeString(phase1Tableau.freeVars())
     );
 
-    if (_iterCount == 0)
+    if (_iterCount == 0) //HACK: !
     {
       return ret;
     }
@@ -207,7 +214,7 @@ namespace LinearProgramming
         );
 
         LOG(
-          "X({0}) :=\n{1}\nx := {2}\nx := {3}",
+          "X({0}) :=\n{1},\n~x := {2},\n x := {3}",
           _iterCount,
           phase2Tableau.entries(),
           makeString(phase2Tableau.basicVars()),
@@ -218,7 +225,7 @@ namespace LinearProgramming
         const SolutionType phase2SolutionType(optimize(phase2Tableau));
 
         LOG(
-          "X({0}) :=\n{1}\n~x := {2}\nx := {3}",
+          "X({0}) :=\n{1},\n~x := {2},\n x := {3}",
           _iterCount,
           phase2Tableau.entries(),
           makeString(phase2Tableau.basicVars()),
@@ -241,7 +248,7 @@ namespace LinearProgramming
             );
 
             LOG(
-              "x* == {0},\nw* == {1}",
+              "x* == {0},\nF* == {1}",
               linearProgramSolution.extremePoint,
               linearProgramSolution.extremeValue
             );
@@ -288,14 +295,19 @@ namespace LinearProgramming
       {
         case SolutionType::Optimal:
           return solutionType;
+
         case SolutionType::Unbounded:
           return solutionType;
+
         case SolutionType::Inconsistent:
           return solutionType;
+
         case SolutionType::Incomplete:
           break;
+
         case SolutionType::Unknown:
           return solutionType;
+
         default:
           break;
       }
@@ -320,8 +332,9 @@ namespace LinearProgramming
     }
     else
     {
-      const pair<SolutionType, Maybe2DIndex> pivotIdx(computePivotIdx(tableau));
-      if (pivotIdx.second) //If index is present
+      const pair<SolutionType, Index2D> pivotIdx(computePivotIdx(tableau));
+
+      if (pivotIdx.second) //If indices is present
       {
         pivotize(tableau, (*pivotIdx.second).first, (*pivotIdx.second).second);
 
@@ -329,8 +342,34 @@ namespace LinearProgramming
       }
       else
       {
-        return pivotIdx.first; //Return why index cannot be obtained
+        return pivotIdx.first; //Return why the indices cannot be obtained
       }
+    }
+  }
+
+
+  template<typename T>
+  /**
+   * @brief DantzigNumericSolver<T>::iterate
+   * Tries to execute one iteration of the Simplex method
+   * on the given tableau.
+   * @param tableau
+   * @return
+   */
+  SolutionType
+  DantzigNumericSolver<T>::iterate(
+    SimplexTableau<T>& tableau, pair<DenseIndex, DenseIndex> pivotIdx
+  )
+  {
+    if (_iterCount >= MaxSimplexIterations) //If can iterate
+    {
+      return SolutionType::Unknown;
+    }
+    else
+    {
+      pivotize(tableau, pivotIdx.first, pivotIdx.second);
+
+      return SolutionType::Incomplete;
     }
   }
 
@@ -342,13 +381,13 @@ namespace LinearProgramming
    * @param tableau
    * @return
    */
-  pair<SolutionType, Maybe2DIndex>
+  pair<SolutionType, Index2D>
   DantzigNumericSolver<T>::computePivotIdx(
     const SimplexTableau<T>& tableau
   ) const
   {
-    pair<SolutionType, Maybe2DIndex> ret;
-    Maybe2DIndex idx;
+    pair<SolutionType, Index2D> ret;
+    Index2D idx;
 
     const optional<DenseIndex> pivotColIdx(computePivotColIdx(tableau));
     if (pivotColIdx)
@@ -387,36 +426,78 @@ namespace LinearProgramming
   template<typename T>
   /**
    * @brief DantzigNumericSolver<T>::computePivotColIdx
+   * For the reference see:
+   * `http://www.math.toronto.edu/mpugh/Teaching/APM236_04/bland',
+   * `http://people.orie.cornell.edu/dpw/orie6300/Lectures/lec13.pdf',
+   * `http://web.stanford.edu/class/msande310/blandrule.pdf'.
    * @param tableau
-   * @return (optional) min{s} for all `s' where (∃s: P[s] < 0).
+   * @return (optional)
+   * argmin{P[s]} for all `s' where (P[s] < 0) (Dantzig's original rule)
+   * or
+   * min{s} for all `s' where (P[s] < 0) (Bland's pivot selection rule that
+   * prevents cycling).
    */
-  Maybe1DIndex
+  Index1D
   DantzigNumericSolver<T>::computePivotColIdx(
     const SimplexTableau<T>& tableau
   ) const
   {
     optional<DenseIndex> ret;
 
-    T minCoeff(0);
-    DenseIndex minCoeffIdx(0);
+    DenseIndex minCoeffColIdx(0);
     bool haveNegativeCoeffs(false);
+
+
+#ifdef LP_WITH_BLAND_RULE
+    //Find min{s} for all `s' where (∃s: P[s] < 0)
+    DenseIndex minVarIdx(
+      tableau.freeVarsCount() + tableau.basicVarsCount()
+    );
+
+    for (DenseIndex colIdx(0); colIdx < tableau.cols() - 1; ++colIdx)
+    {
+      const DenseIndex currVarIdx(tableau.freeVars()[colIdx]);
+      const T currCoeff(tableau(tableau.rows() - 1, colIdx));
+
+      //Pick only negative `P[j]'
+      if (isLessThanZero<T>(currCoeff))
+      {
+        haveNegativeCoeffs = true;
+
+        //Update w/ the new found index
+        if (currVarIdx < minVarIdx)
+        {
+          minVarIdx = currVarIdx;
+          minCoeffColIdx = colIdx;
+        }
+      }
+    }
+#else
+    //Find argmin{P[s]} for all `s' where (P[s] < 0)
+    T minCoeff(0);
 
     //Find the most negative coeff `P[s]' at the bottom row
     for (DenseIndex colIdx(0); colIdx < tableau.cols() - 1; ++colIdx)
     {
       const T currCoeff(tableau(tableau.rows() - 1, colIdx));
-      //Update w/ new found minimum
-      if (currCoeff < minCoeff)
+      //Pick only negative `P[j]'
+      if (isLessThanZero<T>(currCoeff))
       {
-        minCoeff = currCoeff;
-        minCoeffIdx = colIdx;
         haveNegativeCoeffs = true;
+        //Update w/ new found index
+        if (currCoeff < minCoeff)
+        {
+          minCoeff = currCoeff;
+          minCoeffColIdx = colIdx;
+        }
       }
     }
+#endif // LP_WITH_BLAND_RULE
+
 
     if (haveNegativeCoeffs)
     {
-      ret = minCoeffIdx;
+      ret = minCoeffColIdx;
     }
 
     return ret;
@@ -429,17 +510,27 @@ namespace LinearProgramming
    * Computes pivot row index `k' for the pivot column index `s'.
    * @param tableau
    * @param pivotColIdx
-   * @return (optional) `k' for min{β[k] / α[k, s]} if (∃s: α[k, s] > 0).
+   * @return (optional)
+   * `k' for min{β[k] / α[k, s]} if (∃s: α[k, s] > 0)
+   * or
+   * .
    */
-  Maybe1DIndex
+  Index1D
   DantzigNumericSolver<T>::computePivotRowIdx(
     const SimplexTableau<T>& tableau, DenseIndex pivotColIdx
   ) const
   {
     optional<DenseIndex> ret;
 
+
+#ifdef LP_WITH_BLAND_RULE
+    list<DenseIndex> minRatioRowsIndices;
+#else
+    DenseIndex minRatioRowIdx(0);
+#endif // LP_WITH_BLAND_RULE
+
+
     T minRatio(NumericLimits::max<T>());
-    DenseIndex minRatioIdx(0);
     bool havePositiveCoeffs(false);
 
     //Find the pivot row index `k' for the given pivot column index `s'
@@ -449,27 +540,79 @@ namespace LinearProgramming
       //only non-negative elements (α[k, s] > 0)
       if (isGreaterThanZero<T>(tableau(rowIdx, pivotColIdx)))
       {
+        havePositiveCoeffs = true;
+
         //Compute ratio β[k] / α[k, s]
         const T currRatio(
           tableau(rowIdx, tableau.cols() - 1) /
           tableau(rowIdx, pivotColIdx)
         );
+
+
+#ifdef LP_WITH_BLAND_RULE
+        if (isEqual<T>(currRatio, minRatio))
+        {
+          minRatioRowsIndices.push_back(rowIdx);
+        }
+        else
+        {
+          if (currRatio < minRatio)
+          {
+            minRatioRowsIndices.clear();
+            minRatioRowsIndices.push_back(rowIdx);
+            minRatio = currRatio;
+          }
+        }
+#else
         //Update w/ new found minimum
         if (currRatio < minRatio)
         {
           minRatio = currRatio;
-          minRatioIdx = rowIdx;
+          minRatioRowIdx = rowIdx;
         }
-        havePositiveCoeffs = true;
+#endif // LP_WITH_BLAND_RULE
+
+
       }
     }
 
+
+#ifdef LP_WITH_BLAND_RULE
     if (havePositiveCoeffs)
     {
-      //TODO: ! Bland rule
+      if (minRatioRowsIndices.size() > 1)
+      {
+        DenseIndex minRatioRowIdx(minRatioRowsIndices.front());
+        DenseIndex minRatioVarIdx(tableau.basicVarsCount());
 
-      ret = minRatioIdx;
+        for (DenseIndex rowIdx : minRatioRowsIndices)
+        {
+          const DenseIndex currVarIdx(tableau.basicVars()[rowIdx]);
+
+          if (currVarIdx < minRatioVarIdx)
+          {
+            minRatioVarIdx = currVarIdx;
+            minRatioRowIdx = rowIdx;
+          }
+        }
+
+        ret = minRatioRowIdx;
+      }
+      else
+      {
+        if (minRatioRowsIndices.size() == 1)
+        {
+          ret = minRatioRowsIndices.front();
+        }
+      }
     }
+#else
+    if (havePositiveCoeffs)
+    {
+      ret = minRatioRowIdx;
+    }
+#endif // LP_WITH_BLAND_RULE
+
 
     return ret;
   }
@@ -480,6 +623,8 @@ namespace LinearProgramming
    * @brief DantzigNumericSolver<T>::pivotize
    * Performs pivoting operations for the selected
    * pivot row `k' and column `s' of the given tableau.
+   * `k' is the leaving variable index,
+   * `s' is the entering variable index.
    * The pivot element is `α[k, s]'.
    * @param tableau
    * @param rowIdx
@@ -554,7 +699,7 @@ namespace LinearProgramming
     ++_iterCount;
 
     LOG(
-      "T({0}) :=\n{1}\n~X := {2}\nX := {3}",
+      "T({0}) :=\n{1},\n~x := {2},\n x := {3}",
       _iterCount, tableau.entries(),
       makeString(tableau.basicVars()),
       makeString(tableau.freeVars())
@@ -562,6 +707,7 @@ namespace LinearProgramming
   }
 
 
+#ifdef LP_WITH_BLAND_RULE
   template<typename T>
   /**
    * @brief DantzigNumericSolver<T>::isPivotColValid
@@ -584,6 +730,7 @@ namespace LinearProgramming
       any()
     );
   }
+#endif
 
 
   template<typename T>
@@ -642,7 +789,7 @@ namespace LinearProgramming
     if (
       tableau.col(tableau.cols() - 1).
       head(tableau.rows() - 1).
-      unaryExpr(std::ref(isGreaterOrEqualToZero<T>)).
+      unaryExpr(std::ref(isGreaterThanOrEqualToZero<T>)).
       all()
     )
     {

@@ -4,6 +4,8 @@
 #define LINEARPROGRAMSOLUTION_TXX
 
 
+#include "linearprogramsolution.hxx"
+
 #include <utility>
 
 #include "solutiontype.hxx"

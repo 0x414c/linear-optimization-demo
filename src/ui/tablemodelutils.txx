@@ -4,6 +4,8 @@
 #define TABLEMODELUTILS_TXX
 
 
+#include "tablemodelutils.hxx"
+
 #include <QTableWidget>
 
 #include "simpletablemodel.hxx"

@@ -4,6 +4,8 @@
 #define SIMPLEXTABLEAU_TXX
 
 
+#include "simplextableau.hxx"
+
 #include <cstdlib>
 
 #include <algorithm>
@@ -18,6 +20,7 @@
 #include "eigen3/Eigen/Core"
 
 #include "linearprogramdata.hxx"
+#include "optimizationgoaltype.hxx"
 #include "solutionphase.hxx"
 #include "../math/mathutils.hxx"
 
@@ -335,9 +338,18 @@ namespace LinearProgramming
    * @return the current value `w*' of the objective function `w'.
    */
   T
-  SimplexTableau<T>::extremeValue() const
+  SimplexTableau<T>::extremeValue(OptimizationGoalType goalType) const
   {
-    return _entries(_entries.rows() - 1, _entries.cols() - 1);
+    switch (goalType) {
+      case OptimizationGoalType::Minimize:
+        return _entries(_entries.rows() - 1, _entries.cols() - 1) * T(-1);
+
+      case OptimizationGoalType::Maximize:
+        return _entries(_entries.rows() - 1, _entries.cols() - 1);
+
+      default:
+        return T(0);
+    }
   }
 
 
@@ -460,7 +472,7 @@ namespace LinearProgramming
   {
     if (phase1Tableau._phase != SolutionPhase::One)
     {
-      throw invalid_argument("Tableau is not Phase-1 tableau");
+      throw invalid_argument("Tableau is not a Phase-1 tableau");
     }
 
     //Count of free decision vars `x' (~N) in the Phase-1 tableau
@@ -470,7 +482,7 @@ namespace LinearProgramming
     const DenseIndex phase2BasicVarsCount(phase1Tableau.basicVarsCount());
     //Count of free vars `x' (N) in the Phase-2 tableau
     //is equal to ~M - ~N
-    DenseIndex phase2FreeVarsCount(
+    const DenseIndex phase2FreeVarsCount(
       phase1FreeVarsCount - phase2BasicVarsCount
     );
 
@@ -566,32 +578,33 @@ namespace LinearProgramming
     for (DenseIndex j(0); j < phase2Tableau._entries.cols() - 1; ++j)
     {
       T sum(0); //Dot product of `c' and `-α.col[j]'
-      //(we assume that free vars in `α.col[j]' are equal to -1)
+      //(free variable x[j] in `α.col[j]' is set to -1,
+      //other free vars are set to 0)
       for (DenseIndex i(0); i < phase2Tableau._entries.rows() - 1; ++i)
       {
         const DenseIndex varIdx(phase2Tableau._basicVars[i]);
-        sum += linearProgramData.objectiveFuncCoeffs(varIdx) *
+        sum += linearProgramData.objectiveFunctionCoeffs(varIdx) *
                phase2Tableau._entries(i, j) *
                T(-1);
       }
-      for (DenseIndex i(0); i < phase2Tableau._entries.cols() - 1; ++i)
-      {
-        DenseIndex varIdx(phase2Tableau._freeVars[i]);
-        sum += linearProgramData.objectiveFuncCoeffs(varIdx);
-      }
+
+      const DenseIndex varIdx(phase2Tableau._freeVars[j]);
+      sum += linearProgramData.objectiveFunctionCoeffs(varIdx);
+
       phase2Tableau._entries(phase2Tableau._entries.rows() - 1, j) = sum;
     }
 
     //Set objective function value P[0] (the rightmost bottom element)
     T sum(0); //Dot product of `c' and `-β'
-    //(we assume that free vars in `β' are eq. to 0)
+    //(all free vars in `β' are set to 0)
     for (DenseIndex i(0); i < phase2Tableau._entries.rows() - 1; ++i)
     {
       const DenseIndex varIdx(phase2Tableau._basicVars[i]);
-      sum += linearProgramData.objectiveFuncCoeffs(varIdx) *
+      sum += linearProgramData.objectiveFunctionCoeffs(varIdx) *
              phase2Tableau._entries(i, phase2Tableau._entries.cols() - 1) *
              T(-1);
     }
+
     phase2Tableau._entries(
       phase2Tableau._entries.rows() - 1,
       phase2Tableau._entries.cols() - 1

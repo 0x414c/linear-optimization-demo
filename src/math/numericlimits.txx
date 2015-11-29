@@ -4,6 +4,8 @@
 #define NUMERICLIMITS_TXX
 
 
+#include "numericlimits.hxx"
+
 #include <limits>
 
 #include "numerictypes.hxx"

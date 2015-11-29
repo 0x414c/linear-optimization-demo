@@ -30,8 +30,8 @@ namespace LinearProgramming
   using namespace NumericTypes;
   using namespace std;
 
-  using Maybe2DIndex = optional<pair<DenseIndex, DenseIndex>>;
-  using Maybe1DIndex = optional<DenseIndex>;
+  using Index2D = optional<pair<DenseIndex, DenseIndex>>;
+  using Index1D = optional<DenseIndex>;
 
 
   template<typename T = Real>
@@ -69,14 +69,18 @@ namespace LinearProgramming
 
       SolutionType iterate(SimplexTableau<T>& tableau);
 
-      pair<SolutionType, Maybe2DIndex>
+      SolutionType iterate(
+        SimplexTableau<T>& tableau, pair<DenseIndex, DenseIndex> pivotIdx
+      );
+
+      pair<SolutionType, Index2D>
       computePivotIdx(const SimplexTableau<T>& tableau) const;
 
-      Maybe1DIndex computePivotColIdx(
+      Index1D computePivotColIdx(
         const SimplexTableau<T>& tableau
       ) const;
 
-      Maybe1DIndex computePivotRowIdx(
+      Index1D computePivotRowIdx(
         const SimplexTableau<T>& tableau, DenseIndex pivotColIdx
       ) const;
 
@@ -84,9 +88,13 @@ namespace LinearProgramming
         SimplexTableau<T>& tableau, DenseIndex rowIdx, DenseIndex colIdx
       );
 
+
+#ifdef LP_WITH_BLAND_RULE
       bool isPivotColValid(
         const SimplexTableau<T>& tableau, DenseIndex colIdx
       ) const;
+#endif // LP_WITH_BLAND_RULE
+
 
       SolutionType checkPhase1Solution(const SimplexTableau<T>& tableau) const;
 

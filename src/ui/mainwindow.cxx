@@ -9,11 +9,13 @@
 #include <utility>
 
 #include <QBrush>
+#include <QCloseEvent>
 #include <QDateTime>
 #include <QDebug>
 #include <QFile>
 #include <QLineF>
 #include <QMessageBox>
+#include <QModelIndex>
 #include <QPen>
 #include <QPointF>
 #include <QStandardPaths>
@@ -57,17 +59,18 @@ GUI::MainWindow::MainWindow(QWidget* parent) :
 {
   ui->setupUi(this);
 
-  setupSolvers();
-  setupSolversControllers();
+  setupNumericSolvers();
+  setupNumericSolversControllers();
 
   setupProgramView();
   setupSimplexView();
 
   setupControlsDefaults();
+  setupSignals();
 
   clearModelsContents();
-  setTableModelsHeaders();
   toggleTableViewsDelegates();
+  assignTableModelsHeaders();
 }
 
 
@@ -77,6 +80,57 @@ GUI::MainWindow::~MainWindow()
   destroySimplexView();
 
   delete ui;
+}
+
+
+void
+GUI::MainWindow::closeEvent(QCloseEvent* closeEvent)
+{
+  if (isWindowModified()) {
+//    bool isReallyModified(false);
+//    for (int i(0); i < ProgramModelsCount; ++i)
+//    {
+//      if ()
+//    }
+
+  begin:
+    const QMessageBox::StandardButton res(
+      QMessageBox::question(
+        this,
+        QStringLiteral("Unsaved Changes"),
+        QStringLiteral("You have some unsaved changes\n"
+                       "Do you want to save them?"),
+        QMessageBox::Save | QMessageBox::Cancel | QMessageBox::Discard,
+        QMessageBox::Cancel
+      )
+    );
+
+    switch (res) {
+      case QMessageBox::Save:
+        emit on_action_Save_as_triggered();
+        if (!isWindowModified())
+        {
+          closeEvent->accept();
+          break;
+        }
+        else
+        {
+          goto begin;
+        }
+      case QMessageBox::Discard:
+        closeEvent->accept();
+        break;
+      case QMessageBox::Cancel:
+        closeEvent->ignore();
+        break;
+      default:
+        break;
+    }
+  }
+  else
+  {
+    closeEvent->accept();
+  }
 }
 
 
@@ -96,10 +150,51 @@ GUI::MainWindow::setupControlsDefaults()
   ui->graphicalMethodTab->setEnabled(false);
   ui->simplexMethodTab->setEnabled(false);
 
+  enableGraphicalSolutionView(false);
+
   enableStepByStepSimplexView(false);
   enableCurrentSolutionView(false);
 
   ui->realRadioButton->setChecked(true);
+
+  ui->autoPivotSimplexCheckBox->setChecked(true);
+
+  setWindowFilePath(QStringLiteral("untitled"));
+}
+
+
+void
+GUI::MainWindow::setupSignals()
+{
+  for (int i(0); i < ProgramModelsCount; ++i)
+  {
+    connect(
+      _programTableModels[i],
+      SIGNAL(
+        dataChanged(
+          const QModelIndex&, const QModelIndex&, const QVector<int>&
+        )
+      ),
+      this,
+      SLOT(
+        on_anyProgramModel_dataChanged(
+          const QModelIndex&, const QModelIndex&, const QVector<int>&
+        )
+      )
+    );
+  }
+}
+
+
+void
+GUI::MainWindow::setDirty(bool dirty)
+{
+  if (_isDirty != dirty)
+  {
+    _isDirty = dirty;
+
+    setWindowModified(dirty);
+  }
 }
 
 
@@ -161,6 +256,13 @@ GUI::MainWindow::destroyProgramView()
 
 
 void
+GUI::MainWindow::enableGraphicalSolutionView(bool enabled)
+{
+  ui->customPlot->setEnabled(enabled);
+}
+
+
+void
 GUI::MainWindow::setupSimplexView()
 {
   _simplexTableModels = QVector<SimpleTableModel*>(SimplexModelsCount);
@@ -171,24 +273,26 @@ GUI::MainWindow::setupSimplexView()
 
   _simplexTableModels[int(SimplexModel::Solution)]->insertRow(0);
   _simplexTableModels[int(SimplexModel::Solution)]->insertColumn(0);
-  _simplexTableModels[int(SimplexModel::Solution)]->setReadOnly();
+  _simplexTableModels[int(SimplexModel::Solution)]->setEditable(false);
+  _simplexTableModels[int(SimplexModel::Solution)]->setSelectable(false);
   ui->solutionVectorTableView->setModel(
     _simplexTableModels[int(SimplexModel::Solution)]
   );
 
-  _simplexTableModels[int(SimplexModel::FuncValue)]->insertRow(0);
-  _simplexTableModels[int(SimplexModel::FuncValue)]->insertColumn(0);
-  _simplexTableModels[int(SimplexModel::FuncValue)]->setReadOnly();
-  ui->functionValueTableView->setModel(
-    _simplexTableModels[int(SimplexModel::FuncValue)]
+  _simplexTableModels[int(SimplexModel::ObjFuncValue)]->insertRow(0);
+  _simplexTableModels[int(SimplexModel::ObjFuncValue)]->insertColumn(0);
+  _simplexTableModels[int(SimplexModel::ObjFuncValue)]->setEditable(false);
+  _simplexTableModels[int(SimplexModel::ObjFuncValue)]->setSelectable(false);
+  ui->objectiveValueTableView->setModel(
+    _simplexTableModels[int(SimplexModel::ObjFuncValue)]
   );
 
   _simplexTableModels[int(SimplexModel::SimplexTableau)]->insertRow(0);
   _simplexTableModels[int(SimplexModel::SimplexTableau)]->insertColumn(0);
-  _simplexTableModels[int(SimplexModel::SimplexTableau)]->setReadOnly();
+  _simplexTableModels[int(SimplexModel::SimplexTableau)]->setEditable(false);
   ui->simplexTableauTableView->setModel(
     _simplexTableModels[int(SimplexModel::SimplexTableau)]
-      );
+  );
 }
 
 
@@ -203,25 +307,6 @@ GUI::MainWindow::clearSimplexView()
 
 
 void
-GUI::MainWindow::enableCurrentSolutionView(bool enabled)
-{
-  ui->solutionVectorTableView->setEnabled(enabled);
-  ui->functionValueTableView->setEnabled(enabled);
-}
-
-
-void
-GUI::MainWindow::enableStepByStepSimplexView(bool enabled)
-{
-  ui->simplexTableauTableView->setEnabled(enabled);
-  ui->backSimplexPushButton->setEnabled(enabled);
-  ui->forwardSimplexPushButton->setEnabled(enabled);
-  ui->simplexIterCountLcdNumber->setEnabled(enabled);
-  ui->autoPivotSimplexPushPutton->setEnabled(enabled);
-}
-
-
-void
 GUI::MainWindow::refreshSimplexView()
 {
   switch (_currentField)
@@ -229,7 +314,7 @@ GUI::MainWindow::refreshSimplexView()
     case Field::Real:
       if (
         !_realSolverController.isEmpty() &&
-        _realSolverController.wasAdvanced()
+        _realSolverController.stateChanged()
       )
       {
         const SimplexTableau<Real> tableau(_realSolverController.current());
@@ -237,46 +322,78 @@ GUI::MainWindow::refreshSimplexView()
         _simplexTableModels[int(SimplexModel::SimplexTableau)]->resize(
           tableau.rows(), tableau.cols()
         );
+
         TableModelUtils::fill<Real>(
           _simplexTableModels[int(SimplexModel::SimplexTableau)],
           tableau
         );
+
         ui->simplexTableauTableView->resizeColumnsToContents();
 
         const Matrix<Real, 1, Dynamic> extremePoint(tableau.extremePoint());
         _simplexTableModels[int(SimplexModel::Solution)]->resize(
           1, extremePoint.cols()
         );
+
         TableModelUtils::fill<Real>(
           _simplexTableModels[int(SimplexModel::Solution)],
           extremePoint
         );
+
         ui->solutionVectorTableView->resizeColumnsToContents();
 
         TableModelUtils::fill(
-          _simplexTableModels[int(SimplexModel::FuncValue)],
+          _simplexTableModels[int(SimplexModel::ObjFuncValue)],
           numericCast<QString, Real>(
             tableau.extremeValue()
           )
         );
+
+        DenseIndex idx(0);
+        const DenseIndex rows(tableau.rows());
+        const DenseIndex cols(tableau.cols());
+        TableModelUtils::setFlags<Real>(
+          _simplexTableModels[int(SimplexModel::SimplexTableau)],
+          tableau.entries(),
+          [rows, cols, &idx, &tableau]
+          (const Real& x) {
+            const DenseIndex rowIdx(idx / cols);
+            const DenseIndex colIdx(idx % cols);
+            const bool ret(
+              ((rowIdx < rows - 1) && (colIdx < cols - 1)) &&
+                MathUtils::isLessThanZero<Real>(
+                  tableau.row(tableau.rows() - 1)(colIdx)
+                ) &&
+                MathUtils::isGreaterThanZero<Real>(x)
+            );
+            ++idx;
+
+            return ret;
+          },
+          Qt::ItemIsEnabled | Qt::ItemIsSelectable
+        );
       }
 
-      ui->simplexIterCountLcdNumber->display(
+      ui->simplexTableauTableView->selectionModel()->clearSelection();
+      ui->simplexTableauTableView->selectionModel()->clearCurrentIndex();
+
+      ui->iterCountSimplexLcdNumber->display(
         int(_realSolverController.iterationsCount())
       );
 
-      ui->backSimplexPushButton->setEnabled(
+      ui->stepBackSimplexPushButton->setEnabled(
         _realSolverController.hasPrevious()
       );
 
-      ui->forwardSimplexPushButton->setEnabled(
+      ui->stepForwardSimplexPushButton->setEnabled(
         _realSolverController.hasNext()
       );
       break;
+
     case Field::Rational:
       if (
         !_rationalSolverController.isEmpty() &&
-        _rationalSolverController.wasAdvanced()
+        _rationalSolverController.stateChanged()
       )
       {
         const SimplexTableau<Rational> tableau(
@@ -286,45 +403,84 @@ GUI::MainWindow::refreshSimplexView()
         _simplexTableModels[int(SimplexModel::SimplexTableau)]->resize(
           tableau.rows(), tableau.cols()
         );
+
         TableModelUtils::fill<Rational>(
           _simplexTableModels[int(SimplexModel::SimplexTableau)],
           tableau
         );
+
         ui->simplexTableauTableView->resizeColumnsToContents();
 
         const Matrix<Rational, 1, Dynamic> extremePoint(tableau.extremePoint());
         _simplexTableModels[int(SimplexModel::Solution)]->resize(
           1, extremePoint.cols()
         );
+
         TableModelUtils::fill<Rational>(
           _simplexTableModels[int(SimplexModel::Solution)],
           extremePoint
         );
+
         ui->solutionVectorTableView->resizeColumnsToContents();
 
         TableModelUtils::fill(
-          _simplexTableModels[int(SimplexModel::FuncValue)],
+          _simplexTableModels[int(SimplexModel::ObjFuncValue)],
           numericCast<QString, Rational>(
             tableau.extremeValue()
           )
         );
+
+        DenseIndex idx(0);
+        const DenseIndex rows(tableau.rows());
+        const DenseIndex cols(tableau.cols());
+        TableModelUtils::setFlags<Rational>(
+          _simplexTableModels[int(SimplexModel::SimplexTableau)],
+          tableau.entries(),
+          [rows, cols, &idx, &tableau]
+          (const Rational& x) {
+            const DenseIndex rowIdx(idx / cols);
+            const DenseIndex colIdx(idx % cols);
+            const bool ret(
+              ((rowIdx < rows - 1) && (colIdx < cols - 1)) &&
+                MathUtils::isLessThanZero<Rational>(
+                  tableau.row(tableau.rows() - 1)(colIdx)
+                ) &&
+                MathUtils::isGreaterThanZero<Rational>(x)
+            );
+            ++idx;
+
+            return ret;
+          },
+          Qt::ItemIsEnabled | Qt::ItemIsSelectable
+        );
       }
 
-      ui->simplexIterCountLcdNumber->display(
+      ui->simplexTableauTableView->selectionModel()->clearSelection();
+      ui->simplexTableauTableView->selectionModel()->clearCurrentIndex();
+
+      ui->iterCountSimplexLcdNumber->display(
         int(_rationalSolverController.iterationsCount())
       );
 
-      ui->backSimplexPushButton->setEnabled(
+      ui->stepBackSimplexPushButton->setEnabled(
         _rationalSolverController.hasPrevious()
       );
 
-      ui->forwardSimplexPushButton->setEnabled(
+      ui->stepForwardSimplexPushButton->setEnabled(
         _rationalSolverController.hasNext()
       );
       break;
+
     default:
       break;
   }
+}
+
+
+void
+GUI::MainWindow::updateSimplexSelectionRules()
+{
+
 }
 
 
@@ -335,6 +491,26 @@ GUI::MainWindow::destroySimplexView()
   {
     delete _simplexTableModels[i];
   }
+}
+
+
+void
+GUI::MainWindow::enableCurrentSolutionView(bool enabled)
+{
+  ui->solutionVectorTableView->setEnabled(enabled);
+  ui->objectiveValueTableView->setEnabled(enabled);
+}
+
+
+void
+GUI::MainWindow::enableStepByStepSimplexView(bool enabled)
+{
+  ui->simplexTableauTableView->setEnabled(enabled);
+  ui->startSimplexPushButton->setEnabled(enabled);
+  ui->stepBackSimplexPushButton->setEnabled(enabled);
+  ui->stepForwardSimplexPushButton->setEnabled(enabled);
+  ui->iterCountSimplexLcdNumber->setEnabled(enabled);
+  ui->autoPivotSimplexCheckBox->setEnabled(enabled);
 }
 
 
@@ -351,7 +527,7 @@ GUI::MainWindow::clearModelsContents()
 
 
 void
-GUI::MainWindow::setTableModelsHeaders()
+GUI::MainWindow::assignTableModelsHeaders()
 {
   _programTableModels[int(ProgramModel::ObjFunc)]->setHeaderData(
     0, Qt::Vertical, QStringLiteral("c")
@@ -363,9 +539,9 @@ GUI::MainWindow::setTableModelsHeaders()
   _simplexTableModels[int(SimplexModel::Solution)]->setHeaderData(
     0, Qt::Vertical, QStringLiteral("x*")
   );
-  _simplexTableModels[int(SimplexModel::FuncValue)]->setHeaderData(
+  _simplexTableModels[int(SimplexModel::ObjFuncValue)]->setHeaderData(
     0, Qt::Vertical, QStringLiteral("w*")
-        );
+  );
 }
 
 
@@ -380,12 +556,14 @@ GUI::MainWindow::convertTableModelsContents()
         TableModelUtils::convert<Real, Rational>(_programTableModels[i]);
       }
       break;
+
     case Field::Rational:
       for (int i(0); i < ProgramModelsCount; ++i)
       {
         TableModelUtils::convert<Rational, Real>(_programTableModels[i]);
       }
       break;
+
     default:
       break;
   }
@@ -399,7 +577,7 @@ GUI::MainWindow::toggleTableViewsDelegates()
   {
     case Field::Real:
       qDebug() << "MainWindow::updateTableViewsDelegates:"
-                  " switching to `Real' mode";
+                  " switching to `Real'";
       ui->objFuncCoeffsTableView->setItemDelegate(
         _realNumericDelegates[int(ProgramModel::ObjFunc)]
       );
@@ -410,9 +588,10 @@ GUI::MainWindow::toggleTableViewsDelegates()
         _realNumericDelegates[int(ProgramModel::RHS)]
       );
       break;
+
     case Field::Rational:
       qDebug() << "MainWindow::updateTableViewsDelegates:"
-                  " switching to `Rational' mode";
+                  " switching to `Rational'";
       ui->objFuncCoeffsTableView->setItemDelegate(
         _ratNumericDelegates[int(ProgramModel::ObjFunc)]
       );
@@ -423,6 +602,7 @@ GUI::MainWindow::toggleTableViewsDelegates()
         _ratNumericDelegates[int(ProgramModel::RHS)]
       );
       break;
+
     default:
       break;
   }
@@ -430,7 +610,7 @@ GUI::MainWindow::toggleTableViewsDelegates()
 
 
 void
-GUI::MainWindow::toggleMode()
+GUI::MainWindow::toggleField()
 {
   convertTableModelsContents();
   toggleTableViewsDelegates();
@@ -442,7 +622,7 @@ GUI::MainWindow::toggleMode()
 
 
 void
-GUI::MainWindow::setupSolvers()
+GUI::MainWindow::setupNumericSolvers()
 {
   _realSolver = make_shared<DantzigNumericSolver<Real>>();
   _rationalSolver = make_shared<DantzigNumericSolver<Rational>>();
@@ -480,6 +660,7 @@ void GUI::MainWindow::updateNumericSolversData()
 
         break;
       }
+
     case Field::Rational:
       {
         Matrix<Rational, 1, Dynamic> objFuncCoeffs(
@@ -507,13 +688,14 @@ void GUI::MainWindow::updateNumericSolversData()
 
         break;
       }
+
     default:
       break;
   }
 }
 
 void
-GUI::MainWindow::setupSolversControllers()
+GUI::MainWindow::setupNumericSolversControllers()
 {
   _realSolverController = DantzigNumericSolverController<Real>(_realSolver);
   _rationalSolverController =
@@ -818,7 +1000,7 @@ GUI::MainWindow::loadData(const QString& fileName)
                //...and update ownerhsip
               (*_programTableModels[i]).setParent(this);
             }
-            setTableModelsHeaders();
+            assignTableModelsHeaders();
 
             ui->varsSpinBox->setValue(
               _programTableModels[int(ProgramModel::ConstrsCoeffs)]->columnCount()
@@ -833,9 +1015,11 @@ GUI::MainWindow::loadData(const QString& fileName)
               case Field::Real:
                 ui->realRadioButton->setChecked(true);
                 break;
+
               case Field::Rational:
                 ui->rationalRadioButton->setChecked(true);
                 break;
+
               default:
                 qWarning() << "MainWindow::loadData: unknown value of `Field'";
                 return OperationResult::Fail;
@@ -889,7 +1073,7 @@ GUI::MainWindow::saveData(const QString& fileName)
     else
     {
       QJsonObject jsonObject;
-      //TODO: ?~ Use pointers here
+      //TODO: ~? Use pointers here
       TableModelStorage tableModelStorage(
         QVector<SimpleTableModel>{
           (*_programTableModels[int(ProgramModel::ObjFunc)]),
@@ -1030,6 +1214,19 @@ GUI::MainWindow::on_customPlot_mouseWheel()
 
 
 void
+GUI::MainWindow::on_anyProgramModel_dataChanged(
+  const QModelIndex& topLeft,
+  const QModelIndex& bottomRight, const QVector<int>& roles)
+{
+  setDirty();
+
+  ui->objFuncCoeffsTableView->resizeColumnsToContents();
+  ui->constrsCoeffsTableView->resizeColumnsToContents();
+  ui->constrsRHSTableView->resizeColumnsToContents();
+}
+
+
+void
 GUI::MainWindow::on_constrsSpinBox_valueChanged(int arg1)
 {
   if (arg1 >= MinConstraints && arg1 <= MaxConstraints)
@@ -1096,7 +1293,7 @@ GUI::MainWindow::on_realRadioButton_toggled(bool checked)
   {
     _currentField = Field::Real;
 
-    toggleMode();
+    toggleField();
   }
 }
 
@@ -1108,7 +1305,7 @@ GUI::MainWindow::on_rationalRadioButton_toggled(bool checked)
   {
     _currentField = Field::Rational;
 
-    toggleMode();
+    toggleField();
   }
 }
 
@@ -1116,11 +1313,13 @@ GUI::MainWindow::on_rationalRadioButton_toggled(bool checked)
 void
 GUI::MainWindow::on_solveSimplexPushButton_clicked()
 {
+  updateNumericSolversData();
+
   ui->detailsTabWidget->setCurrentIndex(int(DetailsView::Simplex));
   ui->simplexMethodTab->setEnabled(true);
-  enableCurrentSolutionView();
 
-  updateNumericSolversData();
+  enableCurrentSolutionView();
+  enableStepByStepSimplexView();
 
   switch (_currentField)
   {
@@ -1142,14 +1341,14 @@ GUI::MainWindow::on_solveSimplexPushButton_clicked()
           );
 
           TableModelUtils::fill(
-            _simplexTableModels[int(SimplexModel::FuncValue)],
+            _simplexTableModels[int(SimplexModel::ObjFuncValue)],
             numericCast<QString, Real>(
               (*linearProgramSolution).extremeValue
             )
           );
 
           LOG(
-            "Solution: x* := {0}\nw* := {1}",
+            "Solution: x* := {0}\nF* := {1}",
             (*linearProgramSolution).extremePoint,
             (*linearProgramSolution).extremeValue
           );
@@ -1160,6 +1359,7 @@ GUI::MainWindow::on_solveSimplexPushButton_clicked()
         }
         break;
       }
+
     case Field::Rational:
       {
         optional<LinearProgramSolution<Rational>> linearProgramSolution(
@@ -1178,14 +1378,14 @@ GUI::MainWindow::on_solveSimplexPushButton_clicked()
           );
 
           TableModelUtils::fill(
-            _simplexTableModels[int(SimplexModel::FuncValue)],
+            _simplexTableModels[int(SimplexModel::ObjFuncValue)],
             numericCast<QString, Rational>(
               (*linearProgramSolution).extremeValue
             )
           );
 
           LOG(
-            "Solution: x* := {0}\nw* := {1}",
+            "Solution: x* := {0}\nF* := {1}",
             (*linearProgramSolution).extremePoint,
             (*linearProgramSolution).extremeValue
           );
@@ -1196,6 +1396,7 @@ GUI::MainWindow::on_solveSimplexPushButton_clicked()
         }
         break;
       }
+
     error:
       QMessageBox::warning(
         this,
@@ -1203,7 +1404,10 @@ GUI::MainWindow::on_solveSimplexPushButton_clicked()
         QStringLiteral("This linear program can not be solved by"
                        " the Simplex method.")
       );
+      enableCurrentSolutionView(false);
+      enableStepByStepSimplexView(false);
       break;
+
     default:
       break;
   }
@@ -1215,6 +1419,8 @@ GUI::MainWindow::on_solveGraphicalPushButton_clicked()
 {
   ui->detailsTabWidget->setCurrentIndex(int(DetailsView::Graphical));
   ui->graphicalMethodTab->setEnabled(true);
+
+  enableGraphicalSolutionView();
 
   switch (_currentField)
   {
@@ -1255,6 +1461,7 @@ GUI::MainWindow::on_solveGraphicalPushButton_clicked()
         }
         break;
       }
+
     case Field::Rational:
       {
         Matrix<Rational, 1, Dynamic> objFuncCoeffs(
@@ -1292,6 +1499,7 @@ GUI::MainWindow::on_solveGraphicalPushButton_clicked()
         }
         break;
       }
+
     error:
       QMessageBox::warning(
         this,
@@ -1301,7 +1509,9 @@ GUI::MainWindow::on_solveGraphicalPushButton_clicked()
           " the 2D graphical method."
         )
       );
+      enableGraphicalSolutionView(false);
       break;
+
     default:
       break;
   }
@@ -1322,7 +1532,8 @@ GUI::MainWindow::on_testPushButton_clicked()
   {
 //    _loadData(QStringLiteral("data4.json"));
 //    loadData(QStringLiteral("data3+.json"));
-    loadData(QStringLiteral("data5.json"));
+//    loadData(QStringLiteral("data5.json"));
+    loadData(QStringLiteral("data6.json"));
   }
 
   {
@@ -1343,25 +1554,26 @@ GUI::MainWindow::on_testPushButton_clicked()
 //    Matrix<Real, Dynamic, Dynamic> m(
 //      TableModelUtils::getMatrix<Real>(_models[int(Model::Constrs)])
 //    );
-    Matrix<Real, Dynamic, Dynamic> m(3, 4);
+//    Matrix<Real, Dynamic, Dynamic> m(3, 4);
 //    m << 0, 2, -1, -4, 2, 3, -1, -11, -2, 0, -3, 22;
-    m << 1, 2, -1, -4, 2, 3, -1, -11, -2, 0, -3, 22;
+//    m << 1, 2, -1, -4, 2, 3, -1, -11, -2, 0, -3, 22;
 //    Matrix<Real, 2, 2> m(2, 2);
 //    m << 3.7, -8.3, 2.3, -7.2;
-    auto rref(reducedRowEchelonForm<Real>(m));
-    LOG("M=\n{0}\nA=\n{1}\nrk(A)=\n{2}\n",
-      m.format(MathematicaFormat),
-      rref.first.format(MathematicaFormat),
-      rref.second
-    );
+//    auto rref(reducedRowEchelonForm<Real>(m));
+//    LOG("M=\n{0}\nA=\n{1}\nrk(A)=\n{2}\n",
+//      m.format(MathematicaFormat),
+//      rref.first.format(MathematicaFormat),
+//      rref.second
+//    );
   }
 }
 
 
 void
-GUI::MainWindow::on_resetSimplexPushButton_clicked()
+GUI::MainWindow::on_startSimplexPushButton_clicked()
 {
   updateNumericSolversData();
+
   enableCurrentSolutionView();
   enableStepByStepSimplexView();
 
@@ -1372,11 +1584,13 @@ GUI::MainWindow::on_resetSimplexPushButton_clicked()
       _realSolverController.start();
       refreshSimplexView();
       break;
+
     case Field::Rational:
       _rationalSolverController.reset();
       _rationalSolverController.start();
       refreshSimplexView();
       break;
+
     default:
       break;
   }
@@ -1384,7 +1598,7 @@ GUI::MainWindow::on_resetSimplexPushButton_clicked()
 
 
 void
-GUI::MainWindow::on_backSimplexPushButton_clicked()
+GUI::MainWindow::on_stepBackSimplexPushButton_clicked()
 {
   switch (_currentField)
   {
@@ -1395,6 +1609,7 @@ GUI::MainWindow::on_backSimplexPushButton_clicked()
       }
       refreshSimplexView();
       break;
+
     case Field::Rational:
       if (_rationalSolverController.hasPrevious())
       {
@@ -1402,6 +1617,7 @@ GUI::MainWindow::on_backSimplexPushButton_clicked()
       }
       refreshSimplexView();
       break;
+
     default:
       break;
   }
@@ -1409,24 +1625,40 @@ GUI::MainWindow::on_backSimplexPushButton_clicked()
 
 
 void
-GUI::MainWindow::on_forwardSimplexPushButton_clicked()
+GUI::MainWindow::on_stepForwardSimplexPushButton_clicked()
 {
+  optional<pair<DenseIndex, DenseIndex>> pivotIdx;
+
+  if (!ui->autoPivotSimplexCheckBox->isChecked())
+  {
+    const QModelIndex cellIdx(
+      ui->simplexTableauTableView->selectionModel()->currentIndex()
+    );
+
+    if (cellIdx.isValid())
+    {
+      pivotIdx = make_pair(cellIdx.row(), cellIdx.column());
+    }
+  }
+
   switch (_currentField)
   {
     case Field::Real:
       if (_realSolverController.hasNext())
       {
-        _realSolverController.next();
+        _realSolverController.next(pivotIdx);
       }
       refreshSimplexView();
       break;
+
     case Field::Rational:
       if (_rationalSolverController.hasNext())
       {
-        _rationalSolverController.next();
+        _rationalSolverController.next(pivotIdx);
       }
       refreshSimplexView();
       break;
+
     default:
       break;
   }
@@ -1434,9 +1666,13 @@ GUI::MainWindow::on_forwardSimplexPushButton_clicked()
 
 
 void
-GUI::MainWindow::on_autoPivotSimplexPushPutton_clicked()
+GUI::MainWindow::on_autoPivotSimplexCheckBox_toggled(bool checked)
 {
-
+  if (!checked)
+  {
+    ui->simplexTableauTableView->selectionModel()->clearSelection();
+    ui->simplexTableauTableView->selectionModel()->clearCurrentIndex();
+  }
 }
 
 
@@ -1460,9 +1696,9 @@ GUI::MainWindow::on_action_Open_triggered()
   {
     case OperationResult::Success:
       setWindowFilePath(fileName);
-      //TODO: ~ Use `setWindowModified'
-//      setWindowModified(true);
+      setDirty();
       break;
+
     case OperationResult::Fail:
       QMessageBox::critical(
         this,
@@ -1470,6 +1706,7 @@ GUI::MainWindow::on_action_Open_triggered()
         QStringLiteral("Could not open selected file.")
       );
       break;
+
     default:
     case OperationResult::Nothing:
       break;
@@ -1498,14 +1735,16 @@ GUI::MainWindow::on_action_Save_as_triggered()
   switch (result)
   {
     case OperationResult::Success:
-//      setWindowModified(false);
+      setDirty(false);
       break;
+
     case OperationResult::Fail:
       QMessageBox::critical(
         this,
         QStringLiteral("File Writing Error"),
         QStringLiteral("Could not save file to the selected location.")
       );
+
     case OperationResult::Nothing:
     default:
       break;

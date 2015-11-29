@@ -4,6 +4,8 @@
 #define DATACONVERTORS_TXX
 
 
+#include "dataconvertors.hxx"
+
 #include <cstdint>
 #include <utility>
 
@@ -58,7 +60,10 @@ namespace DataConvertors
   numericCast<Rational, Real>(const Real& from)
   {
     const pair<Integer, Integer> rationalized =
-    rationalize<Integer>(from, Epsilon, MaxRationalizeIterations, 32768);
+      rationalize<Integer>(
+        from, Epsilon,
+        MaxRationalizeIterations, DefaultRationalizeDemoninator
+      );
 
     return Rational(rationalized.first, rationalized.second);
   }

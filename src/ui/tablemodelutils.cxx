@@ -38,16 +38,19 @@ namespace TableModelUtils
                 tableModel->index(row, col), QString("%1").arg(0)
               );
               break;
+
             case FillMethod::Random:
               tableModel->setData(
                 tableModel->index(row, col), QString("%1").arg(dist(rnd))
               );
               break;
+
             case FillMethod::Sequential:
               tableModel->setData(
                 tableModel->index(row, col), QString("%1").arg(startIdx++)
               );
               break;
+
             default:
               break;
           }

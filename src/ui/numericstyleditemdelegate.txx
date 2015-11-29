@@ -4,6 +4,8 @@
 #define NUMERICSTYLEDITEMDELEGATE_TXX
 
 
+#include "numericstyleditemdelegate.hxx"
+
 #include <QItemDelegate>
 #include <QLineEdit>
 #include <QModelIndex>

@@ -4,6 +4,8 @@
 #define LINEARPROGRAMMINGUTILS_TXX
 
 
+#include "linearprogrammingutils.hxx"
+
 #include <iostream>
 #include <utility>
 
@@ -30,30 +32,30 @@ namespace LinearProgrammingUtils
 
   template<typename T = Real>
   /**
-   * @brief isPointInFeasibleRegion
-   * Checks if given point (as column-vector) lies
-   * inside of the feasible region
-   * which interior is defined by the following
-   * matrix equation:
-   *   Ax <= b,
+   * @brief isSolutionFeasible
+   * Checks if the point lies inside of
+   * the feasible region which interior is
+   * defined by the following matrix equation:
+   *   {Ax <= b},
    * and if point is also satisfies mandatory
    * non-negativity constraints:
    *   (x[n] >= 0) for any `n' in [1; N].
-   * @param point Point vector.
-   * @param linearProgramData container w/ matrices `A' and `b'.
+   * @param x Point as N × 1 column-vector.
+   * @param A Equations coefficients as M × N matrix
+   * @param b Right-hand-side as M × 1 vector
    * @return `true' if point lies within given region,
    * `false' otherwise.
    */
   bool
-  isPointInFeasibleRegion(
-    const Matrix<T, Dynamic, 1>& point,
-    const LinearProgramData<T>& linearProgramData
+  isSolutionFeasible(
+    const Matrix<T, Dynamic, 1>& x,
+    const Matrix<T, Dynamic, Dynamic>& A,
+    const Matrix<T, Dynamic, 1>& b
   )
   {
     return (
-      (point.array() >= 0).all() &&
-      ((linearProgramData.constraintsCoeffs * point).array() <=
-        linearProgramData.constraintsRHS.array()).all()
+      (x.array() >= 0).all() &&
+      ((A * x).array() <= b.array()).all()
     );
   }
 
@@ -61,15 +63,15 @@ namespace LinearProgrammingUtils
   template<typename T>
   /**
    * @brief findIntersection
-   * Finds intersection point `x' of two lines given as rows
-   * of the following matrix equation
+   * Finds intersection point `x' of two lines
+   * given as the following matrix equation
    *   Ax == b.
    * The formula is
    *   x := {{(A11*b0 - A01*b1) / (-A01*A10 + A00*A11)},
    *         {(A10*b0 - A00*b1) / ( A01*A10 - A00*A11)}}.
    * NOTE: This function handles only two-dimensional case.
-   * @param coeffs Matrix `A'
-   * @param RHS Matrix `b'
+   * @param coeffs 1 × 2 matrix `A'
+   * @param RHS N × 1 matrix `b'
    * @return (optional) intersection point `x' as 2 × 1 column-vector.
    */
   optional<Matrix<T, 2, 1>>
@@ -127,14 +129,14 @@ namespace LinearProgrammingUtils
    * @return Row-reduced echelon form of A' along w/ rank of A'.
    */
   pair<Matrix<T, Dynamic, Dynamic>, DenseIndex>
-  reducedRowEchelonForm(const Matrix<T, Dynamic, Dynamic>& matrix)
+  reducedRowEchelonForm(const Matrix<T, Dynamic, Dynamic>& A)
   {
-    const DenseIndex n(matrix.rows());
-    const DenseIndex m(matrix.cols());
+    const DenseIndex n(A.rows());
+    const DenseIndex m(A.cols());
     DenseIndex rank(0);
 
-    Matrix<T, Dynamic, Dynamic> A(n, m);
-    A << matrix;
+    Matrix<T, Dynamic, Dynamic> RREF(n, m);
+    RREF << A;
 
     DenseIndex i(0), j(0);
     //1. Deal with each row i from 1 to n in turn, ...
@@ -143,7 +145,7 @@ namespace LinearProgrammingUtils
       //If we had reached the end
       if (i >= n || j >= m)
       {
-        return make_pair(A, rank);
+        return make_pair(RREF, rank);
       }
       else
       {
@@ -157,16 +159,16 @@ namespace LinearProgrammingUtils
         //skipping any column of all zero entries.
         while (true)
         {
-          if (isEqualToZero<T>(A(x, j)))
+          if (isEqualToZero<T>(RREF(x, j)))
           {
             ++x;
           }
           else
           {
-            if (absoluteValue<T>(A(x, j)) > absoluteValue<T>(maxValue))
+            if (absoluteValue<T>(RREF(x, j)) > absoluteValue<T>(maxValue))
             {
               xMax = x;
-              maxValue = A(x, j);
+              maxValue = RREF(x, j);
             }
             isColNonZero = true;
             ++x;
@@ -185,7 +187,7 @@ namespace LinearProgrammingUtils
               ++j;
               if (j >= m)
               {
-                return make_pair(A, rank);
+                return make_pair(RREF, rank);
               }
               else
               {
@@ -202,41 +204,41 @@ namespace LinearProgrammingUtils
 
         if (x > i)
         {
-          A.row(x).swap(A.row(i));
+          RREF.row(x).swap(RREF.row(i));
         }
 
         //4. Make the pivot equal to 1 by dividing each element
         //in the pivot row by the value of the pivot.
-        const T pivot(A(i, j));
+        const T pivot(RREF(i, j));
 
 //        LOG("A.row({0}) / pivot <=> [{1}] / {2}", i, A.row(i), pivot);
 
-        A.row(i) /= pivot;
+        RREF.row(i) /= pivot;
 
 //        LOG("A.row({0}) = [{1}]", i, A.row(i));
 
         //5. Make all elements above and below the pivot equal to 0 by
         //subtracting a suitable multiple of the pivot row from each other row.
-        const Matrix<T, 1, Dynamic> pivotRow(A.row(i));
+        const Matrix<T, 1, Dynamic> pivotRow(RREF.row(i));
         for (DenseIndex k(0); k < i; ++k)
         {
-          const T factor(A(k, j));
+          const T factor(RREF(k, j));
 
 //          LOG("A.row({0}) - factor * pivotRow <=> [{1}] - ({2} * [{3}])",
 //              k, A.row(k), factor, pivotRow);
 
-          A.row(k) -= factor * pivotRow;
+          RREF.row(k) -= factor * pivotRow;
 
 //          LOG("A.row({0}) = [{1}]", k, A.row(k));
         }
         for (DenseIndex k(i + 1); k < n; ++k)
         {
-          const T factor(A(k, j));
+          const T factor(RREF(k, j));
 
 //          LOG("A.row({0}) - factor * pivotRow <=> [{1}] - ({2} * [{3}])",
 //              k, A.row(k), factor, pivotRow);
 
-          A.row(k) -= factor * pivotRow;
+          RREF.row(k) -= factor * pivotRow;
 
 //          LOG("A.row({0}) = [{1}]", k, A.row(k));
         }

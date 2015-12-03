@@ -18,6 +18,7 @@
 #include <QModelIndex>
 #include <QPen>
 #include <QPointF>
+#include <QSettings>
 #include <QStandardPaths>
 #include <QString>
 #include <QVariant>
@@ -38,6 +39,7 @@
 #include "../lp/linearprogramsolution.hxx"
 #include "../lp/linearprogrammingutils.hxx"
 #include "../lp/plotdata2d.hxx"
+#include "../lp/solutiontype.hxx"
 #include "../math/mathutils.hxx"
 #include "../misc/dataconvertors.hxx"
 #include "../misc/utils.hxx"
@@ -46,6 +48,7 @@
 namespace GUI
 {
   using namespace boost;
+  using namespace Config::AppGlobal;
   using namespace Config::GUI;
   using namespace Eigen;
   using namespace std;
@@ -71,11 +74,15 @@ GUI::MainWindow::MainWindow(QWidget* parent) :
   clearModelsContents();
   toggleTableViewsDelegates();
   assignTableModelsHeaders();
+
+  loadSettings();
 }
 
 
 GUI::MainWindow::~MainWindow()
 {
+  saveSettings();
+
   destroyProgramView();
   destroySimplexView();
 
@@ -576,8 +583,8 @@ GUI::MainWindow::toggleTableViewsDelegates()
   switch (_currentField)
   {
     case Field::Real:
-      qDebug() << "MainWindow::updateTableViewsDelegates:"
-                  " switching to `Real'";
+      qInfo() << "MainWindow::toggleTableViewsDelegates:"
+                 " switching to `Real'";
       ui->objFuncCoeffsTableView->setItemDelegate(
         _realNumericDelegates[int(ProgramModel::ObjFunc)]
       );
@@ -590,7 +597,7 @@ GUI::MainWindow::toggleTableViewsDelegates()
       break;
 
     case Field::Rational:
-      qDebug() << "MainWindow::updateTableViewsDelegates:"
+      qInfo() << "MainWindow::toggleTableViewsDelegates:"
                   " switching to `Rational'";
       ui->objFuncCoeffsTableView->setItemDelegate(
         _ratNumericDelegates[int(ProgramModel::ObjFunc)]
@@ -604,6 +611,8 @@ GUI::MainWindow::toggleTableViewsDelegates()
       break;
 
     default:
+      qCritical() << "MainWindow::toggleTableViewsDelegates:"
+                     " unknown value of `_currentField'";
       break;
   }
 }
@@ -699,7 +708,49 @@ GUI::MainWindow::setupNumericSolversControllers()
 {
   _realSolverController = DantzigNumericSolverController<Real>(_realSolver);
   _rationalSolverController =
-  DantzigNumericSolverController<Rational>(_rationalSolver);
+    DantzigNumericSolverController<Rational>(_rationalSolver);
+}
+
+
+void
+GUI::MainWindow::showErrorDetails(
+  const QString& description, LinearProgramming::SolutionType type
+)
+{
+  QString details;
+  switch (type) {
+    case SolutionType::Unknown:
+      details = QStringLiteral("Some error has encountered...");
+      break;
+
+    case SolutionType::Incomplete:
+      details = QStringLiteral("Maximal iterations limit is exceeded.");
+      break;
+
+    case SolutionType::Inconsistent:
+      details = QStringLiteral("This linear program is infeasible"
+                               " (the feasible region `U' is empty set).");
+      break;
+
+    case SolutionType::Unbounded:
+      details = QStringLiteral("The objective function `F' is unbounded"
+                               " on the feasible region `U'.");
+      break;
+
+    case SolutionType::Optimal:
+      details = QStringLiteral("The solution is optimal.");
+      break;
+
+    default:
+      details = QStringLiteral("Unknown error...");
+      break;
+  }
+
+  QMessageBox::warning(
+    this,
+    QStringLiteral("Oops..."),
+    description + QStringLiteral("\n") + details
+  );
 }
 
 
@@ -713,7 +764,7 @@ GUI::MainWindow::setupCustomPlot(QCustomPlot* const customPlot)
   customPlot->clearPlottables();
 //  customPlot->plotLayout()->removeAt(0);
 
-  //set up all the things
+  //Set up all the things
   const QFont normalFont(font().family(), 9);
   const QFont boldFont(font().family(), 9, QFont::Bold);
 
@@ -963,7 +1014,7 @@ GUI::MainWindow::plotGraph(const PlotData2D& plotData2D) {
 }
 
 
-Utils::OperationResult
+Utils::ResultType
 GUI::MainWindow::loadData(const QString& fileName)
 {
   if (!fileName.isEmpty())
@@ -971,10 +1022,10 @@ GUI::MainWindow::loadData(const QString& fileName)
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly))
     {
-      qWarning() << "MainWindow::loadData: couldn't open file"
-                    " at path" << fileName;
+      qWarning() << "MainWindow::loadData:"
+                    " couldn't open file at path" << fileName;
 
-      return OperationResult::Nothing;
+      return ResultType::Nothing;
     }
     else
     {
@@ -983,13 +1034,13 @@ GUI::MainWindow::loadData(const QString& fileName)
       {
         const QJsonDocument jsonDocument(QJsonDocument::fromJson(byteArray));
         TableModelStorage tableModelStorage;
-        const OperationResult res(
+        const ResultType res(
           tableModelStorage.read(jsonDocument.object())
         );
         file.flush();
         file.close();
 
-        if (res == OperationResult::Success)
+        if (res == ResultType::Success)
         {
           if (tableModelStorage.count() == ProgramModelsCount)
           {
@@ -1022,14 +1073,14 @@ GUI::MainWindow::loadData(const QString& fileName)
 
               default:
                 qWarning() << "MainWindow::loadData: unknown value of `Field'";
-                return OperationResult::Fail;
+                return ResultType::Fail;
             }
 
-            return OperationResult::Success;
+            return ResultType::Success;
           }
           else
           {
-            return OperationResult::Nothing;
+            return ResultType::Nothing;
           }
         }
         else
@@ -1046,18 +1097,18 @@ GUI::MainWindow::loadData(const QString& fileName)
         qWarning() << "MainWindow::loadData: couldn't read file contents:"
                       " the file is empty";
 
-        return OperationResult::Nothing;
+        return ResultType::Nothing;
       }
     }
   }
   else
   {
-    return OperationResult::Nothing;
+    return ResultType::Nothing;
   }
 }
 
 
-Utils::OperationResult
+Utils::ResultType
 GUI::MainWindow::saveData(const QString& fileName)
 {
   if (!fileName.isEmpty())
@@ -1068,7 +1119,7 @@ GUI::MainWindow::saveData(const QString& fileName)
       qWarning() << "MainWindow::saveData: couldn't save file"
                     " at path" << fileName;
 
-      return OperationResult::Nothing;
+      return ResultType::Nothing;
     }
     else
     {
@@ -1082,9 +1133,9 @@ GUI::MainWindow::saveData(const QString& fileName)
         },
         _currentField
       );
-      const OperationResult res(tableModelStorage.write(jsonObject));
+      const ResultType res(tableModelStorage.write(jsonObject));
 
-      if (res == OperationResult::Success)
+      if (res == ResultType::Success)
       {
         const QJsonDocument jsonDocument(jsonObject);
 
@@ -1096,11 +1147,11 @@ GUI::MainWindow::saveData(const QString& fileName)
 
         if (bytesCount == -1)
         {
-          return OperationResult::Fail;
+          return ResultType::Fail;
         }
         else
         {
-          return OperationResult::Success;
+          return ResultType::Success;
         }
       }
       else
@@ -1111,10 +1162,31 @@ GUI::MainWindow::saveData(const QString& fileName)
   }
   else
   {
-    return OperationResult::Nothing;
+    return ResultType::Nothing;
   }
 }
 
+
+void
+GUI::MainWindow::loadSettings()
+{
+  const QSettings settings(OrgName, AppName);
+  restoreGeometry(
+    settings.value(QStringLiteral("mainWindow/geometry")).toByteArray()
+  );
+  restoreState(
+    settings.value(QStringLiteral("mainWindow/windowState")).toByteArray()
+  );
+}
+
+
+void
+GUI::MainWindow::saveSettings()
+{
+  QSettings settings(OrgName, AppName);
+  settings.setValue(QStringLiteral("mainWindow/geometry"), saveGeometry());
+  settings.setValue(QStringLiteral("mainWindow/windowState"), saveState());
+}
 
 void
 GUI::MainWindow::on_customPlot_selectionChangedByUser()
@@ -1325,36 +1397,40 @@ GUI::MainWindow::on_solveSimplexPushButton_clicked()
   {
     case Field::Real:
       {
-        optional<LinearProgramSolution<Real>> linearProgramSolution(
-          _realSolver->solve()
-        );
+        const pair<SolutionType, optional<LinearProgramSolution<Real>>>
+        linearProgramSolution(_realSolver->solve());
 
-        if (linearProgramSolution)
+        if (linearProgramSolution.second)
         {
           _simplexTableModels[int(SimplexModel::Solution)]->resize(
             1,
-            (*linearProgramSolution).extremePoint.cols()
+            (*linearProgramSolution.second).extremePoint.cols()
           );
           TableModelUtils::fill<Real>(
             _simplexTableModels[int(SimplexModel::Solution)],
-            (*linearProgramSolution).extremePoint
+            (*linearProgramSolution.second).extremePoint
           );
 
           TableModelUtils::fill(
             _simplexTableModels[int(SimplexModel::ObjFuncValue)],
             numericCast<QString, Real>(
-              (*linearProgramSolution).extremeValue
+              (*linearProgramSolution.second).extremeValue
             )
           );
 
           LOG(
             "Solution: x* := {0}\nF* := {1}",
-            (*linearProgramSolution).extremePoint,
-            (*linearProgramSolution).extremeValue
+            (*linearProgramSolution.second).extremePoint,
+            (*linearProgramSolution.second).extremeValue
           );
         }
         else
         {
+          showErrorDetails(
+            QStringLiteral("This linear program can not be solved by the"
+                           " Simplex method."),
+            linearProgramSolution.first
+            );
           goto error;
         }
         break;
@@ -1362,48 +1438,46 @@ GUI::MainWindow::on_solveSimplexPushButton_clicked()
 
     case Field::Rational:
       {
-        optional<LinearProgramSolution<Rational>> linearProgramSolution(
-          _rationalSolver->solve()
-        );
+        const pair<SolutionType, optional<LinearProgramSolution<Rational>>>
+        linearProgramSolution(_rationalSolver->solve());
 
-        if (linearProgramSolution)
+        if (linearProgramSolution.second)
         {
           _simplexTableModels[int(SimplexModel::Solution)]->resize(
             1,
-            (*linearProgramSolution).extremePoint.cols()
+            (*linearProgramSolution.second).extremePoint.cols()
           );
           TableModelUtils::fill<Rational>(
             _simplexTableModels[int(SimplexModel::Solution)],
-            (*linearProgramSolution).extremePoint
+            (*linearProgramSolution.second).extremePoint
           );
 
           TableModelUtils::fill(
             _simplexTableModels[int(SimplexModel::ObjFuncValue)],
             numericCast<QString, Rational>(
-              (*linearProgramSolution).extremeValue
+              (*linearProgramSolution.second).extremeValue
             )
           );
 
           LOG(
             "Solution: x* := {0}\nF* := {1}",
-            (*linearProgramSolution).extremePoint,
-            (*linearProgramSolution).extremeValue
+            (*linearProgramSolution.second).extremePoint,
+            (*linearProgramSolution.second).extremeValue
           );
         }
         else
         {
+          showErrorDetails(
+            QStringLiteral("This linear program can not be solved by the"
+                           " Simplex method."),
+            linearProgramSolution.first
+            );
           goto error;
         }
         break;
       }
 
     error:
-      QMessageBox::warning(
-        this,
-        QStringLiteral("Oops..."),
-        QStringLiteral("This linear program can not be solved by"
-                       " the Simplex method.")
-      );
       enableCurrentSolutionView(false);
       enableStepByStepSimplexView(false);
       break;
@@ -1441,7 +1515,6 @@ GUI::MainWindow::on_solveGraphicalPushButton_clicked()
             _programTableModels[int(ProgramModel::RHS)]
           )
         );
-
         LinearProgramData<Real> linearProgramData(
           std::move(objFuncCoeffs),
           std::move(constrsCoeffs),
@@ -1450,13 +1523,20 @@ GUI::MainWindow::on_solveGraphicalPushButton_clicked()
         GraphicalSolver2D<Real> graphicalSolver2D(
           std::move(linearProgramData)
         );
-        optional<PlotData2D> plotData2D(graphicalSolver2D.solve());
-        if (plotData2D)
+        pair<SolutionType, optional<PlotData2D>> plotData2D(
+          graphicalSolver2D.solve()
+        );
+        if (plotData2D.second)
         {
-          plotGraph(*plotData2D);
+          plotGraph(*plotData2D.second);
         }
         else
         {
+          showErrorDetails(
+            QStringLiteral("This linear program can not be solved by"
+                           " the 2D graphical method."),
+            plotData2D.first
+          );
           goto error;
         }
         break;
@@ -1479,7 +1559,6 @@ GUI::MainWindow::on_solveGraphicalPushButton_clicked()
             _programTableModels[int(ProgramModel::RHS)]
           )
         );
-
         LinearProgramData<Rational> linearProgramData(
           std::move(objFuncCoeffs),
           std::move(constrsCoeffs),
@@ -1488,27 +1567,26 @@ GUI::MainWindow::on_solveGraphicalPushButton_clicked()
         GraphicalSolver2D<Rational> graphicalSolver2D(
           std::move(linearProgramData)
         );
-        optional<PlotData2D> plotData2D(graphicalSolver2D.solve());
-        if (plotData2D)
+        pair<SolutionType, optional<PlotData2D>> plotData2D(
+          graphicalSolver2D.solve()
+        );
+        if (plotData2D.second)
         {
-          plotGraph(*plotData2D);
+          plotGraph(*plotData2D.second);
         }
         else
         {
+          showErrorDetails(
+            QStringLiteral("This linear program can not be solved by"
+                           " the 2D graphical method."),
+            plotData2D.first
+          );
           goto error;
         }
         break;
       }
 
     error:
-      QMessageBox::warning(
-        this,
-        QStringLiteral("Oops..."),
-        QStringLiteral(
-          "This linear program can not be solved by"
-          " the 2D graphical method."
-        )
-      );
       enableGraphicalSolutionView(false);
       break;
 
@@ -1691,15 +1769,15 @@ GUI::MainWindow::on_action_Open_triggered()
     )
   );
 
-  OperationResult result(loadData(fileName));
+  ResultType result(loadData(fileName));
   switch (result)
   {
-    case OperationResult::Success:
+    case ResultType::Success:
       setWindowFilePath(fileName);
       setDirty();
       break;
 
-    case OperationResult::Fail:
+    case ResultType::Fail:
       QMessageBox::critical(
         this,
         QStringLiteral("File Reading Error"),
@@ -1708,7 +1786,7 @@ GUI::MainWindow::on_action_Open_triggered()
       break;
 
     default:
-    case OperationResult::Nothing:
+    case ResultType::Nothing:
       break;
   }
 }
@@ -1731,21 +1809,21 @@ GUI::MainWindow::on_action_Save_as_triggered()
     )
   );
 
-  OperationResult result(saveData(fileName));
+  ResultType result(saveData(fileName));
   switch (result)
   {
-    case OperationResult::Success:
+    case ResultType::Success:
       setDirty(false);
       break;
 
-    case OperationResult::Fail:
+    case ResultType::Fail:
       QMessageBox::critical(
         this,
         QStringLiteral("File Writing Error"),
         QStringLiteral("Could not save file to the selected location.")
       );
 
-    case OperationResult::Nothing:
+    case ResultType::Nothing:
     default:
       break;
   }

@@ -12,7 +12,7 @@
 namespace GUI
 {
   class NumericValidator :
-    public virtual QValidator
+    public QValidator
   {
     Q_OBJECT
 

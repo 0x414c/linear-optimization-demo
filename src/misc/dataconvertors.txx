@@ -96,7 +96,9 @@ namespace DataConvertors
       }
       else
       {
-        value = QString("%1/%2").arg(from.numerator()).arg(from.denominator());
+        value = QString("%1/%2").
+                arg(from.numerator()).
+                arg(from.denominator());
       }
     }
 
@@ -110,11 +112,12 @@ namespace DataConvertors
   {
     bool isOk(false);
     const QLocale cLocale(QLocale::C);
+
     const Real value(cLocale.toDouble(from, &isOk));
     if (!isOk) {
-      qWarning() <<
-      QString("DataConvertors::numericCast<Real>: could not convert '%1'").
-      arg(from).toLatin1().data(); //TODO: ~? Possible crash here
+      qCritical() <<
+        QString("DataConvertors::numericCast<Real>: could not convert '%1'").
+        arg(from).toLatin1().data(); //TODO: ~? Possible crash here
 
       return NumericLimits::min<Real>();
     }
@@ -131,11 +134,12 @@ namespace DataConvertors
   {
     bool isOk(false);
     const QLocale cLocale(QLocale::C);
+
     const Integer value(cLocale.toLongLong(from, &isOk));
     if (!isOk) {
-      qWarning() <<
-      QString("DataConvertors::numericCast<Integer>: could not convert '%1'").
-      arg(from).toLatin1().data(); //TODO: ~? The same as above
+      qCritical() <<
+        QString("DataConvertors::numericCast<Integer>: could not convert '%1'").
+        arg(from).toLatin1().data(); //TODO: ~? The same as above
 
       return NumericLimits::min<Integer>();
     }
@@ -155,6 +159,7 @@ namespace DataConvertors
     //the input string, so this regexp `re' can be simpler
     //(than the one contained in corresponding validator).
     const QRegExp re(QStringLiteral("^([-+]?[0-9]+)(?:\\/([0-9]*))?$"));
+
     const int idx(re.indexIn(from));
     if (idx > -1) {
       const QString numCapture(re.cap(1));
@@ -171,8 +176,8 @@ namespace DataConvertors
     }
     else
     {
-      qDebug() << "DataConvertors::numericCast<Rational>:"
-                  " could not convert" << from;
+      qCritical() << "DataConvertors::numericCast<Rational>:"
+                     " could not convert" << from;
 
       return NumericLimits::min<Rational>();
     }

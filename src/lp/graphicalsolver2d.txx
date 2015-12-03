@@ -23,7 +23,9 @@
 #include "linearprogrammingutils.hxx"
 #include "linearprogramsolution.hxx"
 #include "plotdata2d.hxx"
+#include "solutiontype.hxx"
 #include "../misc/dataconvertors.hxx"
+#include "../misc/utils.hxx"
 
 
 namespace LinearProgramming
@@ -33,11 +35,6 @@ namespace LinearProgramming
   using namespace Eigen;
   using namespace LinearProgrammingUtils;
   using namespace std;
-
-
-  template<typename T>
-  GraphicalSolver2D<T>::GraphicalSolver2D()
-  { }
 
 
   template<typename T>
@@ -57,7 +54,8 @@ namespace LinearProgramming
 
 
   template<typename T>
-  void GraphicalSolver2D<T>::setLinearProgramData(
+  void
+  GraphicalSolver2D<T>::setLinearProgramData(
     const LinearProgramData<T>& linearProgramData
   )
   {
@@ -66,7 +64,8 @@ namespace LinearProgramming
 
 
   template<typename T>
-  void GraphicalSolver2D<T>::setLinearProgramData(
+  void
+  GraphicalSolver2D<T>::setLinearProgramData(
     LinearProgramData<T>&& linearProgramData
   )
   {
@@ -80,7 +79,8 @@ namespace LinearProgramming
    * @return
    */
   template<typename T>
-  optional<PlotData2D> GraphicalSolver2D<T>::solve() const
+  pair<SolutionType, optional<PlotData2D>>
+  GraphicalSolver2D<T>::solve()
   {
     //Input linear program params
     //`M' is the constraints count
@@ -92,10 +92,9 @@ namespace LinearProgramming
     optional<PlotData2D> ret;
 
     PlotData2D plotData2D(
-      SolutionType::Unknown,
       QPointF(
-        numeric_limits<qreal>::lowest(),
-        numeric_limits<qreal>::lowest()
+        numeric_limits<qreal>::min(),
+        numeric_limits<qreal>::min()
       ),
       numeric_limits<qreal>::max(),
       QVector<QPointF>(0),
@@ -126,11 +125,10 @@ namespace LinearProgramming
     //rank(A) should be equal to rank(A|b)
     if (rref_A.second != rref_A_b.second || rref_A.second == 0)
     {
-      plotData2D.resultType = SolutionType::Inconsistent;
-      qDebug() << "GraphicalSolver2D<T>::solve: inconsistent system:"
-                  " rank(A) != rank(A|b) || rank(A) == 0";
+      qWarning() << "GraphicalSolver2D<T>::solve: inconsistent system:"
+                    " rank(A) != rank(A|b) || rank(A) == 0";
 
-      return ret;
+      return make_pair(SolutionType::Inconsistent, ret);
     }
 
     //Constraints count `M^' in the new reduced system {A^x == b^}
@@ -142,11 +140,10 @@ namespace LinearProgramming
     const DenseIndex N_(N - M_);
     if (N_ != 2)
     {
-      plotData2D.resultType = SolutionType::Unknown;
-      qDebug() << "GraphicalSolver2D<T>::solve: cannot solve this linear"
-                  " program: `N^' != 2";
+      qWarning() << "GraphicalSolver2D<T>::solve: could not solve this"
+                    " linear program: `N^' != 2";
 
-      return ret;
+      return make_pair(SolutionType::Unknown, ret);
     }
 
     //`F' in the terms of the reduced basis
@@ -198,7 +195,7 @@ namespace LinearProgramming
             T(-1);
     }
 
-//    LOG("d_ := {}", d_);
+    LOG("c_ := {}\nd_ := {}", c_, d_);
 
     const LinearFunction<T, 2> F_(c_, d_ * T(-1));
 
@@ -270,7 +267,7 @@ namespace LinearProgramming
           b_(r),
           b_(s);
 
-        LOG("r := {}, s := {}\nC :=\n{},\nd :=\n{}", r, s, C, d);
+//        LOG("r := {}, s := {}\nC :=\n{},\nd :=\n{}", r, s, C, d);
 
         //Obtain basic solution `y':
         //Try to solve matrix equation {C * y == d}
@@ -281,7 +278,7 @@ namespace LinearProgramming
 
         if (y)
         {
-          LOG("y ==\n{}", (*y));
+//          LOG("y ==\n{}", (*y));
 
           const bool isValid((C * (*y)).isApprox(d));
           if (isValid)
@@ -314,14 +311,14 @@ namespace LinearProgramming
 
               qreal newValue(numericCast<qreal, T>(F__));
 
-              qDebug() << "GraphicalSolver2D<T>::solve: value for" <<
-                          newVertice << "is" << newValue << "~=" << F__;
+              qInfo() << "GraphicalSolver2D<T>::solve: value for" <<
+                         newVertice << "is" << newValue << "~=" << F__;
 
               if (newValue < plotData2D.extremeValue)
               {
-                qDebug() << "GraphicalSolver2D<T>::solve:"
-                            " new minimum found for" << newVertice << "is" <<
-                            newValue << "~= (" << y_1 << ";" << y_2 << ")";
+                qInfo() << "GraphicalSolver2D<T>::solve:"
+                           " new minimum found for" << newVertice << "is" <<
+                           newValue << "~=(" << y_1 << "," << y_2 << ")";
 
                 plotData2D.extremeValue = newValue;
                 plotData2D.extremeVertex = newVertice;
@@ -332,19 +329,24 @@ namespace LinearProgramming
       }
     }
 
-    plotData2D.resultType = SolutionType::Optimal;
-
     //To plot a polygon we should sort all the found vertices in clockwise order.
     sortPointsClockwise(plotData2D.vertices);
 
-    qDebug() << "GraphicalSolver2D::solve: solution: \nV:=" <<
+    plotData2D.gradient.setP2(
+      QPointF(
+        numericCast<qreal, T>(F_.coeffAt(0)),
+        numericCast<qreal, T>(F_.coeffAt(1))
+      )
+    );
+
+    qDebug() << "Solution: \nV:=" <<
                 plotData2D.vertices << "\nG:=" << plotData2D.gradient <<
                 "\nX*:=" << plotData2D.extremeVertex <<
                 "\nF*:=" << plotData2D.extremeValue;
 
     ret = plotData2D;
 
-    return ret;
+    return make_pair(SolutionType::Optimal, ret);
   }
 }
 

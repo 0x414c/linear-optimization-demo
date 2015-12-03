@@ -24,7 +24,7 @@ TARGET = LinearOptimization
 TEMPLATE = app
 
 CONFIG(release, debug|release) {
-  DEFINES += QT_NO_DEBUG_OUTPUT #QT_NO_INFO_OUTPUT #QT_NO_WARNING_OUTPUT
+  DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_INFO_OUTPUT #QT_NO_WARNING_OUTPUT
 }
 
 DEFINES += EIGEN_MPL2_ONLY FMT_HEADER_ONLY LP_WITH_DEBUG_LOG LP_WITH_BLAND_RULE
@@ -36,8 +36,14 @@ INCLUDEPATH += $$PWD/lib/boost \
 
 #LIBS += -L$$PWD/lib/cppformat/cppformat/build -lformat
 
-SOURCES += src/main.cxx \
+SOURCES += \
   lib/qcustomplot/qcustomplot/qcustomplot.cpp \
+  src/gui/mainwindow.cxx \
+  src/gui/numericstyleditemdelegate.cxx \
+  src/gui/numericvalidator.cxx \
+  src/gui/simpletablemodel.cxx \
+  src/gui/tablemodelstorage.cxx \
+  src/gui/tablemodelutils.cxx \
   src/lp/dantzignumericsolver.cxx \
   src/lp/dantzignumericsolvercontroller.cxx \
   src/lp/graphicalsolver2d.cxx \
@@ -47,28 +53,28 @@ SOURCES += src/main.cxx \
   src/lp/linearprogrammingutils.cxx \
   src/lp/linearprogramsolution.cxx \
   src/lp/plotdata2d.cxx \
+  src/main.cxx \
   src/misc/dataconvertors.cxx \
   src/misc/ijsonserializable.cxx \
   src/misc/utils.cxx \
-  src/ui/mainwindow.cxx \
-  src/ui/numericstyleditemdelegate.cxx \
-  src/ui/numericvalidator.cxx \
-  src/ui/simpletablemodel.cxx \
-  src/ui/tablemodelstorage.cxx \
-  src/ui/tablemodelutils.cxx
+  src/test/test.cxx
 
 HEADERS += \
   lib/qcustomplot/qcustomplot/qcustomplot.h \
   src/config.hxx \
-  src/lp/dantzignumericsolver_fwd.hxx \
-  src/lp/dantzignumericsolvercontroller_fwd.hxx \
-  src/lp/optimizationgoaltype.hxx \
-  src/lp/simplextableau_fwd.hxx \
-  src/lp/solutionphase.hxx \
-  src/lp/solutiontype.hxx \
+  src/gui/mainwindow.hxx \
+  src/gui/numericstyleditemdelegate.hxx \
+  src/gui/numericstyleditemdelegate.txx \
+  src/gui/numericvalidator.hxx \
+  src/gui/simpletablemodel.hxx \
+  src/gui/tablemodelstorage.hxx \
+  src/gui/tablemodelutils.hxx \
+  src/gui/tablemodelutils.txx \
   src/lp/dantzignumericsolver.hxx \
   src/lp/dantzignumericsolver.txx \
+  src/lp/dantzignumericsolver_fwd.hxx \
   src/lp/dantzignumericsolvercontroller.hxx \
+  src/lp/dantzignumericsolvercontroller_fwd.hxx \
   src/lp/graphicalsolver2d.hxx \
   src/lp/graphicalsolver2d.txx \
   src/lp/inumericsolver.hxx \
@@ -80,9 +86,13 @@ HEADERS += \
   src/lp/linearprogrammingutils.txx \
   src/lp/linearprogramsolution.hxx \
   src/lp/linearprogramsolution.txx \
+  src/lp/optimizationgoaltype.hxx \
   src/lp/plotdata2d.hxx \
   src/lp/simplextableau.hxx \
   src/lp/simplextableau.txx \
+  src/lp/simplextableau_fwd.hxx \
+  src/lp/solutionphase.hxx \
+  src/lp/solutiontype.hxx \
   src/math/mathutils.hxx \
   src/math/mathutils.txx \
   src/math/numericlimits.hxx \
@@ -94,14 +104,7 @@ HEADERS += \
   src/misc/eigenextensions.hxx \
   src/misc/ijsonserializable.hxx \
   src/misc/utils.hxx \
-  src/ui/mainwindow.hxx \
-  src/ui/numericstyleditemdelegate.hxx \
-  src/ui/numericstyleditemdelegate.txx \
-  src/ui/numericvalidator.hxx \
-  src/ui/simpletablemodel.hxx \
-  src/ui/tablemodelstorage.hxx \
-  src/ui/tablemodelutils.hxx \
-  src/ui/tablemodelutils.txx
+  src/test/test.hxx
 
 FORMS += forms/mainwindow.ui
 

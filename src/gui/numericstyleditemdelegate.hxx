@@ -22,7 +22,7 @@ namespace GUI
 
   //HACK: This shim only makes `moc' happy about templated classes.
   class StyledItemDelegate :
-    public virtual QStyledItemDelegate
+    public QStyledItemDelegate
   {
     Q_OBJECT
 
@@ -34,7 +34,7 @@ namespace GUI
 
   template<typename T = Real>
   class NumericStyledItemDelegate :
-    public virtual StyledItemDelegate
+    public StyledItemDelegate
   {
     public:
       explicit NumericStyledItemDelegate(QObject* parent = 0);

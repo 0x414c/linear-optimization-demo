@@ -29,8 +29,8 @@ namespace MathUtils
    * Finds the "best" rational approximation of the given real number `x'
    * within the given constraints (Relative Error (Tolerance) and
    * Maximal Denominator) by using Continued Fractions method.
-   * For the reference see `http://mathworld.wolfram.com/
-   * ContinuedFraction.html'.
+   * For the reference see:
+   *  `http://mathworld.wolfram.com/ContinuedFraction.html'.
    * @param x Number to approximate.
    * @param tolerance Tolerance value (default is `1E-16').
    * @param maxIterations Maximum iterations count allowed.
@@ -51,8 +51,8 @@ namespace MathUtils
     //Check for overflow
     if (integerPart > Real(NumericLimits::max<R>()))
     {
-      qDebug() <<
-        "MathUtils::rationalize<R>: overflow at the upper bound of `R'";
+      qWarning() << "MathUtils::rationalize<R>:"
+                    " overflow at the upper bound of `R'";
 
       return make_pair(NumericLimits::max<R>(), 1);
     }
@@ -60,8 +60,8 @@ namespace MathUtils
     {
       if (integerPart < Real(NumericLimits::min<R>()))
       {
-        qDebug() <<
-          "MathUtils::rationalize<R>: overflow at the lower bound of `R'";
+        qWarning() << "MathUtils::rationalize<R>:"
+                      " overflow at the lower bound of `R'";
 
         return make_pair(NumericLimits::min<R>(), 1);
       }
@@ -87,13 +87,13 @@ namespace MathUtils
           uint16_t iterCount(0);
           while (true)
           {
-            Real rn(Real(1.) / Real(r0 - a0)); //See eq. (9)
+            Real rn(Real(1) / Real(r0 - a0)); //See eq. (9)
             R an(floor(rn)); //See eq. (10)
             pn = an * p1 + p0; //See eq. (27), (28)
             qn = an * q1 + q0;
 
             //Look at the n-th convergent `cn'
-            Real cn(Real(pn) / Real(qn));
+            const Real cn(Real(pn) / Real(qn));
             if (++iterCount <= maxIterations &&
                 fabs(x - cn) > tolerance * fabs(x) &&
                 qn < maxDenominator
@@ -113,10 +113,10 @@ namespace MathUtils
 
           if (iterCount > maxIterations)
           {
-            qDebug() << "MathUtils::rationalize<R>: iterations limit"
-                        "`maxIterations' exceeded: `iterCount' ==" <<
-                        iterCount << ">" << maxIterations <<
-                        "; `tolerance' ==" << tolerance;
+            qWarning() << "MathUtils::rationalize<R>:"
+                          " iterations limit `maxIterations' exceeded:"
+                          " `iterCount' ==" << iterCount << ">" <<
+                          maxIterations << "; `tolerance' ==" << tolerance;
           }
 
           if (qn <= maxDenominator)

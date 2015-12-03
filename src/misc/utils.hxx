@@ -31,7 +31,7 @@ namespace Utils
   /**
    * @brief The OperationResult enum
    */
-  enum struct OperationResult : int
+  enum struct ResultType : int
   {
     Success = 0,
     Fail = 1,

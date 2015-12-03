@@ -8,6 +8,8 @@
 #include <QStringList>
 #include <QStyleFactory>
 
+#include "../config.hxx"
+
 
 /**
  * @brief makeApplication
@@ -23,22 +25,23 @@
 QApplication*
 Utils::makeApplication(int& argc, char** argv)
 {
+  using namespace Config::AppGlobal;
+
+
   QStringList args;
   for (int i(0); i < argc; ++i)
   {
     args.append(QString(argv[i]));
   }
 
-  qDebug() << "Utils::makeApplication: `args' ==" << args;
+  qDebug() << "Utils::makeApplication: args ==" << args;
 
   QApplication* const app = new QApplication(argc, argv);
-  QCoreApplication::setApplicationName(QStringLiteral("Linear Optimization"));
-  QCoreApplication::setOrganizationName(QStringLiteral("0x414c!"));
-  QCoreApplication::setOrganizationDomain(QStringLiteral("www.0x414c.tk"));
-  QCoreApplication::setApplicationVersion(QStringLiteral("0.0.1"));
-  QApplication::setApplicationDisplayName(
-    QStringLiteral("Linear Optimization")
-  );
+  QCoreApplication::setApplicationName(AppName);
+  QCoreApplication::setOrganizationName(OrgName);
+  QCoreApplication::setOrganizationDomain(AppDomain);
+  QCoreApplication::setApplicationVersion(AppVersion);
+  QApplication::setApplicationDisplayName(AppDisplayName);
 
   const QCommandLineOption styleOption(
     QStringLiteral("style"),
@@ -104,7 +107,7 @@ Utils::makeApplication(int& argc, char** argv)
 
   if (!parser.isSet(styleOption))
   {
-    qDebug() << "Utils::makeApplication: `style' := `Fusion'";
+    qInfo() << "Utils::makeApplication: style := \"Fusion\"";
 
     if (
       QStyleFactory::keys().contains(

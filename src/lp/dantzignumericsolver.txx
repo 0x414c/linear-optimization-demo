@@ -21,6 +21,8 @@
 
 #include "linearprogramdata.hxx"
 #include "linearprogramsolution.hxx"
+#include "simplextableau.hxx"
+#include "solutiontype.hxx"
 #include "../math/mathutils.hxx"
 #include "../math/numericlimits.hxx"
 #include "../misc/eigenextensions.hxx"
@@ -37,22 +39,17 @@ namespace LinearProgramming
 
 
   template<typename T>
-  DantzigNumericSolver<T>::DantzigNumericSolver()
-  { }
-
-
-  template<typename T>
   /**
    * @brief DantzigNumericSolver<T>::DantzigNumericSolver
    * Solves small-scaled linear programs
    * using the Two-Phase Simplex method.
    * For the reference see:
-   * `http://en.wikipedia.org/wiki/Simplex_algorithm',
-   * `http://en.wikipedia.org/wiki/Linear_programming',
-   * `http://mathworld.wolfram.com/SimplexMethod.html',
-   * `http://mathworld.wolfram.com/LinearProgramming.html'.
-   * Introduction to algorithms / Thomas H. Cormen ... [et al.]. -— 3rd ed.,
-   * Кормен, Томаc Х. и др. Алгоритмы: построение и анализ, 3-е изд.
+   *  `http://en.wikipedia.org/wiki/Simplex_algorithm',
+   *  `http://en.wikipedia.org/wiki/Linear_programming',
+   *  `http://mathworld.wolfram.com/SimplexMethod.html',
+   *  `http://mathworld.wolfram.com/LinearProgramming.html'.
+   *   Introduction to algorithms / Thomas H. Cormen ... [et al.]. -— 3rd ed.,
+   *   Кормен, Томаc Х. и др. Алгоритмы: построение и анализ, 3-е изд.
    * @param linearProgramData
    * Source data containing constraints coefficients
    * matrix `A', right-hand-side column-vector `b' and
@@ -71,12 +68,12 @@ namespace LinearProgramming
    * Solves small-scaled linear programs
    * using the Two-Phase Simplex method.
    * For the reference see:
-   * `http://en.wikipedia.org/wiki/Simplex_algorithm',
-   * `http://en.wikipedia.org/wiki/Linear_programming',
-   * `http://mathworld.wolfram.com/SimplexMethod.html',
-   * `http://mathworld.wolfram.com/LinearProgramming.html',
-   * Introduction to algorithms / Thomas H. Cormen ... [et al.]. -— 3rd ed.,
-   * Кормен, Томаc Х. и др. Алгоритмы: построение и анализ, 3-е изд.
+   *  `http://en.wikipedia.org/wiki/Simplex_algorithm',
+   *  `http://en.wikipedia.org/wiki/Linear_programming',
+   *  `http://mathworld.wolfram.com/SimplexMethod.html',
+   *  `http://mathworld.wolfram.com/LinearProgramming.html',
+   *  Introduction to algorithms / Thomas H. Cormen ... [et al.]. -— 3rd ed.,
+   *  Кормен, Томаc Х. и др. Алгоритмы: построение и анализ, 3-е изд.
    * @param linearProgramData
    * Source data containing constraints coefficients
    * matrix `A', right-hand-side column-vector `b' and
@@ -137,23 +134,23 @@ namespace LinearProgramming
    * @brief DantzigNumericSolver<T>::solve
    * Finds the extreme (minimum) value `w*' and
    * the extreme point `x*' of the given objective linear
-   * function w(x) = (c, x) within the given constraints
+   * function w(x) == (c, x) within the given constraints
    * defined by the following system of linear equations
-   * in matrix form
+   * in matrix form:
    *   αx = β,
    * where:
-   *   M is the constraints count,
-   *   N is the variables count,
-   *   α is M × N matrix of constraints coefficients,
-   *   β is the right-hand-side column-vector of length M
+   *  `M' is the constraints count,
+   *  `N' is the variables count,
+   *  `α' is M × N matrix of constraints coefficients,
+   *  `β' is the right-hand-side column-vector of length M
    * and non-negativity constraints
-   *   x[i] >= 0 for all i in [0; N)
+   *   (x[i] >= 0) for all `i' in [0; N)
    * using the two-phase Simplex method.
    * @return `LinearProgramSolution' instance
-   * w/ row-vector of length `N' for function extreme point `x*'
+   * w/ the row-vector of length `N' for function extreme point `x*'
    * and the extreme (minimal) value `w*'.
    */
-  optional<LinearProgramSolution<T>>
+  pair<SolutionType, optional<LinearProgramSolution<T>>>
   DantzigNumericSolver<T>::solve()
   {
     //Reset internal state
@@ -193,10 +190,10 @@ namespace LinearProgramming
       makeString(phase1Tableau.freeVars())
     );
 
-    if (_iterCount == 0) //HACK: !
-    {
-      return ret;
-    }
+//    if (_iterCount == 0) //HACK: !
+//    {
+//      return make_pair(SolutionType::Unknown, ret);
+//    }
 
     if (phase1SolutionType == SolutionType::Optimal)
     {
@@ -241,8 +238,7 @@ namespace LinearProgramming
 
           if (phase2SolutionType == SolutionType::Optimal)
           {
-            LinearProgramSolution<T> linearProgramSolution(
-              SolutionType::Optimal,
+            const LinearProgramSolution<T> linearProgramSolution(
               phase2Tableau.extremePoint(),
               phase2Tableau.extremeValue()
             );
@@ -254,12 +250,28 @@ namespace LinearProgramming
             );
 
             ret = linearProgramSolution;
+
+            return make_pair(phase2SolutionType, ret);
+          }
+          else
+          {
+            return make_pair(phase2SolutionType, ret);
           }
         }
+        else
+        {
+          return make_pair(phase2SolutionType, ret);
+        }
+      }
+      else
+      {
+        return make_pair(phase1SolutionType, ret);
       }
     }
-
-    return ret;
+    else
+    {
+      return make_pair(phase1SolutionType, ret);
+    }
   }
 
 
@@ -332,10 +344,12 @@ namespace LinearProgramming
     }
     else
     {
-      const pair<SolutionType, Index2D> pivotIdx(computePivotIdx(tableau));
+      const pair<SolutionType, MaybeIndex2D> pivotIdx(computePivotIdx(tableau));
 
       if (pivotIdx.second) //If indices is present
       {
+        ++_iterCount;
+
         pivotize(tableau, (*pivotIdx.second).first, (*pivotIdx.second).second);
 
         return SolutionType::Incomplete;
@@ -367,6 +381,8 @@ namespace LinearProgramming
     }
     else
     {
+      ++_iterCount;
+
       pivotize(tableau, pivotIdx.first, pivotIdx.second);
 
       return SolutionType::Incomplete;
@@ -381,13 +397,12 @@ namespace LinearProgramming
    * @param tableau
    * @return
    */
-  pair<SolutionType, Index2D>
+  pair<SolutionType, MaybeIndex2D>
   DantzigNumericSolver<T>::computePivotIdx(
     const SimplexTableau<T>& tableau
   ) const
   {
-    pair<SolutionType, Index2D> ret;
-    Index2D idx;
+    MaybeIndex2D idx;
 
     const optional<DenseIndex> pivotColIdx(computePivotColIdx(tableau));
     if (pivotColIdx)
@@ -427,22 +442,23 @@ namespace LinearProgramming
   /**
    * @brief DantzigNumericSolver<T>::computePivotColIdx
    * For the reference see:
-   * `http://www.math.toronto.edu/mpugh/Teaching/APM236_04/bland',
-   * `http://people.orie.cornell.edu/dpw/orie6300/Lectures/lec13.pdf',
-   * `http://web.stanford.edu/class/msande310/blandrule.pdf'.
+   *  `http://www.math.toronto.edu/mpugh/Teaching/APM236_04/bland',
+   *  `http://people.orie.cornell.edu/dpw/orie6300/Lectures/lec13.pdf',
+   *  `http://web.stanford.edu/class/msande310/blandrule.pdf'.
    * @param tableau
    * @return (optional)
-   * argmin{P[s]} for all `s' where (P[s] < 0) (Dantzig's original rule)
-   * or
+   * argmin{P[s]} for all `s' where (P[s] < 0) (Dantzig's original pivot
+   * selection rule)
+   *   or
    * min{s} for all `s' where (P[s] < 0) (Bland's pivot selection rule that
    * prevents cycling).
    */
-  Index1D
+  MaybeIndex1D
   DantzigNumericSolver<T>::computePivotColIdx(
     const SimplexTableau<T>& tableau
   ) const
   {
-    optional<DenseIndex> ret;
+    MaybeIndex1D ret;
 
     DenseIndex minCoeffColIdx(0);
     bool haveNegativeCoeffs(false);
@@ -515,12 +531,12 @@ namespace LinearProgramming
    * or
    * .
    */
-  Index1D
+  MaybeIndex1D
   DantzigNumericSolver<T>::computePivotRowIdx(
     const SimplexTableau<T>& tableau, DenseIndex pivotColIdx
   ) const
   {
-    optional<DenseIndex> ret;
+    MaybeIndex1D ret;
 
 
 #ifdef LP_WITH_BLAND_RULE
@@ -635,25 +651,17 @@ namespace LinearProgramming
     SimplexTableau<T>& tableau, DenseIndex rowIdx, DenseIndex colIdx
   )
   {
-    LOG(
-      "swap ~x{0} <> x{1}",
-      tableau.basicVars()[rowIdx],
-      tableau.freeVars()[colIdx]
-    );
-
-    //Swap the free and basic variable ~x[k] ↔ x[s]
-    std::swap(
-      tableau.basicVars()[rowIdx],
-      tableau.freeVars()[colIdx]
-    );
-
-    //Store the value of the pivot element `α[k, s]'
+    //Cache the value of the pivot element `α[k, s]'
     const T pivotElement(tableau(rowIdx, colIdx));
 
     LOG(
-      "rowIdx := {0}, colIdx := {1}, pivotElement := {2}",
-      rowIdx, colIdx, pivotElement
+      "pivotElement := {2}, rowIdx := {0}, colIdx := {1}, swap ~x{3} <> x{4}",
+      rowIdx, colIdx, pivotElement,
+      tableau.basicVars()[rowIdx], tableau.freeVars()[colIdx]
     );
+
+    //Swap the free and basic variable ~x[k] ↔ x[s]
+    std::swap(tableau.basicVars()[rowIdx], tableau.freeVars()[colIdx]);
 
     //For the new row at the pivot position
     //(new pivot row) = (old pivot row) / (old pivot)
@@ -696,8 +704,6 @@ namespace LinearProgramming
       }
     }
 
-    ++_iterCount;
-
     LOG(
       "T({0}) :=\n{1},\n~x := {2},\n x := {3}",
       _iterCount, tableau.entries(),
@@ -705,32 +711,6 @@ namespace LinearProgramming
       makeString(tableau.freeVars())
     );
   }
-
-
-#ifdef LP_WITH_BLAND_RULE
-  template<typename T>
-  /**
-   * @brief DantzigNumericSolver<T>::isPivotColValid
-   * @param tableau
-   * @param colIdx
-   * @return `true' if (for s: ∃i: α[i, s] > 0), `false' otherwise.
-   */
-  bool
-  DantzigNumericSolver<T>::isPivotColValid(
-    const SimplexTableau<T>& tableau, DenseIndex colIdx
-  ) const
-  {
-    return (
-      (
-        tableau.
-        col(colIdx).
-        head(tableau.rows() - 1).
-        unaryExpr(ref(isGreaterThanZero<T>))
-      ).
-      any()
-    );
-  }
-#endif
 
 
   template<typename T>
@@ -762,10 +742,6 @@ namespace LinearProgramming
       {
          //If (~w* < 0) -- Oops... smth went wrong...
         if (isLessThanZero<T>(objFuncValue))
-        {
-          return SolutionType::Unknown;
-        }
-        else
         {
           return SolutionType::Unknown;
         }

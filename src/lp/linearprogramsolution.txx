@@ -19,16 +19,9 @@ namespace LinearProgramming
 
 
   template<typename T>
-  LinearProgramSolution<T>::LinearProgramSolution() :
-    extremePoint(Matrix<T, 1, Dynamic>::Zero(1, 1))
-  { }
-
-
-  template<typename T>
   LinearProgramSolution<T>::LinearProgramSolution(
     const LinearProgramSolution<T>& other
   ) :
-    solutionType(other.solutionType),
     extremePoint(other.extremePoint),
     extremeValue(other.extremeValue)
   { }
@@ -38,7 +31,6 @@ namespace LinearProgramming
   LinearProgramSolution<T>::LinearProgramSolution(
     LinearProgramSolution<T>&& other
   ) :
-    solutionType(other.solutionType),
     extremePoint(std::move(other.extremePoint)),
     extremeValue(other.extremeValue)
   { }
@@ -46,11 +38,9 @@ namespace LinearProgramming
 
   template<typename T>
   LinearProgramSolution<T>::LinearProgramSolution(
-    SolutionType solutionType,
     const Matrix<T, 1, Dynamic>& extremePoint,
     const T& extremeValue
   ) :
-    solutionType(solutionType),
     extremePoint(extremePoint),
     extremeValue(extremeValue)
   { }
@@ -58,11 +48,9 @@ namespace LinearProgramming
 
   template<typename T>
   LinearProgramSolution<T>::LinearProgramSolution(
-    SolutionType solutionType,
     Matrix<T, 1, Dynamic>&& extremePoint,
     const T& extremeValue
   ) :
-    solutionType(solutionType),
     extremePoint(std::move(extremePoint)),
     extremeValue(extremeValue)
   { }
@@ -76,7 +64,6 @@ namespace LinearProgramming
   {
     if (this != &other)
     {
-      solutionType = other.solutionType;
       extremePoint = other.extremePoint;
       extremeValue = other.extremeValue;
     }
@@ -93,7 +80,6 @@ namespace LinearProgramming
   {
     if (this != &other)
     {
-      solutionType = other.solutionType;
       extremePoint = std::move(other.extremePoint);
       extremeValue = other.extremeValue;
     }

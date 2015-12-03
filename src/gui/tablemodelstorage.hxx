@@ -18,11 +18,11 @@
 namespace GUI
 {
   using namespace NumericTypes;
-  using Utils::OperationResult;
+  using Utils::ResultType;
 
 
   class TableModelStorage :
-    public virtual IJsonSerializable
+    public IJsonSerializable
   {
     public:
       TableModelStorage();
@@ -43,9 +43,9 @@ namespace GUI
 
       QString metadata() const;
 
-      virtual OperationResult read(const QJsonObject& jsonObject) override;
+      virtual ResultType read(const QJsonObject& jsonObject) override;
 
-      virtual OperationResult write(QJsonObject& jsonObject) const override;
+      virtual ResultType write(QJsonObject& jsonObject) const override;
 
 
     private:

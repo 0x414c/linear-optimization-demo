@@ -25,23 +25,23 @@ namespace LinearProgramming
    *   c1 * x1 + c2 * X2 + ... + cN*xN + d ==
    *   (c, x) + d,
    * where:
-   *   x := (x1, ..., xN),
-   *   c := (c1, ..., cN),
-   *   d is the constant term,
+   *   `x' is the column-vector (x1, ..., xN),
+   *   `c' is the row-vector (c1, ..., cN),
+   *   `d' is the constant term,
    * and operation (*, *) denotes the dot product.
    * This class is using `Eigen' library for internal
    * representation of function coefficents vector `C'.
    * The grad(F) defines normal vector
-   *   X := <X1, ..., XN>
+   *   n := (x1, ..., xN)
    * to the hyperplane that is defined by equation
-   *   F(X1, ..., XN) == 0.
+   *   F(x1, ..., xN) == 0.
    * This vector defines direction in which
    * function value increases.
-   * We can use this property to solve LP.
+   * We can use this property to solve linear programs.
    * For reference see:
-   * `https://en.wikipedia.org/wiki/Field_(mathematics)',
-   * `https://en.wikipedia.org/wiki/Linear_form',
-   * `https://en.wikipedia.org/wiki/Hyperplane'.
+   *  `https://en.wikipedia.org/wiki/Field_(mathematics)',
+   *  `https://en.wikipedia.org/wiki/Linear_form',
+   *  `https://en.wikipedia.org/wiki/Hyperplane'.
    */
   template<typename T = Real, DenseIndex N = Dynamic>
   class LinearFunction

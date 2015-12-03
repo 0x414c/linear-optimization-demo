@@ -74,7 +74,7 @@ GUI::TableModelStorage::metadata() const
 }
 
 
-Utils::OperationResult
+Utils::ResultType
 GUI::TableModelStorage::read(const QJsonObject& jsonObject)
 {
   const QJsonValue metadataValue(jsonObject[QStringLiteral("metadata")]);
@@ -100,80 +100,80 @@ GUI::TableModelStorage::read(const QJsonObject& jsonObject)
             {
               const QJsonObject itemObject(itemValue.toObject());
               SimpleTableModel item;
-              const OperationResult res(item.read(itemObject));
-              if (res == OperationResult::Success)
+              const ResultType res(item.read(itemObject));
+              if (res == ResultType::Success)
               {
                 _items.append(item);
               }
               else
               {
-                qDebug() << "TableModelStorage::read: cannot read `item':"
-                            " stopping operation";
+                qCritical() << "TableModelStorage::read: cannot read `item':"
+                               " stopping operation";
 
                 return res;
               }
             }
             else
             {
-              qDebug() << "TableModelStorage::read: cannot read `item':"
-                          " `item' == `Undefined', stopping operation";
+              qCritical() << "TableModelStorage::read: cannot read `item':"
+                             " `item' == `Undefined', stopping operation";
 
-              return OperationResult::Nothing;
+              return ResultType::Nothing;
             }
           }
 
-          return OperationResult::Success;
+          return ResultType::Success;
         }
         else
         {
-          qDebug() << "TableModelStorage::read: cannot read:"
-                      " `items' == `Undefined'";
+          qWarning() << "TableModelStorage::read: cannot read:"
+                        " `items' == `Undefined'";
 
-          return OperationResult::Nothing;
+          return ResultType::Nothing;
         }
       }
       else
       {
-        qDebug() << "TableModelStorage::read: cannot read: "
-                    "`metadata' != `this->metadata()'";
+        qWarning() << "TableModelStorage::read: cannot read: "
+                      "`metadata' != `this->metadata()'";
 
-        return OperationResult::Nothing;
+        return ResultType::Nothing;
       }
     }
     else
     {
-      qDebug() << "TableModelStorage::read: cannot read:"
-                  " `metadata' == (empty)";
+      qWarning() << "TableModelStorage::read: cannot read:"
+                    " `metadata' == (empty)";
 
-      return OperationResult::Nothing;
+      return ResultType::Nothing;
     }
   }
   else
   {
-    qDebug() << "TableModelStorage::read: cannot read:"
-                " `metadata' == `Undefined'";
+    qWarning() << "TableModelStorage::read: cannot read:"
+                  " `metadata' == `Undefined'";
 
-    return OperationResult::Nothing;
+    return ResultType::Nothing;
   }
 }
 
 
-Utils::OperationResult
+Utils::ResultType
 GUI::TableModelStorage::write(QJsonObject& jsonObject) const
 {
   QJsonArray itemsArray;
   for (const SimpleTableModel& item : _items)
   {
     QJsonObject itemObject;
-    const OperationResult res(item.write(itemObject));
-    if (res == OperationResult::Success)
+    const ResultType res(item.write(itemObject));
+    if (res == ResultType::Success)
     {
       itemsArray.append(itemObject);
     }
     else
     {
-      qDebug() << "TableModelStorage::read: cannot write `item',"
-                  " stopping operation";
+      qCritical() << "TableModelStorage::write: could not write `item',"
+                     " stopping operation";
 
       return res;
     }
@@ -181,8 +181,9 @@ GUI::TableModelStorage::write(QJsonObject& jsonObject) const
 
   jsonObject[QStringLiteral("items")] = itemsArray;
 
-  jsonObject[QStringLiteral("metadata")] =
-  _metadataHeader + QString("%1").arg(int(_field));
+  jsonObject[QStringLiteral("metadata")] = _metadataHeader +
+                                           QString("%1").
+                                           arg(int(_field));
 
-  return OperationResult::Success;
+  return ResultType::Success;
 }

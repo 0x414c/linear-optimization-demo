@@ -40,14 +40,16 @@ namespace TableModelUtils
 
 
   //TODO: ~? Make these functions members of the `SimpleTableModel' class
-  bool fill(SimpleTableModel* const tableModel, FillMethod fillMethod);
+  bool fill(SimpleTableModel* const tableModel, FillMethod fillMethod)
+  throw(invalid_argument);
 
-  bool fill(SimpleTableModel* const tableModel, const QString& value);
+  bool fill(SimpleTableModel* const tableModel, const QString& value)
+  throw(invalid_argument);
 
   bool fill(
     SimpleTableModel* const tableModel,
     const function<QVariant(const QVariant&)>& callback
-  );
+  ) throw(invalid_argument);
 
 
   template<typename T = Real>
@@ -67,8 +69,8 @@ namespace TableModelUtils
       tableModel->columnCount() != matrix.cols()
     )
     {
-      throw invalid_argument("Inconsistent `tableModel'"
-                             " and `matrix' dimensions");
+      throw invalid_argument("tableModel->rowCount() != tableau.rows()"
+                             " || tableModel->columnCount() != tableau.cols()");
     }
 
     for (DenseIndex row(0); row < matrix.rows(); ++row)
@@ -104,8 +106,8 @@ namespace TableModelUtils
       tableModel->columnCount() != tableau.cols()
     )
     {
-      throw invalid_argument("Inconsistent `tableModel'"
-                             " and `tableau' dimensions");
+      throw invalid_argument("tableModel->rowCount() != tableau.rows()"
+                             " || tableModel->columnCount() != tableau.cols()");
     }
 
     fill<T>(tableModel, tableau.entries());
@@ -148,7 +150,7 @@ namespace TableModelUtils
 
   template<typename R, typename T>
   bool
-  convert(SimpleTableModel* const tableModel)
+  convert(SimpleTableModel* const tableModel) throw(invalid_argument)
   {
     static_assert(
       AlwaysFalse<R, T>::value,
@@ -178,8 +180,8 @@ namespace TableModelUtils
       tableModel->columnCount() != matrix.cols()
     )
     {
-      throw invalid_argument("Inconsistent `tableModel'"
-                             " and `tableau' dimensions");
+      throw invalid_argument("tableModel->rowCount() != matrix.rows()"
+                             " || tableModel->columnCount() != matrix.cols()");
     }
 
     if (!callback)
@@ -212,120 +214,96 @@ namespace TableModelUtils
 
   template<typename T = Real>
   Matrix<T, Dynamic, 1>
-  makeColumnVector(SimpleTableModel* const tableModel)
+  makeColumnVector(SimpleTableModel* const tableModel) throw(invalid_argument)
   {
-    if (tableModel != nullptr)
+    if (tableModel == nullptr)
     {
-      if (tableModel->columnCount() == 1)
-      {
-        Matrix<T, Dynamic, 1> vec(tableModel->rowCount(), 1);
-
-        for (DenseIndex i(0); i < vec.rows(); ++i)
-        {
-          vec(i) =
-            numericCast<T>(
-              tableModel->data(tableModel->index(i, 0)).toString()
-            );
-        }
-
-        return vec;
-      }
-      else
-      {
-        qDebug() << "TableModelUtils::makeColumnVector:"
-                    " `tableModel' should have 1 column";
-
-        return Matrix<T, Dynamic, 1>::Zero(1, 1);
-      }
+      throw invalid_argument("`tableModel' == `nullptr'");
     }
-    else
+
+    if (tableModel->columnCount() != 1 || tableModel->rowCount() == 0)
     {
-      qDebug() << "TableModelUtils::makeColumnVector:"
-                  " `tableModel' == `nullptr'";
-
-      return Matrix<T, Dynamic, 1>::Zero(1, 1);
+      throw invalid_argument("tableModel->columnCount() != 1"
+                             " || tableModel->rowCount() == 0");
     }
+
+    Matrix<T, Dynamic, 1> vec(tableModel->rowCount(), 1);
+
+    for (DenseIndex i(0); i < vec.rows(); ++i)
+    {
+      vec(i) =
+        numericCast<T>(
+          tableModel->data(tableModel->index(i, 0)).
+          toString()
+        );
+    }
+
+    return vec;
   }
 
 
   template<typename T = Real>
   Matrix<T, 1, Dynamic>
-  makeRowVector(SimpleTableModel* const tableModel)
+  makeRowVector(SimpleTableModel* const tableModel) throw(invalid_argument)
   {
-    if (tableModel != nullptr)
+    if (tableModel == nullptr)
     {
-      if (tableModel->rowCount() == 1)
-      {
-        Matrix<T, 1, Dynamic> vec(1, tableModel->columnCount());
-
-        for (DenseIndex i(0); i < vec.cols(); ++i)
-        {
-          vec(i) =
-            numericCast<T>(
-              tableModel->data(tableModel->index(0, i)).toString()
-            );
-        }
-
-        return vec;
-      }
-      else
-      {
-        qDebug() << "TableModelUtils::makeRowVector:"
-                    " `tableModel' should have 1 row";
-
-        return Matrix<T, 1, Dynamic>::Zero(1, 1);
-      }
+      throw invalid_argument("`tableModel' == `nullptr'");
     }
-    else
+
+    if (tableModel->rowCount() != 1 || tableModel->columnCount() == 0)
     {
-      qDebug() << "TableModelUtils::makeRowVector:"
-                  " `tableModel' == `nullptr'";
-
-      return Matrix<T, 1, Dynamic>::Zero(1, 1);
+      throw invalid_argument("tableModel->rowCount() != 1"
+                             " || tableModel->columnCount() == 0");
     }
+
+    Matrix<T, 1, Dynamic> vec(1, tableModel->columnCount());
+
+    for (DenseIndex i(0); i < vec.cols(); ++i)
+    {
+      vec(i) =
+        numericCast<T>(
+          tableModel->data(tableModel->index(0, i)).
+          toString()
+        );
+    }
+
+    return vec;
   }
 
 
   template<typename T = Real>
   Matrix<T, Dynamic, Dynamic>
-  makeMatrix(SimpleTableModel* const tableModel)
+  makeMatrix(SimpleTableModel* const tableModel) throw(invalid_argument)
   {
-    if (tableModel != nullptr)
+    if (tableModel == nullptr)
     {
-      if (tableModel->rowCount() > 0 && tableModel->columnCount() > 0)
+      throw invalid_argument("`tableModel' == `nullptr'");
+    }
+
+    if (tableModel->rowCount() == 0 || tableModel->columnCount() == 0)
+    {
+      throw invalid_argument("tableModel->rowCount() == 0"
+                             " || tableModel->columnCount() == 0");
+    }
+
+    Matrix<T, Dynamic, Dynamic> mat(
+      tableModel->rowCount(), tableModel->columnCount()
+    );
+
+    for (DenseIndex i(0); i < mat.rows(); ++i)
+    {
+      for (DenseIndex j(0); j < mat.cols(); ++j)
       {
-        Matrix<T, Dynamic, Dynamic> mat(
-          tableModel->rowCount(), tableModel->columnCount()
-        );
-
-        for (DenseIndex i(0); i < mat.rows(); ++i)
-        {
-          for (DenseIndex j(0); j < mat.cols(); ++j)
-          {
-            mat(i, j) =
-              numericCast<T>(
-                tableModel->data(tableModel->index(i, j)).toString()
-              );
-          }
-        }
-
-        return mat;
-      }
-      else
-      {
-        qDebug() << "TableModelUtils::makeMatrix:"
-                    " `tableModel' should not be empty";
-
-        return Matrix<T, Dynamic, Dynamic>::Zero(1, 1);
+        mat(i, j) =
+          numericCast<T>(
+            tableModel->data(tableModel->index(i, j)).
+            toString()
+          );
       }
     }
-    else
-    {
-      qDebug() << "TableModelUtils::makeMatrix:"
-                  " `tableModel' argument is `nullptr'";
 
-      return Matrix<T, Dynamic, Dynamic>::Zero(1, 1);
-    }
+    return mat;
   }
 }
 

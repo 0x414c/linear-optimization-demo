@@ -24,7 +24,7 @@ namespace LinearProgramming
    */
   struct LinearProgramData
   {
-    LinearProgramData()/* = delete*/;
+    LinearProgramData() = default;
 
     LinearProgramData(const LinearProgramData<T>& other);
     LinearProgramData(LinearProgramData<T>&& other);
@@ -47,7 +47,7 @@ namespace LinearProgramming
 
     DenseIndex variablesCount() const;
 
-//    static LinearProgramData<T> make(...); //TODO: ~
+//    static LinearProgramData<T> make(???); //TODO: ~?
 
 
     Matrix<T, 1, Dynamic> objectiveFunctionCoeffs;

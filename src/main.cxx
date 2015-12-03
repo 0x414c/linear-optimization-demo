@@ -3,8 +3,9 @@
 #include <QApplication>
 #include <QScopedPointer>
 
-#include "ui/mainwindow.hxx"
+#include "gui/mainwindow.hxx"
 #include "misc/utils.hxx"
+#include "test/test.hxx"
 
 
 /**
@@ -17,15 +18,17 @@
 int
 main(int argc, char** argv)
 {
-  setlocale(LC_ALL, "C");
-  QApplication::setDesktopSettingsAware(false);
+//  setlocale(LC_ALL, "C");
+//  QApplication::setDesktopSettingsAware(false);
 
-  const QScopedPointer<QApplication> application(
-    Utils::makeApplication(argc, argv)
-  );
+//  const QScopedPointer<QApplication> application(
+//    Utils::makeApplication(argc, argv)
+//  );
 
-  GUI::MainWindow mainWindow;
-  mainWindow.show();
+//  GUI::MainWindow mainWindow;
+//  mainWindow.show();
 
-  return application->exec();
+//  return application->exec();
+
+  Test::run();
 }

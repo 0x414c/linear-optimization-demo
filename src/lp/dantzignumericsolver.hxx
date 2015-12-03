@@ -16,8 +16,8 @@
 #include "dantzignumericsolvercontroller_fwd.hxx"
 #include "inumericsolver.hxx"
 #include "linearprogramdata.hxx"
-#include "solutiontype.hxx"
 #include "simplextableau_fwd.hxx"
+#include "solutiontype.hxx"
 #include "../math/numerictypes.hxx"
 #include "../config.hxx"
 
@@ -30,19 +30,19 @@ namespace LinearProgramming
   using namespace NumericTypes;
   using namespace std;
 
-  using Index2D = optional<pair<DenseIndex, DenseIndex>>;
-  using Index1D = optional<DenseIndex>;
+  using MaybeIndex2D = optional<pair<DenseIndex, DenseIndex>>;
+  using MaybeIndex1D = optional<DenseIndex>;
 
 
   template<typename T = Real>
   class DantzigNumericSolver :
-    public virtual INumericSolver<T>
+    public INumericSolver<LinearProgramSolution<T>>
   {
     public:
       friend DantzigNumericSolverController<T>;
 
 
-      DantzigNumericSolver()/* = delete*/;
+      DantzigNumericSolver() = default;
 
       explicit DantzigNumericSolver(
         const LinearProgramData<T>& linearProgramData
@@ -54,7 +54,8 @@ namespace LinearProgramming
       void setLinearProgramData(const LinearProgramData<T>& linearProgramData);
       void setLinearProgramData(LinearProgramData<T>&& linearProgramData);
 
-      virtual optional<LinearProgramSolution<T>> solve() override;
+      virtual pair<SolutionType, optional<LinearProgramSolution<T>>>
+      solve() override;
 
 
     private:
@@ -73,28 +74,20 @@ namespace LinearProgramming
         SimplexTableau<T>& tableau, pair<DenseIndex, DenseIndex> pivotIdx
       );
 
-      pair<SolutionType, Index2D>
+      pair<SolutionType, MaybeIndex2D>
       computePivotIdx(const SimplexTableau<T>& tableau) const;
 
-      Index1D computePivotColIdx(
+      MaybeIndex1D computePivotColIdx(
         const SimplexTableau<T>& tableau
       ) const;
 
-      Index1D computePivotRowIdx(
+      MaybeIndex1D computePivotRowIdx(
         const SimplexTableau<T>& tableau, DenseIndex pivotColIdx
       ) const;
 
       void pivotize(
         SimplexTableau<T>& tableau, DenseIndex rowIdx, DenseIndex colIdx
       );
-
-
-#ifdef LP_WITH_BLAND_RULE
-      bool isPivotColValid(
-        const SimplexTableau<T>& tableau, DenseIndex colIdx
-      ) const;
-#endif // LP_WITH_BLAND_RULE
-
 
       SolutionType checkPhase1Solution(const SimplexTableau<T>& tableau) const;
 

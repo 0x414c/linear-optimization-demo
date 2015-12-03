@@ -55,6 +55,7 @@ namespace LinearProgrammingUtils
   {
     return (
       (x.array() >= 0).all() &&
+//      (A * x).isApprox(b)
       ((A * x).array() <= b.array()).all()
     );
   }

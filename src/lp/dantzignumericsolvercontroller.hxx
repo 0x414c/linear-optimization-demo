@@ -38,8 +38,7 @@ namespace LinearProgramming
   class DantzigNumericSolverController
   {
     public:
-      DantzigNumericSolverController()/* = delete*/
-      { }
+      DantzigNumericSolverController() = default;
 
 
       DantzigNumericSolverController(DantzigNumericSolver<T>* const solver) :

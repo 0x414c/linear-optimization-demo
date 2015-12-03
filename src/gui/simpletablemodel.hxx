@@ -18,12 +18,12 @@
 
 namespace GUI
 {
-  using Utils::OperationResult;
+  using Utils::ResultType;
 
 
   class SimpleTableModel :
-    public virtual QAbstractTableModel,
-    public virtual IJsonSerializable
+    public QAbstractTableModel,
+    public IJsonSerializable
   {
     Q_OBJECT
 
@@ -108,9 +108,9 @@ namespace GUI
 
       bool setSelectable(bool isSelectable = true);
 
-      virtual OperationResult read(const QJsonObject& jsonObject) override;
+      virtual ResultType read(const QJsonObject& jsonObject) override;
 
-      virtual OperationResult write(QJsonObject& jsonObject) const override;
+      virtual ResultType write(QJsonObject& jsonObject) const override;
 
 
     private:

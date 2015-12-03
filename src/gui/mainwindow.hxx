@@ -19,8 +19,8 @@
 #include "simpletablemodel.hxx"
 #include "../lp/dantzignumericsolver.hxx"
 #include "../lp/dantzignumericsolvercontroller.hxx"
-#include "../lp/inumericsolver.hxx"
 #include "../lp/plotdata2d.hxx"
+#include "../lp/solutiontype.hxx"
 #include "../math/numerictypes.hxx"
 #include "../misc/utils.hxx"
 
@@ -35,13 +35,14 @@ namespace GUI
 {
   using namespace LinearProgramming;
   using namespace NumericTypes;
-  using Utils::OperationResult;
+  using Utils::ResultType;
 
   template<class T>
   using shared_ptr = std::shared_ptr<T>;
 
 
-  class MainWindow : public QMainWindow
+  class MainWindow :
+    public QMainWindow
   {
     Q_OBJECT
 
@@ -159,11 +160,16 @@ namespace GUI
       void updateNumericSolversData();
       void setupNumericSolversControllers();
 
+      void showErrorDetails(const QString& description, SolutionType type);
+
       void setupCustomPlot(QCustomPlot* const customPlot);
       void plotGraph(const PlotData2D& plotData2D);
 
-      OperationResult loadData(const QString& fileName);
-      OperationResult saveData(const QString& fileName);
+      ResultType loadData(const QString& fileName);
+      ResultType saveData(const QString& fileName);
+
+      void loadSettings();
+      void saveSettings();
   };
 }
 

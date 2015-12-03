@@ -4,10 +4,14 @@
 #define GRAPHICALSOLVER2D_HXX
 
 
+#include <utility>
+
 #include "boost/optional.hpp"
 
+#include "inumericsolver.hxx"
 #include "linearprogramdata.hxx"
 #include "plotdata2d.hxx"
+#include "solutiontype.hxx"
 #include "../math/numerictypes.hxx"
 
 
@@ -18,10 +22,11 @@ namespace LinearProgramming
 
 
   template<typename T = Real>
-  class GraphicalSolver2D
+  class GraphicalSolver2D :
+    public INumericSolver<PlotData2D>
   {
     public:
-      GraphicalSolver2D()/* = delete*/;
+      GraphicalSolver2D() = default;
 
       explicit GraphicalSolver2D(const LinearProgramData<T>& other);
       explicit GraphicalSolver2D(LinearProgramData<T>&& other);
@@ -29,11 +34,11 @@ namespace LinearProgramming
       void setLinearProgramData(const LinearProgramData<T>& other);
       void setLinearProgramData(LinearProgramData<T>&& other);
 
-      optional<PlotData2D> solve() const;
+      virtual pair<SolutionType, optional<PlotData2D>> solve() override;
 
 
     private:
-      LinearProgramData<T> _linearProgramData = LinearProgramData<T>();
+      LinearProgramData<T> _linearProgramData;
   };
 }
 

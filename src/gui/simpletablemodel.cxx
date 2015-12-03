@@ -11,6 +11,7 @@
 #include <QObject>
 #include <QSize>
 #include <QString>
+#include <QtDebug>
 #include <QVariant>
 #include <QVector>
 
@@ -767,7 +768,7 @@ GUI::SimpleTableModel::setSelectable(bool isSelectable)
 }
 
 
-Utils::OperationResult
+Utils::ResultType
 GUI::SimpleTableModel::read(const QJsonObject& jsonObject)
 {
   const QJsonValue rowsValue(jsonObject[QStringLiteral("rows")]);
@@ -800,10 +801,10 @@ GUI::SimpleTableModel::read(const QJsonObject& jsonObject)
               }
               else
               {
-                qDebug() << "TableModel::read: cannot read `value':"
-                            " `value' == `Undefined', stopping operation";
+                qCritical() << "SimpleTableModel::read: cannot read `value':"
+                               " `value' == `Undefined', stopping operation";
 
-                return OperationResult::Fail;
+                return ResultType::Fail;
               }
             }
           }
@@ -812,41 +813,44 @@ GUI::SimpleTableModel::read(const QJsonObject& jsonObject)
           _resetFlags();
           endResetModel();
 
-          return OperationResult::Success;
+          return ResultType::Success;
         }
         else
         {
-          qDebug() << "TableModel::read: inconsistent `values' count:"
-                      " expected" << rowsCount * colsCount <<
-                      ", actual is" << valuesArray.count();
+          qCritical() << "SimpleTableModel::read: inconsistent `values':"
+                         " expected" << rowsCount * colsCount <<
+                         ", actual is" << valuesArray.count();
 
-          return OperationResult::Nothing;
+          return ResultType::Nothing;
         }
       }
       else
       {
-        qDebug() << "TableModel::read: cannot read: `values' == `Undefined'";
+        qWarning() << "SimpleTableModel::read:"
+                      " cannot read: `values' == `Undefined'";
 
-        return OperationResult::Nothing;
+        return ResultType::Nothing;
       }
     }
     else
     {
-      qDebug() << "TableModel::read: cannot read: `cols' == `Undefined'";
+      qWarning() << "SimpleTableModel::read:"
+                    " cannot read: `cols' == `Undefined'";
 
-      return OperationResult::Nothing;
+      return ResultType::Nothing;
     }
   }
   else
   {
-    qDebug() << "TableModel::read: cannot read: `rows' == `Undefined'";
+    qWarning() << "SimpleTableModel::read:"
+                  " cannot read: `rows' == `Undefined'";
 
-    return OperationResult::Nothing;
+    return ResultType::Nothing;
   }
 }
 
 
-Utils::OperationResult
+Utils::ResultType
 GUI::SimpleTableModel::write(QJsonObject& jsonObject) const
 {
   QJsonArray valuesArray;
@@ -862,7 +866,7 @@ GUI::SimpleTableModel::write(QJsonObject& jsonObject) const
   jsonObject[QStringLiteral("rows")] = _rows;
   jsonObject[QStringLiteral("cols")] = _cols;
 
-  return OperationResult::Success;
+  return ResultType::Success;
 }
 
 

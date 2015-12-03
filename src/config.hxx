@@ -3,14 +3,25 @@
 #ifndef CONFIG_HXX
 #define CONFIG_HXX
 
-
 #include <cstdint>
+
+#include <QString>
 
 #include "math/numerictypes.hxx"
 
 
 namespace Config
 {
+  namespace AppGlobal
+  {
+    const QString AppName = "Linear Programming";
+    const QString OrgName = "0x414c!";
+    const QString AppVersion = "0.0.1";
+    const QString AppDomain = "www.0x414c.tk";
+    const QString AppDisplayName = AppName;
+  }
+
+
   namespace GUI
   {
     constexpr int ProgramModelsCount = 3;

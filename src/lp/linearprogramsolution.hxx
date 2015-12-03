@@ -7,7 +7,6 @@
 #include "eigen3/Eigen/Core"
 
 #include "../math/numerictypes.hxx"
-#include "solutiontype.hxx"
 
 
 namespace LinearProgramming
@@ -22,18 +21,16 @@ namespace LinearProgramming
    */
   struct LinearProgramSolution
   {
-    LinearProgramSolution()/* = delete*/;
+    LinearProgramSolution() = default;
 
     LinearProgramSolution(const LinearProgramSolution<T>& other);
     LinearProgramSolution(LinearProgramSolution<T>&& other);
 
     LinearProgramSolution(
-      SolutionType solutionType,
       const Matrix<T, 1, Dynamic>& extremePoint,
       const T& extremeValue
     );
     LinearProgramSolution(
-      SolutionType solutionType,
       Matrix<T, 1, Dynamic>&& extremePoint,
       const T& extremeValue
     );
@@ -46,11 +43,9 @@ namespace LinearProgramming
     );
 
 
-    SolutionType solutionType = SolutionType::Unknown;
-
     Matrix<T, 1, Dynamic> extremePoint;
 
-    T extremeValue = T(0);
+    T extremeValue;
   };
 }
 

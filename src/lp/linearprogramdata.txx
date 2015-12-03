@@ -19,14 +19,6 @@ namespace LinearProgramming
 
 
   template<typename T>
-  LinearProgramData<T>::LinearProgramData() :
-    objectiveFunctionCoeffs(Matrix<T, 1, Dynamic>::Zero(1, 1)),
-    constraintsCoeffs(Matrix<T, Dynamic, Dynamic>::Zero(1, 1)),
-    constraintsRHS(Matrix<T, Dynamic, 1>::Zero(1, 1))
-  { }
-
-
-  template<typename T>
   LinearProgramData<T>::LinearProgramData(const LinearProgramData<T>& other) :
     objectiveFunctionCoeffs(other.objectiveFunctionCoeffs),
     constraintsCoeffs(other.constraintsCoeffs),
@@ -36,9 +28,7 @@ namespace LinearProgramming
 
   template<typename T>
   LinearProgramData<T>::LinearProgramData(LinearProgramData<T>&& other) :
-    objectiveFunctionCoeffs(
-      std::move(other.objectiveFunctionCoeffs)
-    ),
+    objectiveFunctionCoeffs(std::move(other.objectiveFunctionCoeffs)),
     constraintsCoeffs(std::move(other.constraintsCoeffs)),
     constraintsRHS(std::move(other.constraintsRHS))
   { }
@@ -59,7 +49,10 @@ namespace LinearProgramming
       constraintsRHS.rows() != constraintsCoeffs.rows()
     )
     {
-      throw invalid_argument("Inconsistent sizes.");
+      throw invalid_argument(
+        "objFuncCoeffs.cols() != constraintsCoeffs.cols()"
+        " || constraintsRHS.rows() != constraintsCoeffs.rows()"
+      );
     }
   }
 
@@ -79,7 +72,10 @@ namespace LinearProgramming
       constraintsRHS.rows() != constraintsCoeffs.rows()
     )
     {
-      throw invalid_argument("Inconsistent sizes.");
+      throw invalid_argument(
+        "objFuncCoeffs.cols() != constraintsCoeffs.cols()"
+        " || constraintsRHS.rows() != constraintsCoeffs.rows()"
+      );
     }
   }
 

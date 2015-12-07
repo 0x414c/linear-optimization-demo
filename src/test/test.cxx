@@ -57,7 +57,7 @@ namespace Test
       case SolutionType::Unbounded:
         LOG("Unbounded");
         break;
-      case SolutionType::Inconsistent:
+      case SolutionType::Infeasible:
         LOG("Infeasible");
         break;
       default:
@@ -99,7 +99,7 @@ namespace Test
       case SolutionType::Unbounded:
         LOG("Unbounded");
         break;
-      case SolutionType::Inconsistent:
+      case SolutionType::Infeasible:
         LOG("Infeasible");
         break;
       default:
@@ -189,7 +189,7 @@ namespace Test
         3,
         -4;
 
-      testReal(c, A, b, -3);
+//      testReal(c, A, b, -3);
     }
 
     //Example -1

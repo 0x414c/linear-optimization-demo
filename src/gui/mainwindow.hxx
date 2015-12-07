@@ -9,7 +9,12 @@
 #include <memory>
 
 #include <QCloseEvent>
+#include <QDragEnterEvent>
+#include <QDragLeaveEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
 #include <QMainWindow>
+#include <QMouseEvent>
 #include <QString>
 #include <QWidget>
 
@@ -54,33 +59,46 @@ namespace GUI
 
       virtual void closeEvent(QCloseEvent* closeEvent) override;
 
+      virtual void dragEnterEvent(QDragEnterEvent* event) override;
+      virtual void dragMoveEvent(QDragMoveEvent* event) override;
+      virtual void dragLeaveEvent(QDragLeaveEvent* event) override;
+      virtual void dropEvent(QDropEvent* event) override;
+
 
     private slots:
-      void on_customPlot_selectionChangedByUser();
-      void on_customPlot_mousePress();
-      void on_customPlot_mouseWheel();
+      void on_graphical_solutionPlotQCustomPlot_selectionChangedByUser();
+      void on_graphical_solutionPlotQCustomPlot_mousePress();
+      void on_graphical_solutionPlotQCustomPlot_mouseWheel();
+      void on_graphical_solutionPlotQCustomPlot_mouseMove(
+        QMouseEvent* mouseEvent
+      );
 
       void on_anyProgramModel_dataChanged(
         const QModelIndex & topLeft, const QModelIndex & bottomRight,
         const QVector<int> & roles = QVector<int> ()
       );
+      void on_anyProgramModel_dimensionsChanged(
+        const QModelIndex& parent, int start, int end
+      );
+      void on_anyProgramModel_modelReset();
 
-      void on_constrsSpinBox_valueChanged(int arg1);
-      void on_varsSpinBox_valueChanged(int arg1);
+      void on_program_constrsSpinBox_valueChanged(int arg1);
+      void on_program_varsSpinBox_valueChanged(int arg1);
 
-      void on_realRadioButton_toggled(bool checked);
-      void on_rationalRadioButton_toggled(bool checked);
+      void on_program_realRadioButton_toggled(bool checked);
+      void on_program_rationalRadioButton_toggled(bool checked);
 
-      void on_solveSimplexPushButton_clicked();
-      void on_solveGraphicalPushButton_clicked();
-      void on_clearPushButton_clicked();
-      void on_testPushButton_clicked();
+      void on_control_solveSimplexPushButton_clicked();
+      void on_control_solveGraphicalPushButton_clicked();
+      void on_control_clearPushButton_clicked();
+      void on_control_testPushButton_clicked();
 
-      void on_startSimplexPushButton_clicked();
-      void on_stepBackSimplexPushButton_clicked();
-      void on_stepForwardSimplexPushButton_clicked();
+      void on_simplex_startPushButton_clicked();
+      void on_simplex_stepBackPushButton_clicked();
+      void on_simplex_stepForwardPushButton_clicked();
 
-      void on_autoPivotSimplexCheckBox_toggled(bool checked);
+      void on_simplex_manualPivotCheckBox_toggled(bool checked);
+      void on_simplex_pivotHintPushButton_clicked();
 
       void on_action_Open_triggered();
       void on_action_Save_as_triggered();
@@ -96,6 +114,9 @@ namespace GUI
       void on_action_Zoom_out_triggered();
       void on_action_Zoom_reset_triggered();
 
+      void on_action_Solve_triggered();
+      void on_action_Plot_triggered();
+
       void on_action_How_to_triggered();
       void on_action_About_triggered();
       void on_action_About_Qt_triggered();
@@ -103,22 +124,24 @@ namespace GUI
 
     private:
       enum struct ProgramModel : int
-      { ObjFunc = 0, ConstrsCoeffs = 1, RHS = 2 };
+      { ObjFunc = 0, Constrs = 1, RHS = 2 };
 
       enum struct SimplexModel : int
-      { Solution = 0, ObjFuncValue = 1, SimplexTableau = 2 };
+      { Solution = 0, ObjectiveValue = 1, Tableau = 2 };
 
       enum struct DetailsView : int
       { Graphical = 0, Simplex = 1 };
 
 
-      Ui::MainWindow* ui;
+      Ui::MainWindow* ui = nullptr;
 
-      Field _currentField = Field::Real;
+      Field _field = Field::Real;
 
-//      TODO: ~ `dataChanged' -> `_isDirty' =>
+//      TODO: ~ `_isDirty' <- `dataChanged' =>
 //      reload data only when it is needed
       bool _isDirty = false;
+
+      bool _isLoaded = false;
 
       QVector<SimpleTableModel*> _programTableModels;
       QVector<SimpleTableModel*> _simplexTableModels;
@@ -132,38 +155,47 @@ namespace GUI
       DantzigNumericSolverController<Real> _realSolverController;
       DantzigNumericSolverController<Rational> _rationalSolverController;
 
-      void setupControlsDefaults();
+
+      void setupDefaults();
       void setupSignals();
 
-      void setDirty(bool dirty = true);
-
       void setupProgramView();
+      void clearProgramView();
       void destroyProgramView();
 
+      void setupGraphicalSolutionView(QCustomPlot* const customPlot);
       void enableGraphicalSolutionView(bool enabled = true);
+      void plotGraph(const PlotData2D& plotData2D);
 
       void setupSimplexView();
+      void enableStepByStepSimplexView(bool enabled = true);
+      void enableCurrentSolutionSimplexView(bool enabled = true);
+      void updateSimplexSelectionRules();
       void clearSimplexView();
       void refreshSimplexView();
-      void updateSimplexSelectionRules();
       void destroySimplexView();
-      void enableStepByStepSimplexView(bool enabled = true);
-      void enableCurrentSolutionView(bool enabled = true);
 
-      void clearModelsContents();
       void assignTableModelsHeaders();
       void convertTableModelsContents();
       void toggleTableViewsDelegates();
       void toggleField();
 
+      void setField(Field field);
+
+      void setDirty(bool dirty = true);
+
       void setupNumericSolvers();
       void updateNumericSolversData();
       void setupNumericSolversControllers();
 
-      void showErrorDetails(const QString& description, SolutionType type);
+      void solveSimplexHandler();
+      void solveGraphicalHandler();
 
-      void setupCustomPlot(QCustomPlot* const customPlot);
-      void plotGraph(const PlotData2D& plotData2D);
+      void solutionErrorHandler(const QString& description, SolutionType type);
+      void pivotingErrorHandler(const QString& description, SolutionType type);
+
+      void openFileHandler(const QString& filename);
+      void saveFileHandler(const QString& filename);
 
       ResultType loadData(const QString& fileName);
       ResultType saveData(const QString& fileName);

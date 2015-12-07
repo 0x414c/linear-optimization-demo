@@ -19,6 +19,7 @@ namespace Config
     const QString AppVersion = "0.0.1";
     const QString AppDomain = "www.0x414c.tk";
     const QString AppDisplayName = AppName;
+    const QString AppDescription = "Linear Programming Demonstrational Tool";
   }
 
 
@@ -34,6 +35,8 @@ namespace Config
     constexpr int MinVariables = 1;
     constexpr int MaxVariables = 16;
     constexpr int DefaultVariables = 3;
+
+    const QString DefaultDocumentTitle = "Untitled";
   }
 
 

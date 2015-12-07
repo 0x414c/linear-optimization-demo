@@ -6,8 +6,8 @@
 
 #include <utility>
 
+#include <QList>
 #include <QPointF>
-#include <QVector>
 
 #include "boost/optional.hpp"
 #include "eigen3/Eigen/Core"
@@ -42,7 +42,7 @@ namespace LinearProgrammingUtils
   pair<Matrix<T, Dynamic, Dynamic>, DenseIndex>
   reducedRowEchelonForm(const Matrix<T, Dynamic, Dynamic>& A);
 
-  void sortPointsClockwise(QVector<QPointF>& points);
+  void sortPointsClockwise(QList<QPointF>& points);
 }
 
 

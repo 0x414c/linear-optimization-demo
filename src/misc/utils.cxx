@@ -34,7 +34,7 @@ Utils::makeApplication(int& argc, char** argv)
     args.append(QString(argv[i]));
   }
 
-  qDebug() << "Utils::makeApplication: args ==" << args;
+  qDebug() << "Utils::makeApplication: `args' ==" << args;
 
   QApplication* const app = new QApplication(argc, argv);
   QCoreApplication::setApplicationName(AppName);
@@ -91,9 +91,7 @@ Utils::makeApplication(int& argc, char** argv)
   QCommandLineParser parser;
 
   parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
-  parser.setApplicationDescription(
-    QStringLiteral("Linear Optimization Demonstrational Tool")
-  );
+  parser.setApplicationDescription(AppDescription);
   parser.addVersionOption();
   parser.addHelpOption();
   parser.addOption(styleOption);
@@ -107,14 +105,14 @@ Utils::makeApplication(int& argc, char** argv)
 
   if (!parser.isSet(styleOption))
   {
-    qInfo() << "Utils::makeApplication: style := \"Fusion\"";
-
     if (
       QStyleFactory::keys().contains(
         QStringLiteral("Fusion"), Qt::CaseInsensitive
       )
     )
     {
+      qInfo() << "Utils::makeApplication: `style' := \"Fusion\"";
+
       QApplication::setStyle(QStyleFactory::create(QStringLiteral("Fusion")));
     }
   }

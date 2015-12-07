@@ -10,6 +10,9 @@
     <height>600</height>
    </rect>
   </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
+  </property>
   <property name="windowIcon">
    <iconset>
     <normalon>:/icons/@256/accessories-calculator.png</normalon>
@@ -55,7 +58,7 @@
                <item row="1" column="0">
                 <layout class="QGridLayout" name="gridLayout_6">
                  <item row="0" column="0">
-                  <widget class="QTableView" name="constrsCoeffsTableView">
+                  <widget class="QTableView" name="program_constrsCoeffsTableView">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                      <horstretch>1</horstretch>
@@ -101,7 +104,7 @@
                   </widget>
                  </item>
                  <item row="0" column="1">
-                  <widget class="QTableView" name="constrsRHSTableView">
+                  <widget class="QTableView" name="program_constrsRHSTableView">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Maximum" vsizetype="Expanding">
                      <horstretch>0</horstretch>
@@ -152,7 +155,7 @@
                 </layout>
                </item>
                <item row="0" column="0">
-                <widget class="QTableView" name="objFuncCoeffsTableView">
+                <widget class="QTableView" name="program_objFuncCoeffsTableView">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
                    <horstretch>1</horstretch>
@@ -225,7 +228,7 @@
                <item row="0" column="1">
                 <layout class="QFormLayout" name="formLayout">
                  <item row="0" column="0">
-                  <widget class="QLabel" name="constrsLabel">
+                  <widget class="QLabel" name="label">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
                      <horstretch>0</horstretch>
@@ -238,7 +241,7 @@
                   </widget>
                  </item>
                  <item row="0" column="1">
-                  <widget class="QSpinBox" name="constrsSpinBox">
+                  <widget class="QSpinBox" name="program_constrsSpinBox">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -251,7 +254,7 @@
                   </widget>
                  </item>
                  <item row="1" column="0">
-                  <widget class="QLabel" name="varsLabel">
+                  <widget class="QLabel" name="label_2">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
                      <horstretch>0</horstretch>
@@ -264,7 +267,7 @@
                   </widget>
                  </item>
                  <item row="1" column="1">
-                  <widget class="QSpinBox" name="varsSpinBox">
+                  <widget class="QSpinBox" name="program_varsSpinBox">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -299,7 +302,7 @@
                   <number>0</number>
                  </property>
                  <item row="1" column="0">
-                  <widget class="QRadioButton" name="rationalRadioButton">
+                  <widget class="QRadioButton" name="program_rationalRadioButton">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -312,7 +315,7 @@
                   </widget>
                  </item>
                  <item row="0" column="0">
-                  <widget class="QRadioButton" name="realRadioButton">
+                  <widget class="QRadioButton" name="program_realRadioButton">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -344,7 +347,7 @@
                <item row="0" column="0">
                 <layout class="QGridLayout" name="gridLayout_3">
                  <item row="0" column="1">
-                  <widget class="QPushButton" name="solveGraphicalPushButton">
+                  <widget class="QPushButton" name="control_solveGraphicalPushButton">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -362,7 +365,7 @@
                   </widget>
                  </item>
                  <item row="0" column="0">
-                  <widget class="QPushButton" name="solveSimplexPushButton">
+                  <widget class="QPushButton" name="control_solveSimplexPushButton">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -370,7 +373,7 @@
                     </sizepolicy>
                    </property>
                    <property name="text">
-                    <string>Minimize</string>
+                    <string>Solve</string>
                    </property>
                    <property name="icon">
                     <iconset>
@@ -380,7 +383,7 @@
                   </widget>
                  </item>
                  <item row="1" column="0">
-                  <widget class="QPushButton" name="clearPushButton">
+                  <widget class="QPushButton" name="control_clearPushButton">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -398,7 +401,7 @@
                   </widget>
                  </item>
                  <item row="1" column="1">
-                  <widget class="QPushButton" name="testPushButton">
+                  <widget class="QPushButton" name="control_testPushButton">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -428,7 +431,7 @@
       </widget>
       <widget class="QTabWidget" name="detailsTabWidget">
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="graphicalMethodTab">
         <attribute name="icon">
@@ -467,7 +470,7 @@
             <item row="0" column="0">
              <layout class="QGridLayout" name="gridLayout_8" rowstretch="0" columnstretch="0">
               <item row="0" column="0">
-               <widget class="QCustomPlot" name="customPlot" native="true">
+               <widget class="QCustomPlot" name="graphical_solutionPlotQCustomPlot" native="true">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                   <horstretch>0</horstretch>
@@ -517,7 +520,7 @@
               <item row="0" column="0">
                <layout class="QGridLayout" name="gridLayout_18">
                 <item row="0" column="0">
-                 <widget class="QTableView" name="solutionVectorTableView">
+                 <widget class="QTableView" name="simplex_solutionVectorTableView">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -563,7 +566,7 @@
                  </widget>
                 </item>
                 <item row="0" column="1">
-                 <widget class="QTableView" name="objectiveValueTableView">
+                 <widget class="QTableView" name="simplex_objectiveValueTableView">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -595,10 +598,10 @@
                    <enum>QAbstractItemView::ScrollPerPixel</enum>
                   </property>
                   <attribute name="horizontalHeaderDefaultSectionSize">
-                   <number>62</number>
+                   <number>65</number>
                   </attribute>
                   <attribute name="horizontalHeaderMinimumSectionSize">
-                   <number>62</number>
+                   <number>65</number>
                   </attribute>
                   <attribute name="verticalHeaderDefaultSectionSize">
                    <number>28</number>
@@ -644,7 +647,7 @@
                   <property name="frameShape">
                    <enum>QFrame::StyledPanel</enum>
                   </property>
-                  <widget class="QPushButton" name="startSimplexPushButton">
+                  <widget class="QPushButton" name="simplex_startPushButton">
                    <property name="geometry">
                     <rect>
                      <x>10</x>
@@ -674,7 +677,7 @@
                     </iconset>
                    </property>
                   </widget>
-                  <widget class="QPushButton" name="stepBackSimplexPushButton">
+                  <widget class="QPushButton" name="simplex_stepBackPushButton">
                    <property name="geometry">
                     <rect>
                      <x>79</x>
@@ -704,7 +707,7 @@
                     </iconset>
                    </property>
                   </widget>
-                  <widget class="QPushButton" name="stepForwardSimplexPushButton">
+                  <widget class="QPushButton" name="simplex_stepForwardPushButton">
                    <property name="geometry">
                     <rect>
                      <x>139</x>
@@ -734,10 +737,10 @@
                     </iconset>
                    </property>
                   </widget>
-                  <widget class="QLCDNumber" name="iterCountSimplexLcdNumber">
+                  <widget class="QLCDNumber" name="simplex_iterCountLcdNumber">
                    <property name="geometry">
                     <rect>
-                     <x>230</x>
+                     <x>220</x>
                      <y>10</y>
                      <width>51</width>
                      <height>24</height>
@@ -756,10 +759,10 @@
                     <enum>QLCDNumber::Flat</enum>
                    </property>
                   </widget>
-                  <widget class="QCheckBox" name="autoPivotSimplexCheckBox">
+                  <widget class="QCheckBox" name="simplex_manualPivotCheckBox">
                    <property name="geometry">
                     <rect>
-                     <x>310</x>
+                     <x>290</x>
                      <y>10</y>
                      <width>101</width>
                      <height>24</height>
@@ -772,7 +775,20 @@
                     </sizepolicy>
                    </property>
                    <property name="text">
-                    <string>Auto-Pivot</string>
+                    <string>Manual Pivoting</string>
+                   </property>
+                  </widget>
+                  <widget class="QPushButton" name="simplex_pivotHintPushButton">
+                   <property name="geometry">
+                    <rect>
+                     <x>390</x>
+                     <y>10</y>
+                     <width>24</width>
+                     <height>24</height>
+                    </rect>
+                   </property>
+                   <property name="text">
+                    <string/>
                    </property>
                    <property name="icon">
                     <iconset>
@@ -780,10 +796,23 @@
                     </iconset>
                    </property>
                   </widget>
+                  <widget class="Line" name="line">
+                   <property name="geometry">
+                    <rect>
+                     <x>280</x>
+                     <y>10</y>
+                     <width>3</width>
+                     <height>24</height>
+                    </rect>
+                   </property>
+                   <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                   </property>
+                  </widget>
                  </widget>
                 </item>
                 <item row="1" column="0">
-                 <widget class="QTableView" name="simplexTableauTableView">
+                 <widget class="QTableView" name="simplex_simplexTableauTableView">
                   <property name="verticalScrollBarPolicy">
                    <enum>Qt::ScrollBarAlwaysOn</enum>
                   </property>
@@ -1080,7 +1109,7 @@
      <normaloff>:/icons/@16/view-sort-ascending(2).png</normaloff>:/icons/@16/view-sort-ascending(2).png</iconset>
    </property>
    <property name="text">
-    <string>&amp;Solve</string>
+    <string>&amp;Minimize w/ Simplex method</string>
    </property>
   </action>
   <action name="action_Plot">
@@ -1089,7 +1118,7 @@
      <normaloff>:/icons/@16/document-page-setup.png</normaloff>:/icons/@16/document-page-setup.png</iconset>
    </property>
    <property name="text">
-    <string>&amp;Plot</string>
+    <string>&amp;Minimize w/ Graphical method</string>
    </property>
   </action>
  </widget>

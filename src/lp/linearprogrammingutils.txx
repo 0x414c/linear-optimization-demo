@@ -6,6 +6,7 @@
 
 #include "linearprogrammingutils.hxx"
 
+#include <functional>
 #include <iostream>
 #include <utility>
 
@@ -54,8 +55,7 @@ namespace LinearProgrammingUtils
   )
   {
     return (
-      (x.array() >= 0).all() &&
-//      (A * x).isApprox(b)
+      x.unaryExpr(std::ref(isGreaterThanOrEqualToZero<T>)).all() &&
       ((A * x).array() <= b.array()).all()
     );
   }

@@ -311,7 +311,7 @@ namespace LinearProgramming
         case SolutionType::Unbounded:
           return solutionType;
 
-        case SolutionType::Inconsistent:
+        case SolutionType::Infeasible:
           return solutionType;
 
         case SolutionType::Incomplete:
@@ -414,7 +414,7 @@ namespace LinearProgramming
 
       if (pivotRowIdx)
       {
-        //If (∃s: P[s] < 0) ∧ (∃i: α[i, s] > 0),
+        //If (∃s: P[s] < 0) ∧ (∃k: α[k, s] > 0),
         //the pivoting operation can be performed on the tableau
         idx = make_pair(*pivotRowIdx, *pivotColIdx);
 
@@ -423,7 +423,7 @@ namespace LinearProgramming
       else
       {
         //If (∃s: P[s] < 0) ∧ (∀i: α[i, s] <= 0),
-        //the objective function is unbounded on the feasible region
+        //the objective function is unbounded over the feasible region
 
         return make_pair(SolutionType::Unbounded, idx);
       }
@@ -736,7 +736,7 @@ namespace LinearProgramming
        //If (~w* > 0) -- Inconsistent (infeasible) program
       if (isGreaterThanZero<T>(objFuncValue))
       {
-        return SolutionType::Inconsistent;
+        return SolutionType::Infeasible;
       }
       else
       {
@@ -773,7 +773,7 @@ namespace LinearProgramming
     }
     else
     {
-      return SolutionType::Inconsistent;
+      return SolutionType::Infeasible;
     }
   }
 }

@@ -6,6 +6,7 @@
 
 #include "graphicalsolver2d.hxx"
 
+#include <algorithm>
 #include <iostream>
 #include <limits>
 #include <utility>
@@ -13,8 +14,8 @@
 
 #include <QDebug>
 #include <QLineF>
+#include <QList>
 #include <QPointF>
-#include <QVector>
 
 #include "boost/optional.hpp"
 #include "eigen3/Eigen/Core"
@@ -90,21 +91,20 @@ namespace LinearProgramming
 
     //For output
     optional<PlotData2D> ret;
-
     PlotData2D plotData2D(
       QPointF(
         numeric_limits<qreal>::min(),
         numeric_limits<qreal>::min()
       ),
       numeric_limits<qreal>::max(),
-      QVector<QPointF>(0),
+      QList<QPointF>(),
       QLineF(
         QPointF(0, 0),
         QPointF(0, 0)
       )
     );
 
-    //Make augmented matrix A|b
+    //Construct an augmented matrix A|b
     Matrix<T, Dynamic, Dynamic> A_b(M, N + 1);
     A_b <<
       _linearProgramData.constraintsCoeffs,
@@ -128,7 +128,7 @@ namespace LinearProgramming
       qWarning() << "GraphicalSolver2D<T>::solve: inconsistent system:"
                     " rank(A) != rank(A|b) || rank(A) == 0";
 
-      return make_pair(SolutionType::Inconsistent, ret);
+      return make_pair(SolutionType::Infeasible, ret);
     }
 
     //Constraints count `M^' in the new reduced system {A^x == b^}
@@ -146,47 +146,20 @@ namespace LinearProgramming
       return make_pair(SolutionType::Unknown, ret);
     }
 
-    //`F' in the terms of the reduced basis
+    //`F^' in the terms of the new basis
     Matrix<T, 1, Dynamic> c_(1, N_);
-
     for (DenseIndex j(0); j < N_; ++j)
     {
       T sum(0);
-
       for (DenseIndex i(0); i < M_; ++i)
       {
-//        LOG(
-//          "sum += c[{}] * A'[{}, {}] <=> {} * {} <=> {}",
-//          i, i, j + M_,
-//          _linearProgramData.objectiveFunctionCoeffs(i),
-//          rref_A_b.first(i, j + M_) * T(-1),
-//          _linearProgramData.objectiveFunctionCoeffs(i) *
-//          rref_A_b.first(i, j + M_) *
-//          T(-1)
-//        );
-
         sum += _linearProgramData.objectiveFunctionCoeffs(i) *
                rref_A_b.first(i, j + M_) *
                T(-1);
-
-//        LOG("sum == {}", sum);
       }
-
-//      LOG(
-//        "sum += c[{}] <=> {}",
-//        j + M_,
-//        _linearProgramData.objectiveFunctionCoeffs(j + M_)
-//      );
-
       sum += _linearProgramData.objectiveFunctionCoeffs(j + M_);
-
-//      LOG("sum == {}", sum);
-
       c_(j) = sum;
     }
-
-//    LOG("c^ := {}", c_);
-
     T d_(0);
     for (DenseIndex i(0); i < M_; ++i)
     {
@@ -194,15 +167,13 @@ namespace LinearProgramming
             rref_A_b.first(i, rref_A_b.first.cols() - 1) *
             T(-1);
     }
-
-    LOG("c_ := {}\nd_ := {}", c_, d_);
-
     const LinearFunction<T, 2> F_(c_, d_ * T(-1));
+
+    LOG("F^ := {} + {}", F_.coeffs(), F_.constTerm());
 
     //Construct a new system of linear equations {A^x == b^}
     //w/ non-negativity constraints {-x1 <= 0; -x2 <= 0} added.
     Matrix<T, Dynamic, Dynamic> A_(M_ + 2, N_);
-
     for (DenseIndex i(0); i < M_; ++i)
     {
       for (DenseIndex j(0); j < N_; ++j)
@@ -210,7 +181,6 @@ namespace LinearProgramming
         A_(i, j) = rref_A_b.first(i, j + M_);
       }
     }
-
     for (DenseIndex i(M_); i < M_ + 2; ++i)
     {
       for (DenseIndex j(0); j < N_; ++j)
@@ -226,21 +196,19 @@ namespace LinearProgramming
       }
     }
 
-    LOG("{}", A_);
+    LOG("A^ :=\n{}", A_);
 
     Matrix<T, Dynamic, 1> b_(M_ + 2, 1);
-
     for (DenseIndex i(0); i < M_; ++i)
     {
       b_(i) = rref_A_b.first(i, N);
     }
-
     for (DenseIndex i(M_); i < M_ + 2; ++i)
     {
       b_(i) = T(0);
     }
 
-    LOG("{}", b_);
+    LOG("b^ :=\n{}", b_);
 
     //In two-dimensional case we have two decision variables.
     //So, we need to generate 2-combinations from all the M + 2 equations
@@ -249,6 +217,8 @@ namespace LinearProgramming
     //There are Binomial[M + 2, 2] possible intersection points total.
     //NOTE: in general case we have N decision variables, and M equations,
     //so we need to check Binomial[M + N, N] intersection points for feasibility.
+
+    QVector<uint32_t> intersectionCounters(M_ + 2, 0);
 
     //For each constraint equation
     for (DenseIndex r(0); r < (M_ + 2) - 1; ++r)
@@ -267,18 +237,15 @@ namespace LinearProgramming
           b_(r),
           b_(s);
 
-//        LOG("r := {}, s := {}\nC :=\n{},\nd :=\n{}", r, s, C, d);
+        LOG("r := {}, s := {}\nC :=\n{},\nd :=\n{}", r, s, C, d);
 
-        //Obtain basic solution `y':
-        //Try to solve matrix equation {C * y == d}
+        //Obtain basic solution `y': solve matrix equation {C * y == d}
         //& check solution correctness
         const optional<Matrix<T, 2, 1>> y(findIntersection<T>(C, d));
-
 //        T err((eqs * sol - rhs).norm() / rhs.norm());
-
         if (y)
         {
-//          LOG("y ==\n{}", (*y));
+          LOG("y ==\n{}", (*y));
 
           const bool isValid((C * (*y)).isApprox(d));
           if (isValid)
@@ -293,7 +260,7 @@ namespace LinearProgramming
 
             const bool isFeasible(isSolutionFeasible<T>((*y), A_, b_));
 
-//            LOG("isFeasible := {}", isFeasible);
+            LOG("isFeasible := {}", isFeasible);
 
             //If this is a feasible point and it is valid (non-degenerate)
             //solution, we can now try to compute objective function value
@@ -301,27 +268,36 @@ namespace LinearProgramming
             //(which should be less than current)
             if (isFeasible)
             {
-              const T y_1((*y)(0)), y_2((*y)(1)), F__(F_(*y));
+              ++intersectionCounters[r];
+              ++intersectionCounters[s];
+//              if ((intersectionsCount[r] > 2) || (intersectionsCount[s] > 2))
+//              {
+//                continue;
+//              }
 
-              QPointF newVertice(
+              const T y_1((*y)(0)), y_2((*y)(1)), F__(F_(*y));
+              const QPointF newVertice(
                 numericCast<qreal, T>(y_1),
                 numericCast<qreal, T>(y_2)
               );
-              plotData2D.vertices.append(newVertice);
-
-              qreal newValue(numericCast<qreal, T>(F__));
-
-              qInfo() << "GraphicalSolver2D<T>::solve: value for" <<
-                         newVertice << "is" << newValue << "~=" << F__;
-
-              if (newValue < plotData2D.extremeValue)
+              //TODO: Use `QMap' for faster lookup
+//              if (!plotData2D.vertices.contains(newVertice))
               {
-                qInfo() << "GraphicalSolver2D<T>::solve:"
-                           " new minimum found for" << newVertice << "is" <<
-                           newValue << "~=(" << y_1 << "," << y_2 << ")";
+                plotData2D.vertices.append(newVertice);
+                const qreal newValue(numericCast<qreal, T>(F__));
 
-                plotData2D.extremeValue = newValue;
-                plotData2D.extremeVertex = newVertice;
+                qInfo() << "GraphicalSolver2D<T>::solve: value for" <<
+                           newVertice << "is" << newValue << "~=" << F__;
+
+                if (newValue <= plotData2D.extremeValue)
+                {
+                  qInfo() << "GraphicalSolver2D<T>::solve:"
+                             " new minimum found for" << newVertice << "is" <<
+                             newValue << "~=(" << y_1 << "," << y_2 << ")";
+
+                  plotData2D.extremeValue = newValue;
+                  plotData2D.extremeVertex = newVertice;
+                }
               }
             }
           }
@@ -329,24 +305,46 @@ namespace LinearProgramming
       }
     }
 
-    //To plot a polygon we should sort all the found vertices in clockwise order.
-    sortPointsClockwise(plotData2D.vertices);
+    qDebug() << intersectionCounters;
 
-    plotData2D.gradient.setP2(
-      QPointF(
-        numericCast<qreal, T>(F_.coeffAt(0)),
-        numericCast<qreal, T>(F_.coeffAt(1))
+    if (plotData2D.vertices.count() == 0)
+    {
+      return make_pair(SolutionType::Infeasible, ret);
+    }
+    else
+    {
+      if (
+        all_of(
+          intersectionCounters.cbegin(),
+          intersectionCounters.cend(),
+          [](uint32_t i) { return (i != 1); }
+        )
       )
-    );
+      {
+        //To plot a polygon we need to sort all its vertices in clockwise order.
+        sortPointsClockwise(plotData2D.vertices);
 
-    qDebug() << "Solution: \nV:=" <<
-                plotData2D.vertices << "\nG:=" << plotData2D.gradient <<
-                "\nX*:=" << plotData2D.extremeVertex <<
-                "\nF*:=" << plotData2D.extremeValue;
+        plotData2D.gradient.setP2(
+          QPointF(
+            numericCast<qreal, T>(F_.coeffAt(0)),
+            numericCast<qreal, T>(F_.coeffAt(1))
+          )
+        );
 
-    ret = plotData2D;
+        qDebug() << "GraphicalSolver2D<T>::solve: solution: \nV:=" <<
+                    plotData2D.vertices << "\nG:=" << plotData2D.gradient <<
+                    "\nX*:=" << plotData2D.extremeVertex <<
+                    "\nF*:=" << plotData2D.extremeValue;
 
-    return make_pair(SolutionType::Optimal, ret);
+        ret = plotData2D;
+
+        return make_pair(SolutionType::Optimal, ret);
+      }
+      else
+      {
+        return make_pair(SolutionType::Unbounded, ret);
+      }
+    }
   }
 }
 

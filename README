@@ -52,7 +52,7 @@ Code style rules (For Qt Creator use `../misc/CodeStyle.xml'):
    The *.txx files should not be included explicitly.
 4. Keep in mind that characters-on-line limit is 100
    (but stick to 80 wherever it is possible).
-5. Do not forget about `Utils::Result':
+5. Do not forget about `Utils::ResultType':
    Return `Fail' when destructive operation failed,
    `Nothing' when non-destructive operation failed,
    and the `Success' when all parts of the operation is successful.

@@ -1,11 +1,14 @@
-﻿#include <clocale>
+﻿#ifdef LP_TEST_MODE
+#include "test/test.hxx"
+#else
+#include <clocale>
 
 #include <QApplication>
 #include <QScopedPointer>
 
 #include "gui/mainwindow.hxx"
 #include "misc/utils.hxx"
-#include "test/test.hxx"
+#endif // LP_TEST_MODE
 
 
 /**
@@ -18,17 +21,19 @@
 int
 main(int argc, char** argv)
 {
-//  setlocale(LC_ALL, "C");
-//  QApplication::setDesktopSettingsAware(false);
-
-//  const QScopedPointer<QApplication> application(
-//    Utils::makeApplication(argc, argv)
-//  );
-
-//  GUI::MainWindow mainWindow;
-//  mainWindow.show();
-
-//  return application->exec();
-
+#ifdef LP_TEST_MODE
   Test::run();
+#else
+  setlocale(LC_ALL, "C");
+  QApplication::setDesktopSettingsAware(false);
+
+  const QScopedPointer<QApplication> application(
+    Utils::makeApplication(argc, argv)
+  );
+
+  GUI::MainWindow mainWindow;
+  mainWindow.show();
+
+  return application->exec();
+#endif
 }

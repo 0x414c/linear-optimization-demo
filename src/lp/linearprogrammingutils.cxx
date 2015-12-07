@@ -5,8 +5,8 @@
 
 #include <algorithm>
 
+#include <QList>
 #include <QPointF>
-#include <QVector>
 
 
 namespace LinearProgrammingUtils
@@ -18,8 +18,10 @@ namespace LinearProgrammingUtils
    * @param points Points vector to sort.
    */
   void
-  sortPointsClockwise(QVector<QPointF>& points)
+  sortPointsClockwise(QList<QPointF>& points)
   {
+    //Centroid of a convex region will always
+    //lie inside of that region
     QPointF centroid(0., 0.);
     for (int i(0); i < points.count(); ++i)
     {
@@ -35,10 +37,10 @@ namespace LinearProgrammingUtils
       points.end(),
       [&centroid](const QPointF& lhs, const QPointF& rhs)
       {
-        return
-          atan2(lhs.y() - centroid.y(), lhs.x() - centroid.x())
-          <
-          atan2(rhs.y() - centroid.y(), rhs.x() - centroid.x());
+        return (
+          atan2(lhs.y() - centroid.y(), lhs.x() - centroid.x()) <
+          atan2(rhs.y() - centroid.y(), rhs.x() - centroid.x())
+        );
       }
     );
   }

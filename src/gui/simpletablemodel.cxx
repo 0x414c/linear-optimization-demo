@@ -114,6 +114,8 @@ GUI::SimpleTableModel::operator =(SimpleTableModel&& other)
 }
 
 
+//NOTE: When implementing a table based model, `rowCount' should
+//return `0' when the `parent' is valid.
 int
 GUI::SimpleTableModel::rowCount(const QModelIndex& parent) const
 {

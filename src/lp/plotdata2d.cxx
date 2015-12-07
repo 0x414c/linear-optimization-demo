@@ -3,8 +3,8 @@
 #include <utility>
 
 #include <QLineF>
+#include <QList>
 #include <QPointF>
-#include <QVector>
 
 #include "solutiontype.hxx"
 
@@ -13,7 +13,7 @@ namespace LinearProgramming
 {
   PlotData2D::PlotData2D(
     const QPointF& extremePoint, qreal extremeValue,
-    const QVector<QPointF>& vertices, const QLineF& gradient
+    const QList<QPointF>& vertices, const QLineF& gradient
   ) :
     extremeVertex(extremePoint),
     extremeValue(extremeValue),
@@ -24,7 +24,7 @@ namespace LinearProgramming
 
   PlotData2D::PlotData2D(
     const QPointF& extremePoint, qreal extremeValue,
-    QVector<QPointF>&& vertices, const QLineF& gradient
+    QList<QPointF>&& vertices, const QLineF& gradient
   ) :
     extremeVertex(extremePoint),
     extremeValue(extremeValue),

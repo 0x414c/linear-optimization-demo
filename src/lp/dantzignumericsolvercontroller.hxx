@@ -18,8 +18,8 @@
 #include "linearprogramsolution.hxx"
 #include "simplextableau_fwd.hxx"
 #include "solutionphase.hxx"
-#include "../config.hxx"
 #include "../math/numerictypes.hxx"
+#include "../config.hxx"
 
 
 namespace LinearProgramming
@@ -104,8 +104,15 @@ namespace LinearProgramming
         }
         else
         {
-          throw out_of_range("There is no current item. Generator is empty");
+          throw out_of_range("There is no current item. Generator is empty.");
         }
+      }
+
+
+      pair<SolutionType, optional<pair<DenseIndex, DenseIndex>>>
+      pivot() const throw(out_of_range)
+      {
+        return _solver->computePivotIdx(current());
       }
 
 
@@ -165,7 +172,7 @@ namespace LinearProgramming
             case SolutionType::Unbounded:
               goto end;
 
-            case SolutionType::Inconsistent:
+            case SolutionType::Infeasible:
               goto end;
 
             case SolutionType::Incomplete:
@@ -190,7 +197,7 @@ namespace LinearProgramming
         }
         else
         {
-          throw out_of_range("There is no next item. Generator is exhausted");
+          throw out_of_range("There is no next item. Generator is exhausted.");
         }
       }
 
@@ -207,7 +214,7 @@ namespace LinearProgramming
         }
         else
         {
-          throw out_of_range("There is no previous item. Generator is empty");
+          throw out_of_range("There is no previous item. Generator is empty.");
         }
       }
 

@@ -289,9 +289,7 @@ namespace MathUtils
   inline bool
   isGreaterThanOrEqualToZero(Real x)
   {
-    return (
-      x >= Epsilon * std::max<Real>(Real(1), absoluteValue<Real>(x))
-    );
+    return (x >= Real(0));
   }
 
 

@@ -8,8 +8,8 @@
 
 #include "numericlimits.hxx"
 #include "numerictypes.hxx"
-#include "../config.hxx"
 #include "../misc/utils.hxx"
+#include "../config.hxx"
 
 
 namespace MathUtils

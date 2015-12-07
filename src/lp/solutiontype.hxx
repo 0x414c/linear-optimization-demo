@@ -13,7 +13,7 @@ namespace LinearProgramming
   {
     Optimal = 0,
     Unbounded = 1,
-    Inconsistent = 2,
+    Infeasible = 2,
     Incomplete = 4,
     Unknown = 8
   };

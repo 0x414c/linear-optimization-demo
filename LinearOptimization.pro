@@ -12,11 +12,13 @@ CONFIG += c++14 warn_on
 
 QMAKE_CXX = ccache g++
 
-QMAKE_CXXFLAGS += -march=native -msse -msse2 -msse3 -mfpmath=sse -m64 \
+QMAKE_CXXFLAGS += \
+  -march=native -msse -msse2 -msse3 -mfpmath=sse -m64 \
   -mieee-fp -mno-fp-ret-in-387 -mno-fancy-math-387 -malign-double \
   -ffp-contract=off -ffloat-store -frounding-math -fsignaling-nans
 
-QMAKE_CXXFLAGS_WARN_ON += -fdiagnostics-color=auto \
+QMAKE_CXXFLAGS_WARN_ON += \
+  -fdiagnostics-color=auto \
   -Wpedantic -Wall -Wextra -Wdouble-promotion -Wformat
 
 TARGET = LinearOptimization
@@ -27,9 +29,12 @@ CONFIG(release, debug|release) {
   DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_INFO_OUTPUT #QT_NO_WARNING_OUTPUT
 }
 
-DEFINES += EIGEN_MPL2_ONLY FMT_HEADER_ONLY LP_WITH_DEBUG_LOG LP_WITH_BLAND_RULE
+DEFINES += \
+  EIGEN_MPL2_ONLY FMT_HEADER_ONLY \
+  LP_WITH_DEBUG_LOG LP_WITH_BLAND_RULE #LP_TEST_MODE
 
-INCLUDEPATH += $$PWD/lib/boost \
+INCLUDEPATH += \
+  $$PWD/lib/boost \
   $$PWD/lib/cppformat \
   $$PWD/lib/eigen \
   $$PWD/lib/qcustomplot

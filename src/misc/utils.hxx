@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <iterator>
+#include <list>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -14,6 +15,7 @@
 
 #include "eigen3/Eigen/Core"
 #include "cppformat/format.h"
+#include "prettyprint/prettyprint.hpp"
 
 
 namespace Utils
@@ -62,15 +64,47 @@ namespace Utils
    * @param from
    * @return
    */
+  [[deprecated("Use `Prettyprint'!")]]
+  std::string
+  makeString(const std::list<T>& from)
+  {
+    std::ostringstream oss;
+
+    oss << '[';
+
+    std::copy(
+      from.cbegin(),
+      from.cend(),
+      std::ostream_iterator<T>(oss, " ")
+    );
+
+    oss << ']';
+
+    return oss.str();
+  }
+
+
+  template<typename T>
+  /**
+   * @brief makeString
+   * @param from
+   * @return
+   */
+  [[deprecated("Use `Prettyprint'!")]]
   std::string
   makeString(const std::vector<T>& from)
   {
     std::ostringstream oss;
+
+    oss << '[';
+
     std::copy(
-      from.begin(),
-      from.end(),
+      from.cbegin(),
+      from.cend(),
       std::ostream_iterator<T>(oss, " ")
     );
+
+    oss << ']';
 
     return oss.str();
   }

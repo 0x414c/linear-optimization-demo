@@ -1,34 +1,39 @@
 ﻿#include "plotdata2d.hxx"
 
+#include <list>
 #include <utility>
 
-#include <QLineF>
-#include <QList>
-#include <QPointF>
-
-#include "solutiontype.hxx"
+#include "../math/numerictypes.hxx"
 
 
 namespace LinearProgramming
 {
+  using namespace NumericTypes;
+  using namespace std;
+
+
   PlotData2D::PlotData2D(
-    const QPointF& extremePoint, qreal extremeValue,
-    const QList<QPointF>& vertices, const QLineF& gradient
+    const pair<Real, Real>& extremePoint,
+    Real extremeValue,
+    const list<pair<Real, Real>>& extremePoints,
+    const pair<Real, Real>& gradientDirection
   ) :
-    extremeVertex(extremePoint),
+    extremePoint(extremePoint),
     extremeValue(extremeValue),
-    vertices(vertices),
-    gradient(gradient)
+    feasibleRegionExtremePoints(extremePoints),
+    gradientDirection(gradientDirection)
   { }
 
 
   PlotData2D::PlotData2D(
-    const QPointF& extremePoint, qreal extremeValue,
-    QList<QPointF>&& vertices, const QLineF& gradient
+    pair<Real, Real>&& extremeVertex,
+    Real extremeValue,
+    list<pair<Real, Real>>&& extremePoints,
+    pair<Real, Real>&& gradientDirection
   ) :
-    extremeVertex(extremePoint),
+    extremePoint(extremePoint),
     extremeValue(extremeValue),
-    vertices(std::move(vertices)),
-    gradient(gradient)
+    feasibleRegionExtremePoints(std::move(extremePoints)),
+    gradientDirection(gradientDirection)
   { }
 }

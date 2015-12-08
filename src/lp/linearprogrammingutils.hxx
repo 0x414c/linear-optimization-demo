@@ -4,10 +4,8 @@
 #define LINEARPROGRAMMINGUTILS_HXX
 
 
+#include <list>
 #include <utility>
-
-#include <QList>
-#include <QPointF>
 
 #include "boost/optional.hpp"
 #include "eigen3/Eigen/Core"
@@ -42,7 +40,9 @@ namespace LinearProgrammingUtils
   pair<Matrix<T, Dynamic, Dynamic>, DenseIndex>
   reducedRowEchelonForm(const Matrix<T, Dynamic, Dynamic>& A);
 
-  void sortPointsClockwise(QList<QPointF>& points);
+  void sortPointsClockwise(std::list<pair<Real, Real>>& points);
+
+  pair<Real, Real> perp(pair<Real, Real> point);
 }
 
 

@@ -3,45 +3,63 @@
 
 #include <cmath>
 
-#include <algorithm>
+#include <list>
+#include <utility>
 
-#include <QList>
-#include <QPointF>
+#include "../math/numerictypes.hxx"
 
 
 namespace LinearProgrammingUtils
 {
+  using namespace NumericTypes;
+  using namespace std;
+
+
   /**
    * @brief sortPointsClockwise
    * Sorts given 2-D point in the clockwise order
    * using polar coordinates.
-   * @param points Points vector to sort.
+   * @param points Points container to sort.
    */
   void
-  sortPointsClockwise(QList<QPointF>& points)
+  sortPointsClockwise(list<pair<Real, Real>>& points)
   {
     //Centroid of a convex region will always
     //lie inside of that region
-    QPointF centroid(0., 0.);
-    for (int i(0); i < points.count(); ++i)
+    pair<Real, Real> centroid(0, 0);
+    for (auto it(points.cbegin()); it != points.cend(); ++it)
     {
-      centroid += points.at(i);
+      centroid.first += (*it).first;
+      centroid.second += (*it).second;
     }
-    centroid /= points.count(); //Find a center point
+
+     //Find a center point
+    centroid.first /= points.size();
+    centroid.second /= points.size();
 
     //Convert to polar coords on-the-fly and
     //use the polar angles (relative to centroid) to sort
     //all the vertices clockwise.
-    std::sort(
-      points.begin(),
-      points.end(),
-      [&centroid](const QPointF& lhs, const QPointF& rhs)
+    points.sort(
+      [&centroid] (const pair<Real, Real>& lhs, const pair<Real, Real>& rhs)
       {
         return (
-          atan2(lhs.y() - centroid.y(), lhs.x() - centroid.x()) <
-          atan2(rhs.y() - centroid.y(), rhs.x() - centroid.x())
+          atan2(lhs.second - centroid.second, lhs.first - centroid.first) <
+          atan2(rhs.second - centroid.second, rhs.first - centroid.first)
         );
       }
     );
+  }
+
+
+  /**
+   * @brief perp
+   * @param point
+   * @return
+   */
+  pair<Real, Real>
+  perp(pair<Real, Real> point)
+  {
+    return make_pair(point.second * Real(-1), point.first);
   }
 }

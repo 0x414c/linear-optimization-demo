@@ -6,16 +6,14 @@
 
 #include "graphicalsolver2d.hxx"
 
+#include <cstdint>
+
 #include <algorithm>
-#include <iostream>
-#include <limits>
+#include <list>
 #include <utility>
 #include <vector>
 
 #include <QDebug>
-#include <QLineF>
-#include <QList>
-#include <QPointF>
 
 #include "boost/optional.hpp"
 #include "eigen3/Eigen/Core"
@@ -36,6 +34,7 @@ namespace LinearProgramming
   using namespace Eigen;
   using namespace LinearProgrammingUtils;
   using namespace std;
+  using namespace Utils;
 
 
   template<typename T>
@@ -92,16 +91,10 @@ namespace LinearProgramming
     //For output
     optional<PlotData2D> ret;
     PlotData2D plotData2D(
-      QPointF(
-        numeric_limits<qreal>::min(),
-        numeric_limits<qreal>::min()
-      ),
-      numeric_limits<qreal>::max(),
-      QList<QPointF>(),
-      QLineF(
-        QPointF(0, 0),
-        QPointF(0, 0)
-      )
+      make_pair(0, 0),
+      0,
+      list<pair<Real, Real>>(),
+      make_pair(0, 0)
     );
 
     //Construct an augmented matrix A|b
@@ -160,6 +153,7 @@ namespace LinearProgramming
       sum += _linearProgramData.objectiveFunctionCoeffs(j + M_);
       c_(j) = sum;
     }
+
     T d_(0);
     for (DenseIndex i(0); i < M_; ++i)
     {
@@ -218,7 +212,7 @@ namespace LinearProgramming
     //NOTE: in general case we have N decision variables, and M equations,
     //so we need to check Binomial[M + N, N] intersection points for feasibility.
 
-    QVector<uint32_t> intersectionCounters(M_ + 2, 0);
+    vector<uint32_t> intersectionCounters(M_ + 2, 0);
 
     //For each constraint equation
     for (DenseIndex r(0); r < (M_ + 2) - 1; ++r)
@@ -270,33 +264,34 @@ namespace LinearProgramming
             {
               ++intersectionCounters[r];
               ++intersectionCounters[s];
-//              if ((intersectionsCount[r] > 2) || (intersectionsCount[s] > 2))
-//              {
-//                continue;
-//              }
 
               const T y_1((*y)(0)), y_2((*y)(1)), F__(F_(*y));
-              const QPointF newVertice(
-                numericCast<qreal, T>(y_1),
-                numericCast<qreal, T>(y_2)
+
+              const pair<Real, Real> newVertice(
+                numericCast<Real, T>(y_1),
+                numericCast<Real, T>(y_2)
               );
+
               //TODO: Use `QMap' for faster lookup
 //              if (!plotData2D.vertices.contains(newVertice))
               {
-                plotData2D.vertices.append(newVertice);
-                const qreal newValue(numericCast<qreal, T>(F__));
+                plotData2D.feasibleRegionExtremePoints.push_back(newVertice);
 
-                qInfo() << "GraphicalSolver2D<T>::solve: value for" <<
-                           newVertice << "is" << newValue << "~=" << F__;
+                const Real newValue(numericCast<Real, T>(F__));
+
+                qInfo() << "GraphicalSolver2D<T>::solve: value for (" <<
+                           newVertice.first << ";" << newVertice.second <<
+                           ") is" << newValue << "~=" << F__;
 
                 if (newValue <= plotData2D.extremeValue)
                 {
                   qInfo() << "GraphicalSolver2D<T>::solve:"
-                             " new minimum found for" << newVertice << "is" <<
-                             newValue << "~=(" << y_1 << "," << y_2 << ")";
+                             " new minimum found for (" << newVertice.first <<
+                             ";" << newVertice.second << ") is" <<
+                             newValue << "~=(" << y_1 << ";" << y_2 << ")";
 
                   plotData2D.extremeValue = newValue;
-                  plotData2D.extremeVertex = newVertice;
+                  plotData2D.extremePoint = newVertice;
                 }
               }
             }
@@ -305,9 +300,9 @@ namespace LinearProgramming
       }
     }
 
-    qDebug() << intersectionCounters;
+    LOG("intersectionCounters == {}", makeString(intersectionCounters));
 
-    if (plotData2D.vertices.count() == 0)
+    if (plotData2D.feasibleRegionExtremePoints.empty())
     {
       return make_pair(SolutionType::Infeasible, ret);
     }
@@ -322,19 +317,23 @@ namespace LinearProgramming
       )
       {
         //To plot a polygon we need to sort all its vertices in clockwise order.
-        sortPointsClockwise(plotData2D.vertices);
+        sortPointsClockwise(plotData2D.feasibleRegionExtremePoints);
 
-        plotData2D.gradient.setP2(
-          QPointF(
-            numericCast<qreal, T>(F_.coeffAt(0)),
-            numericCast<qreal, T>(F_.coeffAt(1))
-          )
+        plotData2D.gradientDirection =
+          make_pair(
+            numericCast<Real, T>(F_.coeffAt(0)),
+            numericCast<Real, T>(F_.coeffAt(1))
+          );
+
+        LOG(
+          "Solution: V == {}, G == ({}; {}), x* == ({}; {}), F* == {}",
+          makeString(plotData2D.feasibleRegionExtremePoints),
+          plotData2D.gradientDirection.first,
+          plotData2D.gradientDirection.second,
+          plotData2D.extremePoint.first,
+          plotData2D.extremePoint.second,
+          plotData2D.extremeValue
         );
-
-        qDebug() << "GraphicalSolver2D<T>::solve: solution: \nV:=" <<
-                    plotData2D.vertices << "\nG:=" << plotData2D.gradient <<
-                    "\nX*:=" << plotData2D.extremeVertex <<
-                    "\nF*:=" << plotData2D.extremeValue;
 
         ret = plotData2D;
 

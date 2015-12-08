@@ -165,7 +165,7 @@ namespace GUI
 
       void setupGraphicalSolutionView(QCustomPlot* const customPlot);
       void enableGraphicalSolutionView(bool enabled = true);
-      void plotGraph(const PlotData2D& plotData2D);
+      void refreshGraphicalSolutionView(const PlotData2D& plotData2D);
 
       void setupSimplexView();
       void enableStepByStepSimplexView(bool enabled = true);

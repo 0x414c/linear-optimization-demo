@@ -37,6 +37,7 @@ INCLUDEPATH += \
   $$PWD/lib/boost \
   $$PWD/lib/cppformat \
   $$PWD/lib/eigen \
+  $$PWD/lib/prettyprint \
   $$PWD/lib/qcustomplot
 
 #LIBS += -L$$PWD/lib/cppformat/cppformat/build -lformat

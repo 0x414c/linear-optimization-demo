@@ -57,6 +57,21 @@ namespace MathUtils
     return false;
   }
 
+
+  template<typename T = Real>
+  bool
+  isLessThan(T x, T y)
+  {
+    static_assert(
+      AlwaysFalse<T>::value,
+      "MathUtils::isLessThan<T>:"
+      " You can only use one of the specified specializations!"
+    );
+
+    return false;
+  }
+
+
   template<typename T = Real>
   bool
   isEqualToZero(T x)

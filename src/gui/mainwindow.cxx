@@ -4,7 +4,9 @@
 
 #include <cstdlib>
 #include <cmath>
+#include <functional>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -12,11 +14,11 @@
 #include <QBrush>
 #include <QCloseEvent>
 #include <QDateTime>
+#include <QDebug>
 #include <QDragEnterEvent>
 #include <QDragLeaveEvent>
 #include <QDragMoveEvent>
 #include <QDropEvent>
-#include <QDebug>
 #include <QFile>
 #include <QFileInfo>
 #include <QItemSelectionModel>
@@ -47,7 +49,9 @@
 #include "../lp/graphicalsolver2d.hxx"
 #include "../lp/linearprogrammingutils.hxx"
 #include "../lp/linearprogramsolution.hxx"
-#include "../lp/plotdata2d.hxx"
+#include "../lp/pointreal2d.hxx"
+#include "../lp/pointvaluereal2d.hxx"
+#include "../lp/plotdatareal2d.hxx"
 #include "../lp/solutiontype.hxx"
 #include "../math/mathutils.hxx"
 #include "../misc/dataconvertors.hxx"
@@ -65,6 +69,8 @@ namespace GUI
   using namespace Utils;
 }
 
+
+#pragma region ctors/dtors
 
 GUI::MainWindow::MainWindow(QWidget* parent) :
   QMainWindow(parent),
@@ -103,6 +109,10 @@ GUI::MainWindow::~MainWindow()
   delete ui;
 }
 
+#pragma endregion
+
+
+#pragma region event handlers
 
 void
 GUI::MainWindow::closeEvent(QCloseEvent* closeEvent)
@@ -114,8 +124,11 @@ GUI::MainWindow::closeEvent(QCloseEvent* closeEvent)
       QMessageBox::question(
         this,
         QStringLiteral("Unsaved Changes"),
-        QString("You have some unsaved changes in the program \"%1\"."
-                "\n\nDo you want to save them?").arg(windowFilePath()),
+        QString(
+          "You have some unsaved changes in the program \"%1\"."
+          "\n\nDo you want to save them?"
+        ).
+        arg(QFileInfo(windowFilePath()).baseName()),
         QMessageBox::Save | QMessageBox::Cancel | QMessageBox::Discard,
         QMessageBox::Cancel
       )
@@ -231,6 +244,10 @@ GUI::MainWindow::dropEvent(QDropEvent* event)
   }
 }
 
+#pragma endregion
+
+
+#pragma region private methods
 
 void
 GUI::MainWindow::setupDefaults()
@@ -318,18 +335,6 @@ GUI::MainWindow::setupSignals()
 
 
 void
-GUI::MainWindow::setDirty(bool dirty)
-{
-  if (_isDirty != dirty)
-  {
-    _isDirty = dirty;
-
-    setWindowModified(dirty);
-  }
-}
-
-
-void
 GUI::MainWindow::setupProgramView()
 {
   _ratNumericDelegates =
@@ -375,6 +380,16 @@ GUI::MainWindow::setupProgramView()
 
 
 void
+GUI::MainWindow::clearProgramView()
+{
+  for (int i(0); i < ProgramModelsCount; ++i)
+  {
+    _programTableModels[i]->clear(QStringLiteral("0"));
+  }
+}
+
+
+void
 GUI::MainWindow::destroyProgramView()
 {
   for (int i(0); i < ProgramModelsCount; ++i)
@@ -387,9 +402,417 @@ GUI::MainWindow::destroyProgramView()
 
 
 void
+GUI::MainWindow::setupGraphicalSolutionView(QCustomPlot* const customPlot)
+{
+  clearGraphicalSolutionView(customPlot);
+
+  //Set up all the things
+  const QFont normalFont(font().family(), FontSize);
+  const QFont boldFont(font().family(), FontSize, QFont::Bold);
+
+  customPlot->setInteractions(
+    QCP::iRangeDrag | QCP::iRangeZoom |
+    QCP::iSelectPlottables | QCP::iSelectAxes |
+    QCP::iSelectLegend | QCP::iSelectItems
+  );
+
+  customPlot->setLocale(QLocale(QLocale::English, QLocale::UnitedStates));
+
+  //  customPlot->plotLayout()->insertRow(0);
+//  customPlot->plotLayout()->addElement(0, 0, new QCPPlotTitle(customPlot, "Plot (1)."));
+
+  customPlot->legend->setVisible(true);
+  customPlot->legend->setFont(normalFont);
+  customPlot->legend->setSelectedFont(boldFont);
+  customPlot->legend->setSelectableParts(QCPLegend::spItems);
+
+//  customPlot->axisRect()->setupFullAxesBox(true);
+  customPlot->xAxis2->setVisible(true);
+  customPlot->xAxis2->setTickLabels(false);
+
+  customPlot->yAxis2->setVisible(true);
+  customPlot->yAxis2->setTickLabels(false);
+
+  customPlot->xAxis->setSelectableParts(
+    QCPAxis::spAxis | QCPAxis::spTickLabels
+  );
+
+  customPlot->yAxis->setSelectableParts(
+    QCPAxis::spAxis | QCPAxis::spTickLabels
+  );
+
+  customPlot->xAxis->setRange(0., 1.);
+  customPlot->yAxis->setRange(0., 1.);
+
+  customPlot->xAxis->setLabel(QString("x%1").arg(1)); //TODO: ! Use proper names here
+  customPlot->yAxis->setLabel(QString("x%1").arg(2)); //TODO: ! Use proper names here
+
+  customPlot->setBackgroundScaled(true);
+  customPlot->setBackgroundScaledMode(Qt::IgnoreAspectRatio);
+
+  connect(
+    customPlot, SIGNAL(selectionChangedByUser()),
+    this, SLOT(on_graphical_solutionPlotQCustomPlot_selectionChangedByUser())
+  );
+
+  connect(
+    customPlot, SIGNAL(mousePress(QMouseEvent*)),
+    this, SLOT(on_graphical_solutionPlotQCustomPlot_mousePress())
+  );
+
+  connect(
+    customPlot, SIGNAL(mouseWheel(QWheelEvent*)),
+    this,
+    SLOT(on_graphical_solutionPlotQCustomPlot_mouseWheel())
+  );
+
+  connect(
+    customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)),
+    customPlot->xAxis2, SLOT(setRange(QCPRange))
+  );
+
+  connect(
+    customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)),
+    customPlot->yAxis2, SLOT(setRange(QCPRange))
+  );
+
+  connect(
+    customPlot, SIGNAL(mouseMove(QMouseEvent*)),
+    this, SLOT(on_graphical_solutionPlotQCustomPlot_mouseMove(QMouseEvent*))
+  );
+}
+
+
+void
 GUI::MainWindow::enableGraphicalSolutionView(bool enabled)
 {
+  if (enabled)
+  {
+    ui->graphical_solutionPlotQCustomPlot->setBackground(Qt::white);
+  }
+  else
+  {
+    ui->graphical_solutionPlotQCustomPlot->setBackground(Qt::lightGray);
+  }
+
   ui->graphical_solutionPlotQCustomPlot->setEnabled(enabled);
+}
+
+
+void
+GUI::MainWindow::clearGraphicalSolutionView(QCustomPlot* const customPlot)
+{
+  customPlot->clearFocus();
+  customPlot->clearGraphs();
+  customPlot->clearItems();
+  customPlot->clearMask();
+  customPlot->clearPlottables();
+
+  //Remove `ColorScale' at the second column
+  customPlot->plotLayout()->remove(customPlot->plotLayout()->element(0, 1));
+  //Force layout reflow
+  customPlot->plotLayout()->simplify();
+
+  customPlot->replot();
+}
+
+
+void
+GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
+  QCustomPlot* const customPlot = ui->graphical_solutionPlotQCustomPlot;
+
+  setupGraphicalSolutionView(customPlot);
+
+  const QFont normalFont(font().family(), FontSize);
+  const QFont boldFont(font().family(), FontSize, QFont::Bold);
+
+  const QVector<QColor> colors{
+    Qt::red, Qt::green, Qt::blue,
+    Qt::cyan, Qt::magenta, Qt::yellow
+  };
+
+  const int colorsCount(colors.count());
+
+  const vector<PointReal2D> vertices(
+    plotData.feasibleRegionExtremePoints.cbegin(),
+    plotData.feasibleRegionExtremePoints.cend()
+  );
+
+  const size_t verticesCount(plotData.feasibleRegionExtremePoints.size());
+
+  //Add colormap for obj. func. values...
+  const int xMax(ColorMapResolution * int(plotData.boundingBox.x));
+  const int yMax(ColorMapResolution * int(plotData.boundingBox.y));
+  QCPColorMap* const colorMap =
+    new QCPColorMap(customPlot->xAxis, customPlot->yAxis);
+  colorMap->data()->setSize(xMax, yMax);
+  colorMap->data()->setRange(
+    QCPRange(0., plotData.boundingBox.x),
+    QCPRange(0., plotData.boundingBox.y)
+  );
+
+  {
+    using namespace std::placeholders;
+
+    const auto blerpOverBoundingBox(
+      bind(
+        blerp, 0., 0.,
+        plotData.z11, plotData.z12,
+        plotData.boundingBox.x, plotData.boundingBox.y,
+        plotData.z22, plotData.z21,
+        _1, _2
+      )
+    );
+
+    double x, y;
+    for (int xIdx(0); xIdx < xMax; ++xIdx)
+    {
+      for (int yIdx(0); yIdx < yMax; ++yIdx)
+      {
+        colorMap->data()->cellToCoord(xIdx, yIdx, &x, &y);
+        const double z(blerpOverBoundingBox(x, y));
+        colorMap->data()->setCell(xIdx, yIdx, z);
+      }
+    }
+  }
+
+//  {
+//    int xIdx, yIdx;
+//    for (size_t i(0); i < verticesCount; ++i)
+//    {
+//      const PointReal2D point(vertices[i]);
+
+//      colormap->data()->coordToCell(
+//        point.x, point.y, &xIdx, &yIdx
+//      );
+//      colormap->data()->setCell(xIdx, yIdx, point.second);
+//    }
+//  }
+
+  //w/ a corresponding color scale
+  QCPColorScale* const colorScale = new QCPColorScale(customPlot);
+  colorScale->setType(QCPAxis::atRight);
+  colorMap->setColorScale(colorScale);
+  colorScale->axis()->setLabel("F^");
+  customPlot->plotLayout()->insertColumn(1);
+  customPlot->plotLayout()->addElement(0, 1, colorScale);
+
+  QCPColorGradient colorGradient;
+  colorGradient.setColorStops(ColorMap_PuCy);
+  colorGradient.setLevelCount(ColorMapLevelsCount);
+  colorGradient.setColorInterpolation(QCPColorGradient::ciHSV);
+  colorMap->setGradient(colorGradient);
+
+  colorMap->setInterpolate(true);
+  colorMap->setTightBoundary(true);
+  colorMap->rescaleDataRange(true);
+  colorMap->setName(QString("F^"));
+  colorMap->updateLegendIcon();
+  colorMap->setSelectable(true);
+  customPlot->addPlottable(colorMap);
+
+  //Make sure the axis rect and color scale synchronize their
+  //bottom and top margins (so they line up)
+  QCPMarginGroup* const marginGroup = new QCPMarginGroup(customPlot);
+  customPlot->axisRect()->setMarginGroup(
+    QCP::msBottom | QCP::msTop, marginGroup
+  );
+  colorScale->setMarginGroup(QCP::msBottom | QCP::msTop, marginGroup);
+
+  //Add horizontal axis...
+  QCPItemStraightLine* const xAxisPlotLine =
+    new QCPItemStraightLine(customPlot);
+  xAxisPlotLine->setPen(QPen(Qt::gray));
+  xAxisPlotLine->point1->setCoords(QPointF(0., 0.));
+  xAxisPlotLine->point2->setCoords(QPointF(1., 0.));
+  xAxisPlotLine->setSelectable(false);
+  customPlot->addItem(xAxisPlotLine);
+
+  //...and the vertical one
+  QCPItemStraightLine* const yAxisPlotLine =
+    new QCPItemStraightLine(customPlot);
+  yAxisPlotLine->setPen(QPen(Qt::gray));
+  yAxisPlotLine->point1->setCoords(QPointF(0., 0.));
+  yAxisPlotLine->point2->setCoords(QPointF(0., 1.));
+  yAxisPlotLine->setSelectable(false);
+  customPlot->addItem(yAxisPlotLine);
+
+  //Add feasible region `U' as `QCPCurve'
+  QCPCurve* const feasibleRegionCurve =
+    new QCPCurve(customPlot->xAxis, customPlot->yAxis);
+  QVector<Real> x1(verticesCount + 1), y1(verticesCount + 1);
+  for (size_t i(0); i < verticesCount; ++i)
+  {
+    x1[i] = vertices[i].x;
+    y1[i] = vertices[i].y;
+  }
+  x1[verticesCount] = vertices.front().x;
+  y1[verticesCount] = vertices.front().y;
+  feasibleRegionCurve->setData(x1, y1);
+  feasibleRegionCurve->setPen(QPen(Qt::transparent));
+  feasibleRegionCurve->setBrush(QBrush(QColor(31, 31, 31, 31)));
+  feasibleRegionCurve->setSelectedPen(QPen(Qt::transparent));
+  feasibleRegionCurve->setSelectedBrush(QBrush(QColor(32, 32, 32, 63)));
+  feasibleRegionCurve->setScatterStyle(
+    QCPScatterStyle(QCPScatterStyle::ssCircle, QColor(255, 0, 0), 8)
+  );
+  feasibleRegionCurve->setName(QStringLiteral("U"));
+  feasibleRegionCurve->setSelectable(true);
+  customPlot->addPlottable(feasibleRegionCurve);
+
+  //Add constraints
+  for (size_t i(0); i < verticesCount; ++i) {
+    //Add constraint as infinite line
+    QCPItemStraightLine* const constraintAsContiniousLine =
+      new QCPItemStraightLine(customPlot);
+    constraintAsContiniousLine->setPen(QPen(Qt::gray));
+    constraintAsContiniousLine->point1->setCoords(
+      QPointF(vertices[i].x, vertices[i].x)
+    );
+    constraintAsContiniousLine->point2->setCoords(
+      QPointF(
+        vertices[(i + 1) % verticesCount].x,
+        vertices[(i + 1) % verticesCount].y
+      )
+    );
+    constraintAsContiniousLine->setSelectable(false);
+    customPlot->addItem(constraintAsContiniousLine);
+
+    //Constraint as a feasible region edge
+    QVector<Real> x(2), y(2); //add edge data
+    x[0] = vertices[i].x;
+    x[1] = vertices[(i + 1) % verticesCount].x;
+    y[0] = vertices[i].y;
+    y[1] = vertices[(i + 1) % verticesCount].y;
+    customPlot->addGraph(); //create graph and assign data to it
+    customPlot->graph(i)->setData(x, y);
+    auto defaultColor(colors[i % colorsCount]); //set graph look
+//    auto brushColor(defaultColor); brushColor.setAlphaF(.25);
+//    auto selectedBrushColor(brushColor); selectedBrushColor.setAlphaF(.125);
+    customPlot->graph(i)->setPen(QPen(defaultColor));
+//    customPlot->graph(i)->setBrush(QBrush(brushColor));
+    customPlot->graph(i)->setSelectedPen(
+      QPen(QBrush(defaultColor), SelectedPenWidth)
+    );
+//    customPlot->graph(i)->setSelectedBrush(QBrush(selectedBrushColor));
+    customPlot->graph(i)->setName(QString("Eq. (%1)").arg(i + 1));
+    customPlot->graph(i)->setSelectable(true);
+  }
+
+  //Add objective function level line...
+  const PointReal2D levelLine(perp(plotData.gradientVectorDirection));
+  QCPItemStraightLine* const objFuncPlotLine =
+    new QCPItemStraightLine(customPlot);
+  objFuncPlotLine->point1->setCoords(0., 0.);
+  objFuncPlotLine->point2->setCoords(levelLine.x, levelLine.y);
+  objFuncPlotLine->setPen(QPen(Qt::darkBlue));
+  objFuncPlotLine->setSelectedPen(
+    QPen(QBrush(Qt::darkBlue), SelectedPenWidth)
+  );
+  objFuncPlotLine->setSelectable(true);
+  customPlot->addItem(objFuncPlotLine);
+
+  //HACK: Invisible level line (only a section) to obtain anchor for text label.
+  QCPItemLine* const levelLineSection = new QCPItemLine(customPlot);
+  levelLineSection->start->setCoords(0., 0.);
+  levelLineSection->end->setCoords(levelLine.x, levelLine.y);
+  levelLineSection->setPen(QPen(Qt::transparent));
+  levelLineSection->setSelectable(false);
+  customPlot->addItem(levelLineSection);
+
+  //...w/ label
+  QCPItemText* const objFuncLevelLineText = new QCPItemText(customPlot);
+  objFuncLevelLineText->setPositionAlignment(Qt::AlignTop | Qt::AlignRight);
+  objFuncLevelLineText->position->setParentAnchor(levelLineSection->start);
+//  objFuncLevelLineText->position->setType(QCPItemPosition::ptPlotCoords);
+  objFuncLevelLineText->position->setCoords(-1., 0.);
+//  objFuncLevelLineText->setRotation(levelLine.angle());
+  objFuncLevelLineText->setText(QStringLiteral("F(⃗x) = const"));
+  objFuncLevelLineText->setFont(boldFont);
+  objFuncLevelLineText->setSelectable(false);
+  customPlot->addItem(objFuncLevelLineText);
+
+  //Add gradient vector...
+  QCPItemLine* const objFuncGradientVectorArrow = new QCPItemLine(customPlot);
+  objFuncGradientVectorArrow->start->setCoords(QPointF(0., 0.));
+  objFuncGradientVectorArrow->end->setCoords(
+    plotData.gradientVectorDirection.x, plotData.gradientVectorDirection.y
+  );
+  objFuncGradientVectorArrow->setHead(QCPLineEnding::esLineArrow);
+  objFuncGradientVectorArrow->setPen(QPen(Qt::darkRed));
+  objFuncGradientVectorArrow->setSelectedPen(
+    QPen(QBrush(Qt::darkRed), SelectedPenWidth)
+  );
+  objFuncGradientVectorArrow->setSelectable(true);
+  customPlot->addItem(objFuncGradientVectorArrow);
+
+  //...w/ text label
+  QCPItemText* const objFuncGradientVectorArrowText =
+    new QCPItemText(customPlot);
+  const Qt::AlignmentFlag vertAlignment(
+    plotData.gradientVectorDirection.y >= 0. ? Qt::AlignBottom : Qt::AlignTop
+  );
+  objFuncGradientVectorArrowText->setPositionAlignment(
+    vertAlignment | Qt::AlignHCenter
+  );
+  objFuncGradientVectorArrowText->position->setParentAnchor(
+    objFuncGradientVectorArrow->end
+  );
+//  objFuncGradientVectorArrowText->position->setType(QCPItemPosition::ptPlotCoords);
+  objFuncGradientVectorArrowText->setFont(boldFont);
+  objFuncGradientVectorArrowText->setText(
+    QString("∇F(⃗x) = (%1; %2)").
+    arg(plotData.gradientVectorDirection.x).
+    arg(plotData.gradientVectorDirection.y)
+  );
+  objFuncGradientVectorArrowText->setSelectable(false);
+  customPlot->addItem(objFuncGradientVectorArrowText);
+
+  //Add text label at the top:
+  QCPItemText* const objectiveValueText = new QCPItemText(customPlot);
+  objectiveValueText->setPositionAlignment(Qt::AlignTop | Qt::AlignHCenter);
+  objectiveValueText->position->setType(QCPItemPosition::ptAxisRectRatio);
+  objectiveValueText->position->setCoords(.33, .033);
+  objectiveValueText->setFont(boldFont);
+  objectiveValueText->setText(
+    QString(" F* = F(%1, %2) = %3 ").
+    arg(plotData.extremePoints.front().x).
+    arg(plotData.extremePoints.front().y).
+    arg(plotData.extremeValue)
+  );
+  objectiveValueText->setPen(QPen(Qt::black)); //Show black border around text
+  objectiveValueText->setSelectable(false);
+  customPlot->addItem(objectiveValueText);
+
+  //Add arrows pointing to the objective function extreme points:
+  for (
+    auto it(plotData.extremePoints.cbegin());
+    it != plotData.extremePoints.cend();
+    ++it
+  )
+  {
+    QCPItemLine* const objectiveValueArrow = new QCPItemLine(customPlot);
+    objectiveValueArrow->start->setParentAnchor(objectiveValueText->bottomLeft);
+    objectiveValueArrow->end->setCoords((*it).x, (*it).y);
+    objectiveValueArrow->setHead(QCPLineEnding::esLineArrow);
+    objectiveValueArrow->setSelectable(false);
+    customPlot->addItem(objectiveValueArrow);
+  }
+
+  //TODO: !? We can't use `Tracer' on a `Curve'
+//  QCPItemTracer* const phaseTracer = new QCPItemTracer(customPlot);
+//  phaseTracer->setGraph(customPlot->graph(1));
+//  phaseTracer->setGraphKey(0.);
+//  phaseTracer->setInterpolating(true);
+//  phaseTracer->setStyle(QCPItemTracer::tsCircle);
+//  phaseTracer->setPen(QPen(Qt::red));
+//  phaseTracer->setBrush(Qt::red);
+//  phaseTracer->setSize(8);
+//  customPlot->addItem(phaseTracer);
+
+  //Finalize
+  customPlot->rescaleAxes();
+  customPlot->replot();
 }
 
 
@@ -424,6 +847,34 @@ GUI::MainWindow::setupSimplexView()
   ui->simplex_simplexTableauTableView->setModel(
     _simplexTableModels[int(SimplexModel::Tableau)]
   );
+}
+
+
+void
+GUI::MainWindow::enableStepByStepSimplexView(bool enabled)
+{
+  ui->simplex_startPushButton->setEnabled(enabled);
+  ui->simplex_stepBackPushButton->setEnabled(enabled);
+  ui->simplex_stepForwardPushButton->setEnabled(enabled);
+  ui->simplex_iterCountLcdNumber->setEnabled(enabled);
+  ui->simplex_manualPivotCheckBox->setEnabled(enabled);
+  ui->simplex_pivotHintPushButton->setEnabled(enabled);
+  ui->simplex_simplexTableauTableView->setEnabled(enabled);
+}
+
+
+void
+GUI::MainWindow::enableCurrentSolutionSimplexView(bool enabled)
+{
+  ui->simplex_solutionVectorTableView->setEnabled(enabled);
+  ui->simplex_objectiveValueTableView->setEnabled(enabled);
+}
+
+
+void
+GUI::MainWindow::updateSimplexSelectionRules()
+{
+  //TODO: ~
 }
 
 
@@ -627,49 +1078,11 @@ GUI::MainWindow::refreshSimplexView()
 
 
 void
-GUI::MainWindow::updateSimplexSelectionRules()
-{
-  //TODO: ~
-}
-
-
-void
 GUI::MainWindow::destroySimplexView()
 {
   for (int i(0); i < SimplexModelsCount; ++i)
   {
     delete _simplexTableModels[i];
-  }
-}
-
-
-void
-GUI::MainWindow::enableCurrentSolutionSimplexView(bool enabled)
-{
-  ui->simplex_solutionVectorTableView->setEnabled(enabled);
-  ui->simplex_objectiveValueTableView->setEnabled(enabled);
-}
-
-
-void
-GUI::MainWindow::enableStepByStepSimplexView(bool enabled)
-{
-  ui->simplex_startPushButton->setEnabled(enabled);
-  ui->simplex_stepBackPushButton->setEnabled(enabled);
-  ui->simplex_stepForwardPushButton->setEnabled(enabled);
-  ui->simplex_iterCountLcdNumber->setEnabled(enabled);
-  ui->simplex_manualPivotCheckBox->setEnabled(enabled);
-  ui->simplex_pivotHintPushButton->setEnabled(enabled);
-  ui->simplex_simplexTableauTableView->setEnabled(enabled);
-}
-
-
-void
-GUI::MainWindow::clearProgramView()
-{
-  for (int i(0); i < ProgramModelsCount; ++i)
-  {
-    _programTableModels[i]->clear(QStringLiteral("0"));
   }
 }
 
@@ -784,10 +1197,31 @@ GUI::MainWindow::setField(Field field)
 
 
 void
+GUI::MainWindow::setDirty(bool dirty)
+{
+  if (_isDirty != dirty)
+  {
+    _isDirty = dirty;
+
+    setWindowModified(dirty);
+  }
+}
+
+
+void
 GUI::MainWindow::setupNumericSolvers()
 {
   _realSolver = make_shared<DantzigNumericSolver<Real>>();
   _rationalSolver = make_shared<DantzigNumericSolver<Rational>>();
+}
+
+
+void
+GUI::MainWindow::setupNumericSolversControllers()
+{
+  _realSolverController = DantzigNumericSolverController<Real>(_realSolver);
+  _rationalSolverController =
+      DantzigNumericSolverController<Rational>(_rationalSolver);
 }
 
 
@@ -854,14 +1288,6 @@ void GUI::MainWindow::updateNumericSolversData()
     default:
       break;
   }
-}
-
-void
-GUI::MainWindow::setupNumericSolversControllers()
-{
-  _realSolverController = DantzigNumericSolverController<Real>(_realSolver);
-  _rationalSolverController =
-      DantzigNumericSolverController<Rational>(_rationalSolver);
 }
 
 
@@ -963,6 +1389,7 @@ GUI::MainWindow::solveSimplexHandler()
     error:
       enableCurrentSolutionSimplexView(false);
       enableStepByStepSimplexView(false);
+      clearSimplexView();
       break;
 
     default:
@@ -988,27 +1415,33 @@ GUI::MainWindow::solveGraphicalHandler()
             _programTableModels[int(ProgramModel::ObjFunc)]
           )
         );
+
         Matrix<Real, Dynamic, Dynamic> constrsCoeffs(
           TableModelUtils::makeMatrix<Real>(
             _programTableModels[int(ProgramModel::Constrs)]
           )
         );
+
         Matrix<Real, Dynamic, 1> constrsRHS(
           TableModelUtils::makeColumnVector<Real>(
             _programTableModels[int(ProgramModel::RHS)]
           )
         );
+
         LinearProgramData<Real> linearProgramData(
           std::move(objFuncCoeffs),
           std::move(constrsCoeffs),
           std::move(constrsRHS)
         );
+
         GraphicalSolver2D<Real> graphicalSolver2D(
           std::move(linearProgramData)
         );
-        pair<SolutionType, optional<PlotData2D>> plotData2D(
+
+        pair<SolutionType, optional<PlotDataReal2D>> plotData2D(
           graphicalSolver2D.solve()
         );
+
         if (plotData2D.second)
         {
           refreshGraphicalSolutionView(*plotData2D.second);
@@ -1020,8 +1453,10 @@ GUI::MainWindow::solveGraphicalHandler()
                            " the 2D graphical method."),
             plotData2D.first
           );
+
           goto error;
         }
+
         break;
       }
 
@@ -1032,27 +1467,33 @@ GUI::MainWindow::solveGraphicalHandler()
             _programTableModels[int(ProgramModel::ObjFunc)]
           )
         );
+
         Matrix<Rational, Dynamic, Dynamic> constrsCoeffs(
           TableModelUtils::makeMatrix<Rational>(
             _programTableModels[int(ProgramModel::Constrs)]
           )
         );
+
         Matrix<Rational, Dynamic, 1> constrsRHS(
           TableModelUtils::makeColumnVector<Rational>(
             _programTableModels[int(ProgramModel::RHS)]
           )
         );
+
         LinearProgramData<Rational> linearProgramData(
           std::move(objFuncCoeffs),
           std::move(constrsCoeffs),
           std::move(constrsRHS)
         );
+
         GraphicalSolver2D<Rational> graphicalSolver2D(
           std::move(linearProgramData)
         );
-        pair<SolutionType, optional<PlotData2D>> plotData2D(
+
+        pair<SolutionType, optional<PlotDataReal2D>> plotData2D(
           graphicalSolver2D.solve()
         );
+
         if (plotData2D.second)
         {
           refreshGraphicalSolutionView(*plotData2D.second);
@@ -1064,13 +1505,16 @@ GUI::MainWindow::solveGraphicalHandler()
                            " the 2D graphical method."),
             plotData2D.first
           );
+
           goto error;
         }
+
         break;
       }
 
     error:
       enableGraphicalSolutionView(false);
+      clearGraphicalSolutionView(ui->graphical_solutionPlotQCustomPlot);
       break;
 
     default:
@@ -1208,307 +1652,6 @@ GUI::MainWindow::saveFileHandler(const QString& filename)
     default:
       break;
   }
-}
-
-
-void
-GUI::MainWindow::setupGraphicalSolutionView(QCustomPlot* const customPlot)
-{
-  customPlot->clearFocus();
-  customPlot->clearGraphs();
-  customPlot->clearItems();
-  customPlot->clearMask();
-  customPlot->clearPlottables();
-//  customPlot->plotLayout()->removeAt(0);
-
-  //Set up all the things
-  const QFont normalFont(font().family(), 9);
-  const QFont boldFont(font().family(), 9, QFont::Bold);
-
-  customPlot->setInteractions(
-    QCP::iRangeDrag | QCP::iRangeZoom |
-    QCP::iSelectPlottables | QCP::iSelectAxes |
-    QCP::iSelectLegend | QCP::iSelectItems
-  );
-
-  customPlot->setLocale(QLocale(QLocale::English, QLocale::UnitedStates));
-//  customPlot->plotLayout()->insertRow(0);
-//  customPlot->plotLayout()->addElement(0, 0, new QCPPlotTitle(customPlot, "Plot (1)."));
-  customPlot->legend->setVisible(true);
-  customPlot->legend->setFont(normalFont);
-  customPlot->legend->setSelectedFont(boldFont);
-  customPlot->legend->setSelectableParts(QCPLegend::spItems);
-
-//  customPlot->axisRect()->setupFullAxesBox(true);
-  customPlot->xAxis2->setVisible(true);
-  customPlot->xAxis2->setTickLabels(false);
-  customPlot->yAxis2->setVisible(true);
-  customPlot->yAxis2->setTickLabels(false);
-
-  customPlot->xAxis->setSelectableParts(
-    QCPAxis::spAxis | QCPAxis::spTickLabels
-  );
-  customPlot->yAxis->setSelectableParts(
-    QCPAxis::spAxis | QCPAxis::spTickLabels
-  );
-  customPlot->xAxis->setRange(0, 2);
-  customPlot->yAxis->setRange(0, 1);
-  customPlot->xAxis->setLabel(QString("x%1").arg(1)); //TODO: ! Use proper names here
-  customPlot->yAxis->setLabel(QString("x%1").arg(2)); //TODO: ! Use proper names here
-
-  connect(
-    customPlot, SIGNAL(selectionChangedByUser()),
-    this, SLOT(on_graphical_solutionPlotQCustomPlot_selectionChangedByUser())
-  );
-  connect(
-    customPlot, SIGNAL(mousePress(QMouseEvent*)),
-    this, SLOT(on_graphical_solutionPlotQCustomPlot_mousePress())
-  );
-  connect(
-    customPlot, SIGNAL(mouseWheel(QWheelEvent*)),
-    this, SLOT(on_graphical_solutionPlotQCustomPlot_mouseWheel())
-  );
-  connect(
-    customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)),
-    customPlot->xAxis2, SLOT(setRange(QCPRange))
-  );
-  connect(
-    customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)),
-    customPlot->yAxis2, SLOT(setRange(QCPRange))
-  );
-  connect(
-    customPlot,
-    SIGNAL(mouseMove(QMouseEvent*)),
-    this,
-    SLOT(on_graphical_solutionPlotQCustomPlot_mouseMove(QMouseEvent*))
-  );
-}
-
-
-void
-GUI::MainWindow::refreshGraphicalSolutionView(const PlotData2D& plotData2D) {
-  QCustomPlot* const customPlot = ui->graphical_solutionPlotQCustomPlot;
-  setupGraphicalSolutionView(customPlot);
-
-  const QVector<QColor> plotColors{
-    Qt::red, Qt::green, Qt::blue,
-    Qt::cyan, Qt::magenta, Qt::yellow
-  };
-  const int colorsCount(plotColors.count());
-//  const QFont normalFont(font().family(), 9);
-  const QFont boldFont(font().family(), 9, QFont::Bold);
-
-  const size_t verticesCount(plotData2D.feasibleRegionExtremePoints.size());
-
-  const vector<pair<Real, Real>> vertices(
-    plotData2D.feasibleRegionExtremePoints.cbegin(),
-    plotData2D.feasibleRegionExtremePoints.cend()
-  );
-
-  //Add heatmap for obj. func. values
-//  QCPColorMap* colorMap = new QCPColorMap(customPlot->xAxis, customPlot->yAxis);
-//  int nx(2);
-//  int ny(2);
-//  colorMap->data()->setSize(nx, ny);
-//  colorMap->data()->setRange(QCPRange(0, 4), QCPRange(0, 3));
-//  double x, y, z;
-//  for (int xIdx(0); xIdx < nx; ++xIdx)
-//  {
-//    for (int yIdx(0); yIdx <ny; ++yIdx)
-//    {
-//      colorMap->data()->cellToCoord(xIdx, yIdx, &x, &y);
-//      z = -xIdx * yIdx;
-//      colorMap->data()->setCell(xIdx, yIdx, z);
-//    }
-//  }
-//  colorMap->setName(QString("f(x%1, x%2)").arg(1).arg(2));
-//  colorMap->setTightBoundary(true);
-//  colorMap->setGradient(QCPColorGradient::gpHot);
-//  colorMap->rescaleDataRange(true);
-//  colorMap->updateLegendIcon();
-//  customPlot->addPlottable(colorMap);
-
-  //Add horizontal axis...
-  QCPItemStraightLine* const xAxisPlotLine =
-    new QCPItemStraightLine(customPlot);
-  xAxisPlotLine->setPen(QPen(Qt::gray));
-  xAxisPlotLine->point1->setCoords(QPointF(0, 0));
-  xAxisPlotLine->point2->setCoords(QPointF(1, 0));
-  xAxisPlotLine->setSelectable(false);
-  customPlot->addItem(xAxisPlotLine);
-
-  //...and the vertical one
-  QCPItemStraightLine* const yAxisPlotLine =
-    new QCPItemStraightLine(customPlot);
-  yAxisPlotLine->setPen(QPen(Qt::gray));
-  yAxisPlotLine->point1->setCoords(QPointF(0, 0));
-  yAxisPlotLine->point2->setCoords(QPointF(0, 1));
-  yAxisPlotLine->setSelectable(false);
-  customPlot->addItem(yAxisPlotLine);
-
-  //Add feasible region `U' as `QCPCurve'
-  QCPCurve* const feasibleRegionCurve =
-    new QCPCurve(customPlot->xAxis, customPlot->yAxis);
-  QVector<Real> x1(verticesCount + 1), y1(verticesCount + 1);
-  for (size_t i(0); i < verticesCount; ++i)
-  {
-    x1[i] = vertices[i].first;
-    y1[i] = vertices[i].second;
-  }
-  x1[verticesCount] = vertices.front().first;
-  y1[verticesCount] = vertices.front().second;
-  feasibleRegionCurve->setData(x1, y1);
-  feasibleRegionCurve->setPen(QPen(Qt::transparent));
-  feasibleRegionCurve->setBrush(QBrush(QColor(127, 0, 127, 31)));
-  feasibleRegionCurve->setSelectedPen(QPen(Qt::transparent));
-  feasibleRegionCurve->setSelectedBrush(QBrush(QColor(127, 0, 127, 63)));
-  feasibleRegionCurve->setScatterStyle(
-    QCPScatterStyle(QCPScatterStyle::ssCircle, QColor(127, 0, 127), 8)
-  );
-  feasibleRegionCurve->setName(QStringLiteral("U"));
-  feasibleRegionCurve->setSelectable(true);
-  customPlot->addPlottable(feasibleRegionCurve);
-
-  //Add constraints
-  for (size_t i(0); i < verticesCount; ++i) {
-    //Add constraint as infinite line
-    QCPItemStraightLine* const constraintAsContiniousLine =
-        new QCPItemStraightLine(customPlot);
-    constraintAsContiniousLine->setPen(QPen(Qt::gray));
-    constraintAsContiniousLine->point1->setCoords(
-      QPointF(vertices[i].first, vertices[i].second)
-    );
-    constraintAsContiniousLine->point2->setCoords(
-      QPointF(
-        vertices[(i + 1) % verticesCount].first,
-        vertices[(i + 1) % verticesCount].second
-      )
-    );
-    constraintAsContiniousLine->setSelectable(false);
-    customPlot->addItem(constraintAsContiniousLine);
-
-    //Constraint as a feasible region edge
-    QVector<Real> x(2), y(2); //add edge data
-    x[0] = vertices[i].first;
-    x[1] = vertices[(i + 1) % verticesCount].first;
-    y[0] = vertices[i].second;
-    y[1] = vertices[(i + 1) % verticesCount].second;
-    customPlot->addGraph(); //create graph and assign data to it
-    customPlot->graph(i)->setData(x, y);
-    auto defaultColor(plotColors[i % colorsCount]); //set graph look
-    //    auto brushColor(defaultColor); brushColor.setAlphaF(.25);
-    //    auto selectedBrushColor(brushColor); selectedBrushColor.setAlphaF(.125);
-    customPlot->graph(i)->setPen(QPen(defaultColor));
-    //    customPlot->graph(i)->setBrush(QBrush(brushColor));
-    customPlot->graph(i)->setSelectedPen(QPen(QBrush(defaultColor), 2.5));
-    //    customPlot->graph(i)->setSelectedBrush(QBrush(selectedBrushColor));
-    customPlot->graph(i)->setName(QString("Eq. (%1)").arg(i + 1));
-    customPlot->graph(i)->setSelectable(true);
-  }
-
-  //Add objective function level line...
-  const pair<Real, Real> levelLine(perp(plotData2D.gradientDirection));
-  QCPItemStraightLine* const objFuncPlotLine =
-    new QCPItemStraightLine(customPlot);
-  objFuncPlotLine->setPen(QPen(Qt::darkBlue));
-  objFuncPlotLine->point1->setCoords(0., 0.);
-  objFuncPlotLine->point2->setCoords(levelLine.first, levelLine.second);
-  objFuncPlotLine->setSelectable(true);
-  customPlot->addItem(objFuncPlotLine);
-
-  //HACK: Invisible level line (only a section) to obtain anchor for text label.
-  QCPItemLine* const levelLineSection = new QCPItemLine(customPlot);
-  levelLineSection->setPen(QPen(Qt::transparent));
-  levelLineSection->start->setCoords(0., 0.);
-  levelLineSection->end->setCoords(levelLine.first, levelLine.second);
-  levelLineSection->setSelectable(false);
-  customPlot->addItem(levelLineSection);
-
-  //...w/ label
-  QCPItemText* const objFuncLevelLineText = new QCPItemText(customPlot);
-  objFuncLevelLineText->setPositionAlignment(Qt::AlignTop | Qt::AlignRight);
-  objFuncLevelLineText->position->setParentAnchor(levelLineSection->start);
-//  objFuncLevelLineText->position->setType(QCPItemPosition::ptPlotCoords);
-  objFuncLevelLineText->position->setCoords(-1., 0.);
-//  objFuncLevelLineText->setRotation(levelLine.angle());
-  objFuncLevelLineText->setText(QStringLiteral("F(⃗x) = const"));
-  objFuncLevelLineText->setFont(boldFont);
-  objFuncLevelLineText->setSelectable(false);
-  customPlot->addItem(objFuncLevelLineText);
-
-  //Ddd gradient vector...
-  QCPItemLine* const objFuncGradientVectorArrow = new QCPItemLine(customPlot);
-  objFuncGradientVectorArrow->setPen(QPen(Qt::darkRed));
-  objFuncGradientVectorArrow->start->setCoords(QPointF(0., 0.));
-  objFuncGradientVectorArrow->end->setCoords(
-    plotData2D.gradientDirection.first, plotData2D.gradientDirection.second
-  );
-  objFuncGradientVectorArrow->setHead(QCPLineEnding::esLineArrow);
-  objFuncGradientVectorArrow->setSelectable(true);
-  customPlot->addItem(objFuncGradientVectorArrow);
-
-  //...w/ label
-  QCPItemText* const objFuncGradientVectorArrowText =
-    new QCPItemText(customPlot);
-  const Qt::AlignmentFlag vertAlignment(
-    plotData2D.gradientDirection.second >= 0. ? Qt::AlignBottom : Qt::AlignTop
-  );
-  objFuncGradientVectorArrowText->setPositionAlignment(
-    vertAlignment | Qt::AlignHCenter
-  );
-  objFuncGradientVectorArrowText->position->setParentAnchor(
-    objFuncGradientVectorArrow->end
-  );
-//  objFuncGradientVectorArrowText->position->setType(QCPItemPosition::ptPlotCoords);
-  objFuncGradientVectorArrowText->setFont(boldFont);
-  objFuncGradientVectorArrowText->setText(
-    QString("∇F(⃗x) = (%1; %2)").
-    arg(plotData2D.gradientDirection.first).
-    arg(plotData2D.gradientDirection.second)
-  );
-  objFuncGradientVectorArrowText->setSelectable(false);
-  customPlot->addItem(objFuncGradientVectorArrowText);
-
-  // add the text label at the top:
-  QCPItemText* const objectiveValueText = new QCPItemText(customPlot);
-  objectiveValueText->setPositionAlignment(Qt::AlignTop | Qt::AlignHCenter);
-  objectiveValueText->position->setType(QCPItemPosition::ptAxisRectRatio);
-  objectiveValueText->position->setCoords(.33, .033);
-  objectiveValueText->setFont(boldFont);
-  objectiveValueText->setText(
-    QString("F* = F(%1, %2) = %3").
-    arg(plotData2D.extremePoint.first).
-    arg(plotData2D.extremePoint.second).
-    arg(plotData2D.extremeValue)
-  );
-  objectiveValueText->setPen(QPen(Qt::black)); // show black border around text
-  objectiveValueText->setSelectable(false);
-  customPlot->addItem(objectiveValueText);
-
-  // add the arrow:
-  QCPItemLine *objectiveValueArrow = new QCPItemLine(customPlot);
-  objectiveValueArrow->start->setParentAnchor(objectiveValueText->bottom);
-  objectiveValueArrow->end->setCoords(
-    plotData2D.extremePoint.first, plotData2D.extremePoint.second
-  );
-  objectiveValueArrow->setHead(QCPLineEnding::esLineArrow);
-  objectiveValueArrow->setSelectable(false);
-  customPlot->addItem(objectiveValueArrow);
-
-  //TODO: !? We can't use `Tracer' on a `Curve'
-//  QCPItemTracer* const phaseTracer = new QCPItemTracer(customPlot);
-//  phaseTracer->setGraph(customPlot->graph(1));
-//  phaseTracer->setGraphKey(0.);
-//  phaseTracer->setInterpolating(true);
-//  phaseTracer->setStyle(QCPItemTracer::tsCircle);
-//  phaseTracer->setPen(QPen(Qt::red));
-//  phaseTracer->setBrush(Qt::red);
-//  phaseTracer->setSize(7);
-//  customPlot->addItem(phaseTracer);
-
-  //Finalize
-  customPlot->rescaleAxes();
-  customPlot->replot();
 }
 
 
@@ -1697,6 +1840,10 @@ GUI::MainWindow::saveSettings()
   settings.endGroup();
 }
 
+#pragma endregion
+
+
+#pragma region public slots
 
 void
 GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_selectionChangedByUser()
@@ -1998,6 +2145,8 @@ GUI::MainWindow::on_control_testPushButton_clicked()
 //    loadData(QStringLiteral("data3+.json"));
 //    loadData(QStringLiteral("data5.json"));
     loadData(QStringLiteral("data6.json"));
+
+    setDirty(false);
   }
 
   {
@@ -2226,7 +2375,7 @@ GUI::MainWindow::on_action_Open_triggered()
   const QString filename(
     QFileDialog::getOpenFileName(
       this,
-      QStringLiteral("Open Data File"),
+      QStringLiteral("Open Program..."),
       QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) +
         "/data.json",
       QStringLiteral("JSON files (*.json);;Text files (*.txt)"),
@@ -2245,7 +2394,7 @@ GUI::MainWindow::on_action_Save_as_triggered()
   const QString filename(
     QFileDialog::getSaveFileName(
       this,
-      QStringLiteral("Save Data File As..."),
+      QStringLiteral("Save Program As..."),
       QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) +
         QString("/linearProgram@%1.json").arg(
           QDateTime::currentDateTime().toString(QStringLiteral("dMMMyy_h-m-s"))
@@ -2323,6 +2472,20 @@ GUI::MainWindow::on_action_Zoom_reset_triggered()
 
 
 void
+GUI::MainWindow::on_action_Solve_triggered()
+{
+  solveSimplexHandler();
+}
+
+
+void
+GUI::MainWindow::on_action_Plot_triggered()
+{
+  solveGraphicalHandler();
+}
+
+
+void
 GUI::MainWindow::on_action_How_to_triggered()
 {
   //TODO: ~ Add how-to guide
@@ -2388,16 +2551,4 @@ GUI::MainWindow::on_action_About_Qt_triggered()
   QApplication::aboutQt();
 }
 
-
-void
-GUI::MainWindow::on_action_Solve_triggered()
-{
-  solveSimplexHandler();
-}
-
-
-void
-GUI::MainWindow::on_action_Plot_triggered()
-{
-  solveGraphicalHandler();
-}
+#pragma endregion

@@ -83,6 +83,7 @@ namespace LinearProgramming
         return _coeffs(coeffIdx);
       }
 
+
       T&
       coeffAt(DenseIndex coeffIdx)
       {
@@ -121,7 +122,7 @@ namespace LinearProgramming
     private:
       Matrix<T, 1, N> _coeffs;
 
-      T _constTerm = T(0);
+      T _constTerm;
   };
 }
 

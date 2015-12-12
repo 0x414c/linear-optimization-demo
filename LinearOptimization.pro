@@ -58,7 +58,9 @@ SOURCES += \
   src/lp/linearprogramdata.cxx \
   src/lp/linearprogrammingutils.cxx \
   src/lp/linearprogramsolution.cxx \
-  src/lp/plotdata2d.cxx \
+  src/lp/plotdatareal2d.cxx \
+  src/lp/pointreal2d.cxx \
+  src/lp/pointvaluereal2d.cxx \
   src/main.cxx \
   src/misc/dataconvertors.cxx \
   src/misc/ijsonserializable.cxx \
@@ -68,6 +70,9 @@ SOURCES += \
 HEADERS += \
   lib/qcustomplot/qcustomplot/qcustomplot.h \
   src/config.hxx \
+  src/lp/plotdatareal2d.hxx \
+  src/lp/pointreal2d.hxx \
+  src/lp/pointvaluereal2d.hxx \
   src/gui/mainwindow.hxx \
   src/gui/numericstyleditemdelegate.hxx \
   src/gui/numericstyleditemdelegate.txx \
@@ -93,7 +98,6 @@ HEADERS += \
   src/lp/linearprogramsolution.hxx \
   src/lp/linearprogramsolution.txx \
   src/lp/optimizationgoaltype.hxx \
-  src/lp/plotdata2d.hxx \
   src/lp/simplextableau.hxx \
   src/lp/simplextableau.txx \
   src/lp/simplextableau_fwd.hxx \

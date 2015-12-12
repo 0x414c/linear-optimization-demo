@@ -11,6 +11,7 @@
 #include "eigen3/Eigen/Core"
 
 #include "linearprogramdata.hxx"
+#include "plotdatareal2d.hxx"
 #include "../math/numerictypes.hxx"
 
 
@@ -40,9 +41,20 @@ namespace LinearProgrammingUtils
   pair<Matrix<T, Dynamic, Dynamic>, DenseIndex>
   reducedRowEchelonForm(const Matrix<T, Dynamic, Dynamic>& A);
 
-  void sortPointsClockwise(std::list<pair<Real, Real>>& points);
+  void sortPointsClockwise(list<PointReal2D>& points);
 
-  pair<Real, Real> perp(pair<Real, Real> point);
+  PointReal2D perp(const PointReal2D& point);
+
+  Real lerp(Real x1, Real y1, Real x2, Real y2, Real x0);
+
+  Real blerp(
+    Real x1, Real y1, Real z11, Real z12,
+    Real x2, Real y2, Real z22, Real z21,
+    Real x0, Real y0
+  );
+
+  template<typename T = Real>
+  Matrix<T, 2, 2> computeBoundingBox(const list<Matrix<T, 2, 1>>& points);
 }
 
 

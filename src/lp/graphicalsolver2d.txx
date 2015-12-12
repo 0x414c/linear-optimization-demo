@@ -21,8 +21,11 @@
 #include "linearfunction.hxx"
 #include "linearprogrammingutils.hxx"
 #include "linearprogramsolution.hxx"
-#include "plotdata2d.hxx"
+#include "pointreal2d.hxx"
+#include "pointvaluereal2d.hxx"
+#include "plotdatareal2d.hxx"
 #include "solutiontype.hxx"
+#include "../math/numericlimits.hxx"
 #include "../misc/dataconvertors.hxx"
 #include "../misc/utils.hxx"
 
@@ -79,7 +82,7 @@ namespace LinearProgramming
    * @return
    */
   template<typename T>
-  pair<SolutionType, optional<PlotData2D>>
+  pair<SolutionType, optional<PlotDataReal2D>>
   GraphicalSolver2D<T>::solve()
   {
     //Input linear program params
@@ -89,13 +92,7 @@ namespace LinearProgramming
     const DenseIndex N(_linearProgramData.variablesCount());
 
     //For output
-    optional<PlotData2D> ret;
-    PlotData2D plotData2D(
-      make_pair(0, 0),
-      0,
-      list<pair<Real, Real>>(),
-      make_pair(0, 0)
-    );
+    optional<PlotDataReal2D> ret;
 
     //Construct an augmented matrix A|b
     Matrix<T, Dynamic, Dynamic> A_b(M, N + 1);
@@ -212,7 +209,10 @@ namespace LinearProgramming
     //NOTE: in general case we have N decision variables, and M equations,
     //so we need to check Binomial[M + N, N] intersection points for feasibility.
 
-    vector<uint32_t> intersectionCounters(M_ + 2, 0);
+    vector<uint16_t> intersectionCounters(M_ + 2, 0);
+    list<Matrix<T, 2, 1>> extremePoints;
+    T extremeValue(NumericLimits::max<T>());
+    list<Matrix<T, 2, 1>> feasibleRegionExtremePoints;
 
     //For each constraint equation
     for (DenseIndex r(0); r < (M_ + 2) - 1; ++r)
@@ -231,7 +231,7 @@ namespace LinearProgramming
           b_(r),
           b_(s);
 
-        LOG("r := {}, s := {}\nC :=\n{},\nd :=\n{}", r, s, C, d);
+//        LOG("r == {}, s == {}\nC ==\n{},\nd ==\n{}", r, s, C, d);
 
         //Obtain basic solution `y': solve matrix equation {C * y == d}
         //& check solution correctness
@@ -239,9 +239,11 @@ namespace LinearProgramming
 //        T err((eqs * sol - rhs).norm() / rhs.norm());
         if (y)
         {
-          LOG("y ==\n{}", (*y));
+          const Matrix<T, 2, 1> y_(*y);
 
-          const bool isValid((C * (*y)).isApprox(d));
+          LOG("y ==\n{}", y_);
+
+          const bool isValid((C * y_).isApprox(d));
           if (isValid)
           {
             //Check if Basic Solution `y' is also a Basic Feasible Solution:
@@ -249,12 +251,12 @@ namespace LinearProgramming
             //The found point is point of intersection of two lines
             //(feasible region edges) and it is the feasible region
             //corner point (vertex) <=>
-            //it satisfies the following matrix equation `A^ * y <= b^'
+            //it satisfies the following matrix equation `A^ * y^ <= b^'
             //NOTE: non-vertices (inner points) are also subj. to this eq.
 
-            const bool isFeasible(isSolutionFeasible<T>((*y), A_, b_));
+            const bool isFeasible(isSolutionFeasible<T>(y_, A_, b_));
 
-            LOG("isFeasible := {}", isFeasible);
+            LOG("isFeasible == {}", isFeasible);
 
             //If this is a feasible point and it is valid (non-degenerate)
             //solution, we can now try to compute objective function value
@@ -265,33 +267,25 @@ namespace LinearProgramming
               ++intersectionCounters[r];
               ++intersectionCounters[s];
 
-              const T y_1((*y)(0)), y_2((*y)(1)), F__(F_(*y));
+              feasibleRegionExtremePoints.push_back(y_);
 
-              const pair<Real, Real> newVertice(
-                numericCast<Real, T>(y_1),
-                numericCast<Real, T>(y_2)
-              );
+              const T newValue(F_(y_));
 
-              //TODO: Use `QMap' for faster lookup
-//              if (!plotData2D.vertices.contains(newVertice))
+              if (isLessThan<T>(newValue, extremeValue))
               {
-                plotData2D.feasibleRegionExtremePoints.push_back(newVertice);
+                LOG("<: newPoint == {}, newValue == {}", y_, newValue);
 
-                const Real newValue(numericCast<Real, T>(F__));
-
-                qInfo() << "GraphicalSolver2D<T>::solve: value for (" <<
-                           newVertice.first << ";" << newVertice.second <<
-                           ") is" << newValue << "~=" << F__;
-
-                if (newValue <= plotData2D.extremeValue)
+                extremeValue = newValue;
+                extremePoints.clear();
+                extremePoints.push_back(y_);
+              }
+              else
+              {
+                if (isEqual<T>(newValue, extremeValue))
                 {
-                  qInfo() << "GraphicalSolver2D<T>::solve:"
-                             " new minimum found for (" << newVertice.first <<
-                             ";" << newVertice.second << ") is" <<
-                             newValue << "~=(" << y_1 << ";" << y_2 << ")";
+                  LOG("~: newPoint == {}, newValue == {}", y_, newValue);
 
-                  plotData2D.extremeValue = newValue;
-                  plotData2D.extremePoint = newVertice;
+                  extremePoints.push_back(y_);
                 }
               }
             }
@@ -302,7 +296,7 @@ namespace LinearProgramming
 
     LOG("intersectionCounters == {}", makeString(intersectionCounters));
 
-    if (plotData2D.feasibleRegionExtremePoints.empty())
+    if (feasibleRegionExtremePoints.empty())
     {
       return make_pair(SolutionType::Infeasible, ret);
     }
@@ -312,28 +306,91 @@ namespace LinearProgramming
         all_of(
           intersectionCounters.cbegin(),
           intersectionCounters.cend(),
-          [](uint32_t i) { return (i != 1); }
+          [](uint16_t i) { return (i != 1); }
         )
       )
       {
+        PlotDataReal2D plotData2D(
+          list<PointReal2D>(),
+          0.,
+          list<PointReal2D>(),
+          PointReal2D(0., 0.),
+          PointReal2D(0., 0.)
+        );
+
+        plotData2D.extremePoints.resize(extremePoints.size());
+
+        transform(
+          extremePoints.cbegin(),
+          extremePoints.cend(),
+          plotData2D.extremePoints.begin(),
+          [](const Matrix<T, 2, 1>& point)
+          {
+            return (
+              PointReal2D(
+                numericCast<Real, T>(point(0)),
+                numericCast<Real, T>(point(1))
+              )
+            );
+          }
+        );
+
+        plotData2D.extremeValue = numericCast<Real, T>(extremeValue);
+
+        plotData2D.feasibleRegionExtremePoints.resize(
+          feasibleRegionExtremePoints.size()
+        );
+
+        transform(
+          feasibleRegionExtremePoints.cbegin(),
+          feasibleRegionExtremePoints.cend(),
+          plotData2D.feasibleRegionExtremePoints.begin(),
+          [](const Matrix<T, 2, 1>& point)
+          {
+            return (
+              PointReal2D(
+                numericCast<Real, T>(point(0)),
+                numericCast<Real, T>(point(1))
+              )
+            );
+          }
+        );
+
         //To plot a polygon we need to sort all its vertices in clockwise order.
         sortPointsClockwise(plotData2D.feasibleRegionExtremePoints);
 
-        plotData2D.gradientDirection =
-          make_pair(
+        plotData2D.gradientVectorDirection =
+          PointReal2D(
             numericCast<Real, T>(F_.coeffAt(0)),
             numericCast<Real, T>(F_.coeffAt(1))
           );
 
-        LOG(
-          "Solution: V == {}, G == ({}; {}), x* == ({}; {}), F* == {}",
-          makeString(plotData2D.feasibleRegionExtremePoints),
-          plotData2D.gradientDirection.first,
-          plotData2D.gradientDirection.second,
-          plotData2D.extremePoint.first,
-          plotData2D.extremePoint.second,
-          plotData2D.extremeValue
+        const Matrix<T, 2, 2> boundingBox(
+          computeBoundingBox(feasibleRegionExtremePoints)
         );
+
+        plotData2D.boundingBox =
+          PointReal2D(
+            numericCast<Real, T>(boundingBox(0, 1)),
+            numericCast<Real, T>(boundingBox(1, 1))
+          );
+
+        LOG("{}", boundingBox);
+
+        plotData2D.z11 = numericCast<Real, T>(F_(boundingBox.col(0)));
+        plotData2D.z12 =
+          numericCast<Real, T>(F_(boundingBox.row(1).transpose()));
+        plotData2D.z22 = numericCast<Real, T>(F_(boundingBox.col(1)));
+        plotData2D.z21 =
+          numericCast<Real, T>(F_(boundingBox.row(0).transpose().reverse()));
+
+//        LOG(
+//          "Solution: V == {}, G == {}, x* == {}, F* == {}",
+//          plotData2D.feasibleRegionExtremePoints,
+//          plotData2D.gradientDirection,
+//          plotData2D.extremePoints,
+//          plotData2D.extremeValue
+//        );
 
         ret = plotData2D;
 

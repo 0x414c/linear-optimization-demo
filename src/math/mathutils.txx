@@ -167,7 +167,7 @@ namespace MathUtils
    * @brief isEqual
    * @param x
    * @param y
-   * @return
+   * @return `true' if (x ~= y), `false' otherwise.
    */
   inline bool
   isEqual(Real x, Real y)
@@ -186,12 +186,45 @@ namespace MathUtils
    * @brief isEqual
    * @param x
    * @param y
-   * @return
+   * @return `true' if (x == y), `false' otherwise.
    */
   inline bool
   isEqual(Rational x, Rational y)
   {
     return (x == y);
+  }
+
+
+  template<>
+  /**
+   * @brief isLessThan
+   * @param x
+   * @param y
+   * @return `true' if (x ≲ y), `false' otherwise.
+   */
+  inline bool
+  isLessThan(Real x, Real y)
+  {
+    return (
+      (x - y) <
+      (-Epsilon) * std::max<Real>(
+        {Real(1), absoluteValue<Real>(y), absoluteValue<Real>(y)}
+      )
+    );
+  }
+
+
+  template<>
+  /**
+   * @brief isLessThan
+   * @param x
+   * @param y
+   * @return `true' if (x < y), `false' otherwise.
+   */
+  inline bool
+  isLessThan(Rational x, Rational y)
+  {
+    return (x < y);
   }
 
 

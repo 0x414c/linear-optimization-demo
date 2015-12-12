@@ -10,7 +10,7 @@
 
 #include "inumericsolver.hxx"
 #include "linearprogramdata.hxx"
-#include "plotdata2d.hxx"
+#include "plotdatareal2d.hxx"
 #include "solutiontype.hxx"
 #include "../math/numerictypes.hxx"
 
@@ -23,7 +23,7 @@ namespace LinearProgramming
 
   template<typename T = Real>
   class GraphicalSolver2D :
-    public INumericSolver<PlotData2D>
+    public INumericSolver<PlotDataReal2D>
   {
     public:
       GraphicalSolver2D() = default;
@@ -34,7 +34,7 @@ namespace LinearProgramming
       void setLinearProgramData(const LinearProgramData<T>& other);
       void setLinearProgramData(LinearProgramData<T>&& other);
 
-      virtual pair<SolutionType, optional<PlotData2D>> solve() override;
+      virtual pair<SolutionType, optional<PlotDataReal2D>> solve() override;
 
 
     private:

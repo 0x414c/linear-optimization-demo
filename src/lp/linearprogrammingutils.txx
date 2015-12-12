@@ -143,7 +143,7 @@ namespace LinearProgrammingUtils
     //1. Deal with each row i from 1 to n in turn, ...
     while (true)
     {
-      //If we had reached the end
+      //If we have reached the end
       if (i >= n || j >= m)
       {
         return make_pair(RREF, rank);
@@ -255,6 +255,46 @@ namespace LinearProgrammingUtils
       //Jump to the next row
       ++i;
     }
+  }
+
+
+  template<typename T>
+  /**
+   * @brief computeBoundingBox
+   * NOTE: We assume that (min{x} == min{y} == 0).
+   * @param points
+   * @return
+   */
+  Matrix<T, 2, 2>
+  computeBoundingBox(const list<Matrix<T, 2, 1>>& points)
+  {
+    T xMax(0), yMax(0);
+    Matrix<T, 2, 2> boundingBox(2, 2);
+
+    for (
+      auto it(points.cbegin());
+      it != points.cend();
+      ++it
+    )
+    {
+      const Matrix<T, 2, 1> point(*it);
+
+      if (point(0) > xMax)
+      {
+        xMax = point(0);
+      }
+
+      if (point(1) > yMax)
+      {
+        yMax = point(1);
+      }
+    }
+
+    boundingBox <<
+      T(0), xMax,
+      T(0), yMax;
+
+    return boundingBox;
   }
 }
 

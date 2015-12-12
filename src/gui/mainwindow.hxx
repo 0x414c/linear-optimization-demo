@@ -24,7 +24,7 @@
 #include "simpletablemodel.hxx"
 #include "../lp/dantzignumericsolver.hxx"
 #include "../lp/dantzignumericsolvercontroller.hxx"
-#include "../lp/plotdata2d.hxx"
+#include "../lp/plotdatareal2d.hxx"
 #include "../lp/solutiontype.hxx"
 #include "../math/numerictypes.hxx"
 #include "../misc/utils.hxx"
@@ -133,7 +133,7 @@ namespace GUI
       { Graphical = 0, Simplex = 1 };
 
 
-      Ui::MainWindow* ui = nullptr;
+      Ui::MainWindow* ui = 0;
 
       Field _field = Field::Real;
 
@@ -165,7 +165,8 @@ namespace GUI
 
       void setupGraphicalSolutionView(QCustomPlot* const customPlot);
       void enableGraphicalSolutionView(bool enabled = true);
-      void refreshGraphicalSolutionView(const PlotData2D& plotData2D);
+      void clearGraphicalSolutionView(QCustomPlot* const customPlot);
+      void refreshGraphicalSolutionView(const PlotDataReal2D& plotData2D);
 
       void setupSimplexView();
       void enableStepByStepSimplexView(bool enabled = true);
@@ -185,8 +186,8 @@ namespace GUI
       void setDirty(bool dirty = true);
 
       void setupNumericSolvers();
-      void updateNumericSolversData();
       void setupNumericSolversControllers();
+      void updateNumericSolversData();
 
       void solveSimplexHandler();
       void solveGraphicalHandler();

@@ -596,29 +596,29 @@ namespace LinearProgramming
 #ifdef LP_WITH_BLAND_RULE
     if (havePositiveCoeffs)
     {
-      if (minRatioRowsIndices.size() > 1)
+      if (minRatioRowsIndices.size() == 1)
       {
-        DenseIndex minRatioRowIdx(minRatioRowsIndices.front());
-        DenseIndex minRatioVarIdx(tableau.basicVarsCount());
-
-        for (DenseIndex rowIdx : minRatioRowsIndices)
-        {
-          const DenseIndex currVarIdx(tableau.basicVars()[rowIdx]);
-
-          if (currVarIdx < minRatioVarIdx)
-          {
-            minRatioVarIdx = currVarIdx;
-            minRatioRowIdx = rowIdx;
-          }
-        }
-
-        ret = minRatioRowIdx;
+        ret = minRatioRowsIndices.front();
       }
       else
       {
-        if (minRatioRowsIndices.size() == 1)
+        if (minRatioRowsIndices.size() > 1)
         {
-          ret = minRatioRowsIndices.front();
+          DenseIndex minRatioRowIdx(minRatioRowsIndices.front());
+          DenseIndex minRatioVarIdx(tableau.basicVarsCount());
+
+          for (DenseIndex rowIdx : minRatioRowsIndices)
+          {
+            const DenseIndex currVarIdx(tableau.basicVars()[rowIdx]);
+
+            if (currVarIdx < minRatioVarIdx)
+            {
+              minRatioVarIdx = currVarIdx;
+              minRatioRowIdx = rowIdx;
+            }
+          }
+
+          ret = minRatioRowIdx;
         }
       }
     }

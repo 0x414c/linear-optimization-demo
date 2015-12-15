@@ -13,6 +13,7 @@ namespace LinearProgramming
   using namespace NumericTypes;
 
 
+  [[deprecated]]
   struct PointValueReal2D
   {
     PointValueReal2D() = default;

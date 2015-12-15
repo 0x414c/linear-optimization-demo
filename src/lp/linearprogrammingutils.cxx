@@ -6,50 +6,50 @@
 #include <list>
 #include <utility>
 
-#include "plotdatareal2d.hxx"
-#include "pointreal2d.hxx"
-#include "pointvaluereal2d.hxx"
+#include "eigen3/Eigen/Core"
+
 #include "../math/numerictypes.hxx"
 
 
 namespace LinearProgrammingUtils
 {
+  using namespace Eigen;
   using namespace NumericTypes;
   using namespace std;
 
 
   /**
-   * @brief sortPointsClockwise
+   * @brief sortPointsByPolarAngle
    * Sorts given 2-D point in the clockwise order
    * using polar coordinates.
    * @param points Points container to sort.
    */
   void
-  sortPointsClockwise(list<PointReal2D>& points)
+  sortPointsByPolarAngle(list<Matrix<Real, 2, 1>>& points)
   {
     //Centroid of a convex region will always
     //lie inside of that region
-    PointReal2D centroid(0., 0.);
+    Matrix<Real, 2, 1> centroid(Matrix<Real, 2, 1>::Zero());
 
     for (auto it(points.cbegin()); it != points.cend(); ++it)
     {
-      centroid.x += (*it).x;
-      centroid.y += (*it).y;
+      centroid.x() += (*it).x();
+      centroid.y() += (*it).y();
     }
 
      //Find a center point
-    centroid.x /= points.size();
-    centroid.y /= points.size();
+    centroid.x() /= points.size();
+    centroid.y() /= points.size();
 
     //Convert to polar coords on-the-fly and
     //use the polar angles (relative to centroid) to sort
     //all the vertices clockwise.
     points.sort(
-      [&centroid] (const PointReal2D& lhs, const PointReal2D& rhs)
+      [&centroid](const Matrix<Real, 2, 1>& lhs, const Matrix<Real, 2, 1>& rhs)
       {
         return (
-          atan2(lhs.y - centroid.y, lhs.x - centroid.x) <
-          atan2(rhs.y - centroid.y, rhs.x - centroid.x)
+          atan2(lhs.y() - centroid.y(), lhs.x() - centroid.x()) <
+          atan2(rhs.y() - centroid.y(), rhs.x() - centroid.x())
         );
       }
     );
@@ -61,10 +61,16 @@ namespace LinearProgrammingUtils
    * @param point
    * @return
    */
-  PointReal2D
-  perp(const PointReal2D& point)
+  Matrix<Real, 2, 1>
+  perp(const Matrix<Real, 2, 1>& point)
   {
-    return PointReal2D(point.y * Real(-1), point.x);
+    Matrix<Real, 2, 1> perp(2, 1);
+
+    perp <<
+      point.y() * Real(-1),
+      point.x();
+
+    return perp;
   }
 
 

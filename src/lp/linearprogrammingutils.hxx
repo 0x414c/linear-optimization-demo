@@ -11,7 +11,6 @@
 #include "eigen3/Eigen/Core"
 
 #include "linearprogramdata.hxx"
-#include "plotdatareal2d.hxx"
 #include "../math/numerictypes.hxx"
 
 
@@ -41,9 +40,9 @@ namespace LinearProgrammingUtils
   pair<Matrix<T, Dynamic, Dynamic>, DenseIndex>
   reducedRowEchelonForm(const Matrix<T, Dynamic, Dynamic>& A);
 
-  void sortPointsClockwise(list<PointReal2D>& points);
+  void sortPointsByPolarAngle(list<Matrix<Real, 2, 1>>& points);
 
-  PointReal2D perp(const PointReal2D& point);
+  Matrix<Real, 2, 1> perp(const Matrix<Real, 2, 1>& point);
 
   Real lerp(Real x1, Real y1, Real x2, Real y2, Real x0);
 

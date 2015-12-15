@@ -21,8 +21,6 @@
 #include "linearfunction.hxx"
 #include "linearprogrammingutils.hxx"
 #include "linearprogramsolution.hxx"
-#include "pointreal2d.hxx"
-#include "pointvaluereal2d.hxx"
 #include "plotdatareal2d.hxx"
 #include "solutiontype.hxx"
 #include "../math/numericlimits.hxx"
@@ -113,7 +111,7 @@ namespace LinearProgramming
 
     //For the system {Ax == b} to be consistent
     //rank(A) should be equal to rank(A|b)
-    if (rref_A.second != rref_A_b.second || rref_A.second == 0)
+    if (rref_A.second != rref_A_b.second || rref_A_b.second == 0)
     {
       qWarning() << "GraphicalSolver2D<T>::solve: inconsistent system:"
                     " rank(A) != rank(A|b) || rank(A) == 0";
@@ -125,8 +123,8 @@ namespace LinearProgramming
     //is equal to rank(A|b)
     const DenseIndex M_(rref_A_b.second);
 
-    //In the new reduced basis, the decision variables count `N^'
-    //is equal to (N - rank(A|b))
+    //In the new system, the decision variables count `N^'
+    //is equal to N - M^
     const DenseIndex N_(N - M_);
     if (N_ != 2)
     {
@@ -310,79 +308,91 @@ namespace LinearProgramming
         )
       )
       {
-        PlotDataReal2D plotData2D(
-          list<PointReal2D>(),
+        PlotDataReal2D plotData(
+          list<Matrix<Real, 2, 1>>(),
           0.,
-          list<PointReal2D>(),
-          PointReal2D(0., 0.),
-          PointReal2D(0., 0.)
+          list<Matrix<Real, 2, 1>>(),
+          Matrix<Real, 1, Dynamic>(1, 2),
+          Matrix<Real, 2, 2>(2, 2),
+          Matrix<Real, 2, 2>(2, 2)
         );
 
-        plotData2D.extremePoints.resize(extremePoints.size());
+        plotData.extremePoints.resize(extremePoints.size());
 
         transform(
           extremePoints.cbegin(),
           extremePoints.cend(),
-          plotData2D.extremePoints.begin(),
+          plotData.extremePoints.begin(),
           [](const Matrix<T, 2, 1>& point)
           {
-            return (
-              PointReal2D(
-                numericCast<Real, T>(point(0)),
-                numericCast<Real, T>(point(1))
-              )
-            );
+            Matrix<Real, 2, 1> realPoint(2, 1);
+
+            realPoint <<
+              numericCast<Real, T>(point.x()),
+              numericCast<Real, T>(point.y());
+
+            return realPoint;
           }
         );
 
-        plotData2D.extremeValue = numericCast<Real, T>(extremeValue);
+        plotData.extremeValue = numericCast<Real, T>(extremeValue);
 
-        plotData2D.feasibleRegionExtremePoints.resize(
+        plotData.feasibleRegionExtremePoints.resize(
           feasibleRegionExtremePoints.size()
         );
 
         transform(
           feasibleRegionExtremePoints.cbegin(),
           feasibleRegionExtremePoints.cend(),
-          plotData2D.feasibleRegionExtremePoints.begin(),
+          plotData.feasibleRegionExtremePoints.begin(),
           [](const Matrix<T, 2, 1>& point)
           {
-            return (
-              PointReal2D(
-                numericCast<Real, T>(point(0)),
-                numericCast<Real, T>(point(1))
-              )
-            );
+            Matrix<Real, 2, 1> realPoint(2, 1);
+
+            realPoint <<
+              numericCast<Real, T>(point.x()),
+              numericCast<Real, T>(point.y());
+
+            return realPoint;
           }
         );
 
         //To plot a polygon we need to sort all its vertices in clockwise order.
-        sortPointsClockwise(plotData2D.feasibleRegionExtremePoints);
+        sortPointsByPolarAngle(plotData.feasibleRegionExtremePoints);
 
-        plotData2D.gradientVectorDirection =
-          PointReal2D(
-            numericCast<Real, T>(F_.coeffAt(0)),
-            numericCast<Real, T>(F_.coeffAt(1))
-          );
+//        for (DenseIndex i(0); i < M; ++i)
+//        {
+//          plotData.gradientVector(i) =
+//            rref_A_b.first(i, N) -
+//              plotData.extremePoints.front().dot(rref_A_b.first.block(i, M_, 1, 2));
+//        }
+
+        for (DenseIndex i(0); i < 2; ++i)
+        {
+          plotData.gradientVector(i) = numericCast<Real, T>(F_.coeffAt(i));
+        }
 
         const Matrix<T, 2, 2> boundingBox(
           computeBoundingBox(feasibleRegionExtremePoints)
         );
 
-        plotData2D.boundingBox =
-          PointReal2D(
-            numericCast<Real, T>(boundingBox(0, 1)),
-            numericCast<Real, T>(boundingBox(1, 1))
-          );
+        plotData.feasibleRegionBoundingBox <<
+          numericCast<Real, T>(boundingBox(0, 0)),
+          numericCast<Real, T>(boundingBox(0, 1)),
+          numericCast<Real, T>(boundingBox(1, 0)),
+          numericCast<Real, T>(boundingBox(1, 1));
 
-        LOG("{}", boundingBox);
-
-        plotData2D.z11 = numericCast<Real, T>(F_(boundingBox.col(0)));
-        plotData2D.z12 =
-          numericCast<Real, T>(F_(boundingBox.row(1).transpose()));
-        plotData2D.z22 = numericCast<Real, T>(F_(boundingBox.col(1)));
-        plotData2D.z21 =
+        plotData.feasibleRegionBoundingBoxHeights <<
+          numericCast<Real, T>(F_(boundingBox.row(1).transpose())),
+          numericCast<Real, T>(F_(boundingBox.col(1))),
+          numericCast<Real, T>(F_(boundingBox.col(0))),
           numericCast<Real, T>(F_(boundingBox.row(0).transpose().reverse()));
+
+        LOG(
+          "\n{}\n{}",
+          plotData.feasibleRegionBoundingBox,
+          plotData.feasibleRegionBoundingBoxHeights
+        );
 
 //        LOG(
 //          "Solution: V == {}, G == {}, x* == {}, F* == {}",
@@ -392,7 +402,7 @@ namespace LinearProgramming
 //          plotData2D.extremeValue
 //        );
 
-        ret = plotData2D;
+        ret = plotData;
 
         return make_pair(SolutionType::Optimal, ret);
       }

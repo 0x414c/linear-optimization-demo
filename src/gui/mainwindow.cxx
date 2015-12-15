@@ -49,8 +49,6 @@
 #include "../lp/graphicalsolver2d.hxx"
 #include "../lp/linearprogrammingutils.hxx"
 #include "../lp/linearprogramsolution.hxx"
-#include "../lp/pointreal2d.hxx"
-#include "../lp/pointvaluereal2d.hxx"
 #include "../lp/plotdatareal2d.hxx"
 #include "../lp/solutiontype.hxx"
 #include "../math/mathutils.hxx"
@@ -533,7 +531,7 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
 
   const int colorsCount(colors.count());
 
-  const vector<PointReal2D> vertices(
+  const vector<Matrix<Real, 2, 1>> vertices(
     plotData.feasibleRegionExtremePoints.cbegin(),
     plotData.feasibleRegionExtremePoints.cend()
   );
@@ -541,14 +539,35 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   const size_t verticesCount(plotData.feasibleRegionExtremePoints.size());
 
   //Add colormap for obj. func. values...
-  const int xMax(ColorMapResolution * int(plotData.boundingBox.x));
-  const int yMax(ColorMapResolution * int(plotData.boundingBox.y));
+  const int xSize(
+    ColorMapResolution *
+    (
+      plotData.feasibleRegionBoundingBox(0, 1) -
+      plotData.feasibleRegionBoundingBox(0, 0) + .5
+    )
+  );
+  const int ySize(
+    ColorMapResolution *
+    (
+      plotData.feasibleRegionBoundingBox(1, 1) -
+      plotData.feasibleRegionBoundingBox(1, 0) + .5
+    )
+  );
+
+  LOG("{} {}", xSize, ySize);
+
   QCPColorMap* const colorMap =
     new QCPColorMap(customPlot->xAxis, customPlot->yAxis);
-  colorMap->data()->setSize(xMax, yMax);
+  colorMap->data()->setSize(xSize, ySize);
   colorMap->data()->setRange(
-    QCPRange(0., plotData.boundingBox.x),
-    QCPRange(0., plotData.boundingBox.y)
+    QCPRange(
+      plotData.feasibleRegionBoundingBox(0, 0),
+      plotData.feasibleRegionBoundingBox(0, 1)
+    ),
+    QCPRange(
+      plotData.feasibleRegionBoundingBox(1, 0),
+      plotData.feasibleRegionBoundingBox(1, 1)
+    )
   );
 
   {
@@ -556,18 +575,23 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
 
     const auto blerpOverBoundingBox(
       bind(
-        blerp, 0., 0.,
-        plotData.z11, plotData.z12,
-        plotData.boundingBox.x, plotData.boundingBox.y,
-        plotData.z22, plotData.z21,
+        blerp,
+        plotData.feasibleRegionBoundingBox(0, 0),
+        plotData.feasibleRegionBoundingBox(1, 0),
+        plotData.feasibleRegionBoundingBoxHeights(1, 0),
+        plotData.feasibleRegionBoundingBoxHeights(0, 0),
+        plotData.feasibleRegionBoundingBox(0, 1),
+        plotData.feasibleRegionBoundingBox(1, 1),
+        plotData.feasibleRegionBoundingBoxHeights(0, 1),
+        plotData.feasibleRegionBoundingBoxHeights(1, 1),
         _1, _2
       )
     );
 
     double x, y;
-    for (int xIdx(0); xIdx < xMax; ++xIdx)
+    for (int xIdx(0); xIdx < xSize; ++xIdx)
     {
-      for (int yIdx(0); yIdx < yMax; ++yIdx)
+      for (int yIdx(0); yIdx < ySize; ++yIdx)
       {
         colorMap->data()->cellToCoord(xIdx, yIdx, &x, &y);
         const double z(blerpOverBoundingBox(x, y));
@@ -643,11 +667,11 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   QVector<Real> x1(verticesCount + 1), y1(verticesCount + 1);
   for (size_t i(0); i < verticesCount; ++i)
   {
-    x1[i] = vertices[i].x;
-    y1[i] = vertices[i].y;
+    x1[i] = vertices[i].x();
+    y1[i] = vertices[i].y();
   }
-  x1[verticesCount] = vertices.front().x;
-  y1[verticesCount] = vertices.front().y;
+  x1[verticesCount] = vertices.front().x();
+  y1[verticesCount] = vertices.front().y();
   feasibleRegionCurve->setData(x1, y1);
   feasibleRegionCurve->setPen(QPen(Qt::transparent));
   feasibleRegionCurve->setBrush(QBrush(QColor(31, 31, 31, 31)));
@@ -667,12 +691,12 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
       new QCPItemStraightLine(customPlot);
     constraintAsContiniousLine->setPen(QPen(Qt::gray));
     constraintAsContiniousLine->point1->setCoords(
-      QPointF(vertices[i].x, vertices[i].x)
+      QPointF(vertices[i].x(), vertices[i].y())
     );
     constraintAsContiniousLine->point2->setCoords(
       QPointF(
-        vertices[(i + 1) % verticesCount].x,
-        vertices[(i + 1) % verticesCount].y
+        vertices[(i + 1) % verticesCount].x(),
+        vertices[(i + 1) % verticesCount].y()
       )
     );
     constraintAsContiniousLine->setSelectable(false);
@@ -680,10 +704,10 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
 
     //Constraint as a feasible region edge
     QVector<Real> x(2), y(2); //add edge data
-    x[0] = vertices[i].x;
-    x[1] = vertices[(i + 1) % verticesCount].x;
-    y[0] = vertices[i].y;
-    y[1] = vertices[(i + 1) % verticesCount].y;
+    x[0] = vertices[i].x();
+    x[1] = vertices[(i + 1) % verticesCount].x();
+    y[0] = vertices[i].y();
+    y[1] = vertices[(i + 1) % verticesCount].y();
     customPlot->addGraph(); //create graph and assign data to it
     customPlot->graph(i)->setData(x, y);
     auto defaultColor(colors[i % colorsCount]); //set graph look
@@ -700,11 +724,11 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   }
 
   //Add objective function level line...
-  const PointReal2D levelLine(perp(plotData.gradientVectorDirection));
+  const Matrix<Real, 2, 1> levelLine(perp(plotData.gradientVector));
   QCPItemStraightLine* const objFuncPlotLine =
     new QCPItemStraightLine(customPlot);
   objFuncPlotLine->point1->setCoords(0., 0.);
-  objFuncPlotLine->point2->setCoords(levelLine.x, levelLine.y);
+  objFuncPlotLine->point2->setCoords(levelLine.x(), levelLine.y());
   objFuncPlotLine->setPen(QPen(Qt::darkBlue));
   objFuncPlotLine->setSelectedPen(
     QPen(QBrush(Qt::darkBlue), SelectedPenWidth)
@@ -715,7 +739,7 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   //HACK: Invisible level line (only a section) to obtain anchor for text label.
   QCPItemLine* const levelLineSection = new QCPItemLine(customPlot);
   levelLineSection->start->setCoords(0., 0.);
-  levelLineSection->end->setCoords(levelLine.x, levelLine.y);
+  levelLineSection->end->setCoords(levelLine.x(), levelLine.y());
   levelLineSection->setPen(QPen(Qt::transparent));
   levelLineSection->setSelectable(false);
   customPlot->addItem(levelLineSection);
@@ -736,7 +760,7 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   QCPItemLine* const objFuncGradientVectorArrow = new QCPItemLine(customPlot);
   objFuncGradientVectorArrow->start->setCoords(QPointF(0., 0.));
   objFuncGradientVectorArrow->end->setCoords(
-    plotData.gradientVectorDirection.x, plotData.gradientVectorDirection.y
+    plotData.gradientVector.x(), plotData.gradientVector.y()
   );
   objFuncGradientVectorArrow->setHead(QCPLineEnding::esLineArrow);
   objFuncGradientVectorArrow->setPen(QPen(Qt::darkRed));
@@ -750,7 +774,7 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   QCPItemText* const objFuncGradientVectorArrowText =
     new QCPItemText(customPlot);
   const Qt::AlignmentFlag vertAlignment(
-    plotData.gradientVectorDirection.y >= 0. ? Qt::AlignBottom : Qt::AlignTop
+    plotData.gradientVector.y() >= 0. ? Qt::AlignBottom : Qt::AlignTop
   );
   objFuncGradientVectorArrowText->setPositionAlignment(
     vertAlignment | Qt::AlignHCenter
@@ -762,8 +786,8 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   objFuncGradientVectorArrowText->setFont(boldFont);
   objFuncGradientVectorArrowText->setText(
     QString("∇F(⃗x) = (%1; %2)").
-    arg(plotData.gradientVectorDirection.x).
-    arg(plotData.gradientVectorDirection.y)
+    arg(plotData.gradientVector.x()).
+    arg(plotData.gradientVector.y())
   );
   objFuncGradientVectorArrowText->setSelectable(false);
   customPlot->addItem(objFuncGradientVectorArrowText);
@@ -776,8 +800,8 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   objectiveValueText->setFont(boldFont);
   objectiveValueText->setText(
     QString(" F* = F(%1, %2) = %3 ").
-    arg(plotData.extremePoints.front().x).
-    arg(plotData.extremePoints.front().y).
+    arg(plotData.extremePoints.front().x()).
+    arg(plotData.extremePoints.front().y()).
     arg(plotData.extremeValue)
   );
   objectiveValueText->setPen(QPen(Qt::black)); //Show black border around text
@@ -793,7 +817,7 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   {
     QCPItemLine* const objectiveValueArrow = new QCPItemLine(customPlot);
     objectiveValueArrow->start->setParentAnchor(objectiveValueText->bottomLeft);
-    objectiveValueArrow->end->setCoords((*it).x, (*it).y);
+    objectiveValueArrow->end->setCoords((*it).x(), (*it).y());
     objectiveValueArrow->setHead(QCPLineEnding::esLineArrow);
     objectiveValueArrow->setSelectable(false);
     customPlot->addItem(objectiveValueArrow);
@@ -2375,10 +2399,10 @@ GUI::MainWindow::on_action_Open_triggered()
   const QString filename(
     QFileDialog::getOpenFileName(
       this,
-      QStringLiteral("Open Program..."),
+      QStringLiteral("Open Linear Program..."),
       QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) +
-        "/data.json",
-      QStringLiteral("JSON files (*.json);;Text files (*.txt)"),
+        "/linearProgram.json",
+      QStringLiteral("JSON file (*.json);;Plain text document (*.txt)"),
       0,
       QFileDialog::DontUseNativeDialog
     )
@@ -2394,12 +2418,12 @@ GUI::MainWindow::on_action_Save_as_triggered()
   const QString filename(
     QFileDialog::getSaveFileName(
       this,
-      QStringLiteral("Save Program As..."),
+      QStringLiteral("Save Linear Program As..."),
       QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) +
         QString("/linearProgram@%1.json").arg(
           QDateTime::currentDateTime().toString(QStringLiteral("dMMMyy_h-m-s"))
         ),
-      QStringLiteral("JSON files (*.json);;Text files (*.txt)"),
+      QStringLiteral("JSON file (*.json);;Plain text document (*.txt)"),
       0,
       QFileDialog::DontUseNativeDialog
     )

@@ -64,7 +64,7 @@ namespace Utils
    * @param from
    * @return
    */
-  [[deprecated("Use `Prettyprint'!")]]
+  [[deprecated("Use `cxx-prettyprint'!")]]
   std::string
   makeString(const std::list<T>& from)
   {
@@ -90,7 +90,7 @@ namespace Utils
    * @param from
    * @return
    */
-  [[deprecated("Use `Prettyprint'!")]]
+  [[deprecated("Use `cxx-prettyprint'!")]]
   std::string
   makeString(const std::vector<T>& from)
   {
@@ -113,6 +113,9 @@ namespace Utils
   template <typename... Args>
   /**
    * @brief printDebugLog
+   * TODO: ~? Use `Q_FUNC_INFO' or
+   *   `BOOST_CURRENT_FUNCTION' (<boost/current_function.hpp>).
+   * TODO: ~? Use `std::clog'.
    * @param func
    * @param file
    * @param line

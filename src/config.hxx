@@ -45,9 +45,9 @@ namespace Config
 
     constexpr int FontSize = 9;
 
-    constexpr int ColorMapResolution = 20;
+    constexpr int ColorMapResolution = 40;
 
-    constexpr int ColorMapLevelsCount = 40;
+    constexpr int ColorMapLevelsCount = 80;
 
     constexpr uint8_t ColorMapAlpha = 127;
 

@@ -12,6 +12,7 @@ namespace LinearProgramming
   using namespace NumericTypes;
 
 
+  [[deprecated("Use `Eigen::Matrix<NumericTypes::Real, 2, 1>'!")]]
   struct PointReal2D
   {
     PointReal2D() = default;

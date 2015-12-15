@@ -19,6 +19,7 @@
 
 #include "linearprogramdata.hxx"
 #include "../math/mathutils.hxx"
+#include "../math/numericlimits.hxx"
 #include "../misc/utils.hxx"
 
 
@@ -261,27 +262,35 @@ namespace LinearProgrammingUtils
   template<typename T>
   /**
    * @brief computeBoundingBox
-   * NOTE: We assume that (min{x} == min{y} == 0).
    * @param points
    * @return
    */
   Matrix<T, 2, 2>
   computeBoundingBox(const list<Matrix<T, 2, 1>>& points)
   {
-    T xMax(0), yMax(0);
     Matrix<T, 2, 2> boundingBox(2, 2);
+    T xMin(NumericLimits::max<T>()),
+      xMax(NumericLimits::min<T>()),
+      yMin(NumericLimits::max<T>()),
+      yMax(NumericLimits::min<T>());
 
-    for (
-      auto it(points.cbegin());
-      it != points.cend();
-      ++it
-    )
+    for (auto it(points.cbegin()); it != points.cend(); ++it)
     {
       const Matrix<T, 2, 1> point(*it);
+
+      if (point(0) < xMin)
+      {
+        xMin = point(0);
+      }
 
       if (point(0) > xMax)
       {
         xMax = point(0);
+      }
+
+      if (point(1) < yMin)
+      {
+        yMin = point(1);
       }
 
       if (point(1) > yMax)
@@ -291,8 +300,8 @@ namespace LinearProgrammingUtils
     }
 
     boundingBox <<
-      T(0), xMax,
-      T(0), yMax;
+      xMin, xMax,
+      yMin, yMax;
 
     return boundingBox;
   }

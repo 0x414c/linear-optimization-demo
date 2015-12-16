@@ -23,8 +23,10 @@
 
 namespace GUI
 {
-  using namespace NumericTypes;
-  using namespace Utils;
+  using NumericTypes::Integer;
+  using NumericTypes::Rational;
+  using NumericTypes::Real;
+  using Utils::AlwaysFalse;
 
 
   template<typename T>

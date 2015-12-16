@@ -11,8 +11,12 @@
 //TODO: ~? Convert to struct w/ static members
 namespace NumericLimits
 {
-  template<typename T = NumericTypes::Real>
-  T max()
+  using NumericTypes::Real;
+
+
+  template<typename T = Real>
+  T
+  max()
   {
     static_assert(
       Utils::AlwaysFalse<T>::value,
@@ -24,8 +28,9 @@ namespace NumericLimits
   }
 
 
-  template<typename T = NumericTypes::Real>
-  T min()
+  template<typename T = Real>
+  T
+  min()
   {
     static_assert(
       Utils::AlwaysFalse<T>::value,

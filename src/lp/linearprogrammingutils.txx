@@ -10,26 +10,28 @@
 #include <iostream>
 #include <utility>
 
-#include <QDebug>
-#include <QPointF>
-#include <QVector>
-
 #include "boost/optional.hpp"
 #include "eigen3/Eigen/Core"
 
-#include "linearprogramdata.hxx"
 #include "../math/mathutils.hxx"
 #include "../math/numericlimits.hxx"
-#include "../misc/utils.hxx"
+#include "../math/numerictypes.hxx"
 
 
 namespace LinearProgrammingUtils
 {
-  using namespace boost;
-  using namespace Eigen;
-  using namespace MathUtils;
-  using namespace std;
-  using namespace Utils;
+  using boost::optional;
+  using Eigen::DenseIndex;
+  using Eigen::Dynamic;
+  using Eigen::Matrix;
+  using MathUtils::absoluteValue;
+  using MathUtils::isEqualToZero;
+  using MathUtils::isGreaterThanOrEqualToZero;
+  using NumericTypes::Real;
+  using std::list;
+  using std::make_pair;
+  using std::pair;
+  using std::ref;
 
 
   template<typename T = Real>
@@ -56,7 +58,7 @@ namespace LinearProgrammingUtils
   )
   {
     return (
-      x.unaryExpr(std::ref(isGreaterThanOrEqualToZero<T>)).all() &&
+      x.unaryExpr(ref(isGreaterThanOrEqualToZero<T>)).all() &&
       ((A * x).array() <= b.array()).all()
     );
   }

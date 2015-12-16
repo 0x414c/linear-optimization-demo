@@ -22,13 +22,17 @@
 
 namespace TableModelUtils
 {
-  using namespace DataConvertors;
-  using namespace Eigen;
+  using DataConvertors::numericCast;
+  using Eigen::DenseIndex;
+  using Eigen::Dynamic;
+  using Eigen::Matrix;
   using GUI::SimpleTableModel;
-  using namespace LinearProgramming;
-  using namespace MathUtils;
-  using namespace std;
-  using namespace NumericTypes;
+  using LinearProgramming::SimplexTableau;
+  using NumericTypes::Rational;
+  using NumericTypes::Real;
+  using Utils::AlwaysFalse;
+  using std::function;
+  using std::invalid_argument;
 
 
   enum struct FillMethod : int

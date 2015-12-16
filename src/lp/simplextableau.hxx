@@ -8,8 +8,6 @@
 
 #include <vector>
 
-#include <QDebug>
-
 #include "eigen3/Eigen/Core"
 
 #include "dantzignumericsolver_fwd.hxx"
@@ -22,9 +20,13 @@
 
 namespace LinearProgramming
 {
-  using namespace Eigen;
-  using namespace NumericTypes;
-  using namespace std;
+  using Eigen::Block;
+  using Eigen::DenseIndex;
+  using Eigen::Dynamic;
+  using Eigen::Matrix;
+  using NumericTypes::Real;
+  using std::invalid_argument;
+  using std::vector;
 
 
   template<typename T = Real>
@@ -39,8 +41,9 @@ namespace LinearProgramming
       friend DantzigNumericSolverController<T>;
 
 
-      [[deprecated("Only for internal usage."
-                   " Use factory methods `makePhase...' instead!")]]
+      [[deprecated(
+        "Only for internal usage. Use factory methods `makePhase...' instead!"
+      )]]
       SimplexTableau();
 
       SimplexTableau(const SimplexTableau<T>& simplexTableau);
@@ -79,7 +82,7 @@ namespace LinearProgramming
 
       size_t freeVarsCount() const;
 
-      Matrix<T, 1, Dynamic> extremePoint() const;
+      Matrix<T, Dynamic, 1> extremePoint() const;
 
       T extremeValue(
         OptimizationGoalType goalType = OptimizationGoalType::Minimize

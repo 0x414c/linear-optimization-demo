@@ -13,55 +13,57 @@
 
 namespace NumericLimits
 {
+  using NumericTypes::Integer;
+  using NumericTypes::Rational;
+  using NumericTypes::Real;
+  using std::numeric_limits;
+
+
   template<>
-  inline constexpr NumericTypes::Real
+  inline constexpr Real
   max()
   {
-    return std::numeric_limits<NumericTypes::Real>::max();
+    return numeric_limits<Real>::max();
   }
 
 
   template<>
-  inline constexpr NumericTypes::Real
+  inline constexpr Real
   min()
   {
-    return std::numeric_limits<NumericTypes::Real>::min();
+    return numeric_limits<Real>::min();
   }
 
 
   template<>
-  inline constexpr NumericTypes::Rational
+  inline constexpr Rational
   max()
   {
-    return NumericTypes::Rational(
-      std::numeric_limits<NumericTypes::Integer>::max()
-    );
+    return Rational(numeric_limits<Integer>::max());
   }
 
 
   template<>
-  inline constexpr NumericTypes::Rational
+  inline constexpr Rational
   min()
   {
-    return NumericTypes::Rational(
-      std::numeric_limits<NumericTypes::Integer>::min()
-    );
+    return Rational(numeric_limits<Integer>::min());
   }
 
 
   template<>
-  inline constexpr NumericTypes::Integer
+  inline constexpr Integer
   max()
   {
-    return std::numeric_limits<NumericTypes::Integer>::max();
+    return numeric_limits<Integer>::max();
   }
 
 
   template<>
-  inline constexpr NumericTypes::Integer
+  inline constexpr Integer
   min()
   {
-    return std::numeric_limits<NumericTypes::Integer>::min();
+    return numeric_limits<Integer>::min();
   }
 }
 

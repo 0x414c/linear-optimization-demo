@@ -17,7 +17,9 @@
 
 namespace GUI
 {
-  using namespace NumericTypes;
+  using NumericTypes::Field;
+  using NumericTypes::Rational;
+  using NumericTypes::Real;
   using Utils::ResultType;
 
 

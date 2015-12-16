@@ -38,12 +38,18 @@ namespace Ui
 
 namespace GUI
 {
-  using namespace LinearProgramming;
-  using namespace NumericTypes;
+  using LinearProgramming::DantzigNumericSolver;
+  using LinearProgramming::DantzigNumericSolverController;
+  using LinearProgramming::PlotDataReal2D;
+  using LinearProgramming::SolutionType;
+  using NumericTypes::Field;
+  using NumericTypes::Rational;
+  using NumericTypes::Real;
   using Utils::ResultType;
+  using std::shared_ptr;
 
-  template<class T>
-  using shared_ptr = std::shared_ptr<T>;
+//  template<class T>
+//  using shared_ptr = std::shared_ptr<T>;
 
 
   class MainWindow :

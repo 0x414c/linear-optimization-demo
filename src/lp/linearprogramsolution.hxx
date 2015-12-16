@@ -11,8 +11,9 @@
 
 namespace LinearProgramming
 {
-  using namespace Eigen;
-  using namespace NumericTypes;
+  using Eigen::Dynamic;
+  using Eigen::Matrix;
+  using NumericTypes::Real;
 
 
   template<typename T = Real>
@@ -27,11 +28,11 @@ namespace LinearProgramming
     LinearProgramSolution(LinearProgramSolution<T>&& other);
 
     LinearProgramSolution(
-      const Matrix<T, 1, Dynamic>& extremePoint,
+      const Matrix<T, Dynamic, 1>& extremePoint,
       const T& extremeValue
     );
     LinearProgramSolution(
-      Matrix<T, 1, Dynamic>&& extremePoint,
+      Matrix<T, Dynamic, 1>&& extremePoint,
       const T& extremeValue
     );
 
@@ -43,7 +44,7 @@ namespace LinearProgramming
     );
 
 
-    Matrix<T, 1, Dynamic> extremePoint;
+    Matrix<T, Dynamic, 1> extremePoint;
 
     T extremeValue;
   };

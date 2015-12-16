@@ -17,8 +17,9 @@
 
 namespace LinearProgramming
 {
-  using namespace boost;
-  using namespace NumericTypes;
+  using boost::optional;
+  using NumericTypes::Real;
+  using std::pair;
 
 
   template<typename T = Real>

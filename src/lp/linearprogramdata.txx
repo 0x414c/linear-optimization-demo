@@ -14,8 +14,10 @@
 
 namespace LinearProgramming
 {
-  using namespace Eigen;
-  using namespace std;
+  using Eigen::DenseIndex;
+  using Eigen::Dynamic;
+  using Eigen::Matrix;
+  using std::invalid_argument;
 
 
   template<typename T>
@@ -105,8 +107,7 @@ namespace LinearProgramming
   {
     if (this != &other)
     {
-      objectiveFunctionCoeffs =
-        std::move(other.objectiveFunctionCoeffs);
+      objectiveFunctionCoeffs = std::move(other.objectiveFunctionCoeffs);
       constraintsCoeffs = std::move(other.constraintsCoeffs);
       constraintsRHS = std::move(other.constraintsRHS);
     }

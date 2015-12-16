@@ -12,7 +12,7 @@
 //TODO: ~? Merge w/ `NumericTypes'
 namespace DataConvertors
 {
-  using namespace Utils;
+  using Utils::AlwaysFalse;
 
 
   template<typename R>

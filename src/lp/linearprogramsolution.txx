@@ -8,14 +8,15 @@
 
 #include <utility>
 
-#include "solutiontype.hxx"
-
 #include "eigen3/Eigen/Core"
+
+#include "solutiontype.hxx"
 
 
 namespace LinearProgramming
 {
-  using namespace Eigen;
+  using Eigen::Dynamic;
+  using Eigen::Matrix;
 
 
   template<typename T>
@@ -38,7 +39,7 @@ namespace LinearProgramming
 
   template<typename T>
   LinearProgramSolution<T>::LinearProgramSolution(
-    const Matrix<T, 1, Dynamic>& extremePoint,
+    const Matrix<T, Dynamic, 1>& extremePoint,
     const T& extremeValue
   ) :
     extremePoint(extremePoint),
@@ -48,7 +49,7 @@ namespace LinearProgramming
 
   template<typename T>
   LinearProgramSolution<T>::LinearProgramSolution(
-    Matrix<T, 1, Dynamic>&& extremePoint,
+    Matrix<T, Dynamic, 1>&& extremePoint,
     const T& extremeValue
   ) :
     extremePoint(std::move(extremePoint)),
@@ -58,9 +59,7 @@ namespace LinearProgramming
 
   template<typename T>
   const LinearProgramSolution<T>&
-  LinearProgramSolution<T>::operator =(
-    const LinearProgramSolution<T>& other
-  )
+  LinearProgramSolution<T>::operator =(const LinearProgramSolution<T>& other)
   {
     if (this != &other)
     {
@@ -74,13 +73,11 @@ namespace LinearProgramming
 
   template<typename T>
   const LinearProgramSolution<T>&
-  LinearProgramSolution<T>::operator =(
-    LinearProgramSolution<T>&& other
-  )
+  LinearProgramSolution<T>::operator =(LinearProgramSolution<T>&& other)
   {
     if (this != &other)
     {
-      extremePoint = std::move(other.extremePoint);
+      extremePoint = move(other.extremePoint);
       extremeValue = other.extremeValue;
     }
 

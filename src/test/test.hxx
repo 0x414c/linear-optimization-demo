@@ -1,4 +1,6 @@
-﻿#ifndef TEST_HXX
+﻿#pragma once
+
+#ifndef TEST_HXX
 #define TEST_HXX
 
 
@@ -9,10 +11,13 @@
 #include "../math/numerictypes.hxx"
 
 
-namespace Test {
-  using namespace Eigen;
-  using namespace NumericTypes;
-  using namespace std;
+namespace Test
+{
+  using Eigen::Matrix;
+  using Eigen::Dynamic;
+  using NumericTypes::Rational;
+  using NumericTypes::Real;
+  using std::logic_error;
 
 
   void testReal(

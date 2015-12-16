@@ -17,7 +17,7 @@
 
 namespace GUI
 {
-  using namespace NumericTypes;
+  using NumericTypes::Real;
 
 
   //HACK: This shim only makes `moc' happy about templated classes.

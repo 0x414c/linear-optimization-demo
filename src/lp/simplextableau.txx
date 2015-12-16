@@ -14,9 +14,6 @@
 #include <utility>
 #include <vector>
 
-#include <QDebug>
-#include <QDebugStateSaver>
-
 #include "eigen3/Eigen/Core"
 
 #include "linearprogramdata.hxx"
@@ -27,16 +24,19 @@
 
 namespace LinearProgramming
 {
-  using namespace Eigen;
-  using namespace MathUtils;
-  using namespace std;
+  using Eigen::Block;
+  using Eigen::DenseIndex;
+  using Eigen::Dynamic;
+  using Eigen::Matrix;
+  using MathUtils::isLessThanZero;
+  using std::invalid_argument;
 
 
   template<typename T>
   /**
    * @brief SimplexTableau<T>::SimplexTableau
    * Default ctor.
-   * NOTE: It leaves struct members uninitialized.
+   * NOTE: It leaves class members uninitialized.
    */
   SimplexTableau<T>::SimplexTableau()
   { }
@@ -311,24 +311,24 @@ namespace LinearProgramming
    * and free variables will be set to 0.
    * @return the current solution `x*' as row-vector.
    */
-  Matrix<T, 1, Dynamic>
+  Matrix<T, Dynamic, 1>
   SimplexTableau<T>::extremePoint() const
   {
-    Matrix<T, 1, Dynamic> x(1, _basicVars.size() + _freeVars.size());
+    Matrix<T, Dynamic, 1> x_(_basicVars.size() + _freeVars.size(), 1);
 
     for (DenseIndex i(0); i < _entries.rows() - 1; ++i)
     {
       const DenseIndex varIdx(_basicVars[i]);
-      x(varIdx) = _entries(i, _entries.cols() - 1);
+      x_(varIdx) = _entries(i, _entries.cols() - 1);
     }
 
     for (DenseIndex j(0); j < _entries.cols() - 1; j++)
     {
       const DenseIndex varIdx(_freeVars[j]);
-      x(varIdx) = T(0);
+      x_(varIdx) = T(0);
     }
 
-    return x;
+    return x_;
   }
 
 

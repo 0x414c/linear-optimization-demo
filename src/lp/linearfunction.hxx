@@ -14,8 +14,10 @@
 
 namespace LinearProgramming
 {
-  using namespace Eigen;
-  using namespace NumericTypes;
+  using Eigen::DenseIndex;
+  using Eigen::Dynamic;
+  using Eigen::Matrix;
+  using NumericTypes::Real;
 
 
   /**

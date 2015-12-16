@@ -4,6 +4,7 @@
 #define MATHUTILS_HXX
 
 
+#include <type_traits>
 #include <utility>
 
 #include "numericlimits.hxx"
@@ -15,12 +16,16 @@
 namespace MathUtils
 {
   using namespace Config::MathUtils;
-  using namespace NumericTypes;
-  using namespace std;
-  using namespace Utils;
+  using NumericTypes::Integer;
+  using NumericTypes::Rational;
+  using NumericTypes::Real;
+  using std::enable_if;
+  using std::is_integral;
+  using std::pair;
+  using Utils::AlwaysFalse;
 
 
-  template<typename R = Integer>
+  template<typename R, typename = enable_if<is_integral<R>::value>>
   pair<R, R>
   rationalize(
     Real x, Real tolerance = Epsilon,

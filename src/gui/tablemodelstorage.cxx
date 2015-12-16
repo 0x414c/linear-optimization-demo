@@ -15,8 +15,8 @@
 
 namespace GUI
 {
-  using namespace NumericTypes;
-  using namespace Utils;
+//  using namespace NumericTypes;
+//  using namespace Utils;
 }
 
 

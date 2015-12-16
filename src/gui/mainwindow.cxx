@@ -22,13 +22,11 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QItemSelectionModel>
-#include <QLineF>
 #include <QList>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QModelIndex>
 #include <QPen>
-#include <QPointF>
 #include <QSettings>
 #include <QStandardPaths>
 #include <QString>
@@ -59,12 +57,24 @@
 
 namespace GUI
 {
-  using namespace boost;
+  using boost::optional;
   using namespace Config::AppGlobal;
   using namespace Config::GUI;
-  using namespace Eigen;
-  using namespace std;
-  using namespace Utils;
+  using DataConvertors::numericCast;
+  using Eigen::DenseIndex;
+  using Eigen::Dynamic;
+  using Eigen::Matrix;
+  using LinearProgramming::GraphicalSolver2D;
+  using LinearProgramming::LinearProgramData;
+  using LinearProgramming::LinearProgramSolution;
+  using LinearProgramming::MaybeIndex2D;
+  using LinearProgramming::SimplexTableau;
+  using LinearProgrammingUtils::blerp;
+  using LinearProgrammingUtils::perp;
+  using std::make_shared;
+  using std::move;
+  using std::pair;
+  using std::vector;
 }
 
 
@@ -571,7 +581,8 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   );
 
   {
-    using namespace std::placeholders;
+    using std::placeholders::_1;
+    using std::placeholders::_2;
 
     const auto blerpOverBoundingBox(
       bind(
@@ -936,15 +947,15 @@ GUI::MainWindow::refreshSimplexView()
 
         ui->simplex_simplexTableauTableView->resizeColumnsToContents();
 
-        const Matrix<Real, 1, Dynamic> extremePoint(tableau.extremePoint());
+        const Matrix<Real, Dynamic, 1> extremePoint(tableau.extremePoint());
 
         _simplexTableModels[int(SimplexModel::Solution)]->resize(
-          1, extremePoint.cols()
+          1, extremePoint.rows()
         );
 
         TableModelUtils::fill<Real>(
           _simplexTableModels[int(SimplexModel::Solution)],
-          extremePoint
+          extremePoint.transpose()
         );
 
         ui->simplex_solutionVectorTableView->resizeColumnsToContents();
@@ -1026,15 +1037,15 @@ GUI::MainWindow::refreshSimplexView()
 
         ui->simplex_simplexTableauTableView->resizeColumnsToContents();
 
-        const Matrix<Rational, 1, Dynamic> extremePoint(tableau.extremePoint());
+        const Matrix<Rational, Dynamic, 1> extremePoint(tableau.extremePoint());
 
         _simplexTableModels[int(SimplexModel::Solution)]->resize(
-          1, extremePoint.cols()
+          1, extremePoint.rows()
         );
 
         TableModelUtils::fill<Rational>(
           _simplexTableModels[int(SimplexModel::Solution)],
-          extremePoint
+          extremePoint.transpose()
         );
 
         ui->simplex_solutionVectorTableView->resizeColumnsToContents();
@@ -1337,11 +1348,11 @@ GUI::MainWindow::solveSimplexHandler()
         {
           _simplexTableModels[int(SimplexModel::Solution)]->resize(
             1,
-            (*linearProgramSolution.second).extremePoint.cols()
+            (*linearProgramSolution.second).extremePoint.rows()
           );
           TableModelUtils::fill<Real>(
             _simplexTableModels[int(SimplexModel::Solution)],
-            (*linearProgramSolution.second).extremePoint
+            (*linearProgramSolution.second).extremePoint.transpose()
           );
 
           TableModelUtils::fill(
@@ -1378,11 +1389,11 @@ GUI::MainWindow::solveSimplexHandler()
         {
           _simplexTableModels[int(SimplexModel::Solution)]->resize(
             1,
-            (*linearProgramSolution.second).extremePoint.cols()
+            (*linearProgramSolution.second).extremePoint.rows()
           );
           TableModelUtils::fill<Rational>(
             _simplexTableModels[int(SimplexModel::Solution)],
-            (*linearProgramSolution.second).extremePoint
+            (*linearProgramSolution.second).extremePoint.transpose()
           );
 
           TableModelUtils::fill(

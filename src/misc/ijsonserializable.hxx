@@ -15,6 +15,7 @@ class IJsonSerializable
     virtual Utils::ResultType read(const QJsonObject& jsonObject) = 0;
     virtual Utils::ResultType write(QJsonObject& jsonObject) const = 0;
 
+
   protected:
     virtual ~IJsonSerializable() = 0;
 };

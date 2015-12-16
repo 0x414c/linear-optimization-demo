@@ -17,7 +17,10 @@ namespace TableModelUtils
 {
   using namespace Config::TableModelUtils;
   using GUI::SimpleTableModel;
-  using namespace std;
+  using std::function;
+  using std::invalid_argument;
+  using std::minstd_rand;
+  using std::uniform_real_distribution;
 
 
   bool

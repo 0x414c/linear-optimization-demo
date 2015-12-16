@@ -13,9 +13,9 @@
 
 namespace LinearProgrammingUtils
 {
-  using namespace Eigen;
-  using namespace NumericTypes;
-  using namespace std;
+//  using namespace Eigen;
+//  using namespace NumericTypes;
+//  using namespace std;
 
 
   /**

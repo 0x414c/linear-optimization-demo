@@ -27,15 +27,28 @@
 #include "../math/numericlimits.hxx"
 #include "../misc/eigenextensions.hxx"
 #include "../misc/utils.hxx"
+#include "../config.hxx"
 
 
 namespace LinearProgramming
 {
-  using namespace boost;
-  using namespace Eigen;
-  using namespace MathUtils;
-  using namespace std;
-  using namespace Utils;
+  using boost::optional;
+  using namespace Config::LinearProgramming;
+  using Eigen::DenseIndex;
+  using Eigen::Dynamic;
+  using Eigen::Matrix;
+  using MathUtils::isEqual;
+  using MathUtils::isEqualToZero;
+  using MathUtils::isGreaterThanOrEqualToZero;
+  using MathUtils::isGreaterThanZero;
+  using MathUtils::isLessThanZero;
+  using NumericTypes::Rational;
+  using NumericTypes::Real;
+  using std::list;
+  using std::make_pair;
+  using std::pair;
+  using std::ref;
+  using Utils::makeString;
 
 
   template<typename T>
@@ -765,7 +778,7 @@ namespace LinearProgramming
     if (
       tableau.col(tableau.cols() - 1).
       head(tableau.rows() - 1).
-      unaryExpr(std::ref(isGreaterThanOrEqualToZero<T>)).
+      unaryExpr(ref(isGreaterThanOrEqualToZero<T>)).
       all()
     )
     {

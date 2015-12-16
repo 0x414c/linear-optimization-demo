@@ -6,7 +6,11 @@
 
 #include "tablemodelutils.hxx"
 
+#include <stdexcept>
+
+#include <QString>
 #include <QTableWidget>
+#include <QVariant>
 
 #include "simpletablemodel.hxx"
 #include "../misc/dataconvertors.hxx"
@@ -15,8 +19,11 @@
 
 namespace TableModelUtils
 {
-  using namespace DataConvertors;
-  using namespace NumericTypes;
+  using DataConvertors::numericCast;
+  using GUI::SimpleTableModel;
+  using NumericTypes::Rational;
+  using NumericTypes::Real;
+  using std::invalid_argument;
 
 
   template<>

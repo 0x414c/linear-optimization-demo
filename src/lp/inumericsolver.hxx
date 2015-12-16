@@ -10,14 +10,12 @@
 
 #include "linearprogramsolution.hxx"
 #include "solutiontype.hxx"
-#include "../math/numerictypes.hxx"
 
 
 namespace LinearProgramming
 {
-  using namespace boost;
-  using namespace NumericTypes;
-  using namespace std;
+  using boost::optional;
+  using std::pair;
 
 
   template<typename T>

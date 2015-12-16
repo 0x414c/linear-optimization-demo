@@ -25,14 +25,20 @@
 
 namespace LinearProgramming
 {
-  using namespace boost;
+  using boost::optional;
   using namespace Config::LinearProgramming;
-  using namespace Eigen;
-  using namespace NumericTypes;
-  using namespace std;
+  using Eigen::DenseIndex;
+  using Eigen::Dynamic;
+  using Eigen::Matrix;
+  using NumericTypes::Real;
+  using std::list;
+  using std::make_shared;
+  using std::shared_ptr;
+  using std::out_of_range;
+  using std::pair;
 
-  template<class T>
-  using shared_ptr = std::shared_ptr<T>;
+//  template<class T>
+//  using shared_ptr = std::shared_ptr<T>;
 
 
   template<typename T = Real>

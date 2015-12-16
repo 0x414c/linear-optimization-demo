@@ -4,7 +4,12 @@
 #define EIGENEXTENSIONS_HXX
 
 
-#include <cmath>
+/**
+ * Include this header to all files that use
+ * operations on `Eigen::Matrix<NumericTypes::Rational>' data type.
+ * Contents of this header is not intended for end-user.
+ */
+
 
 #include "eigen3/Eigen/Core"
 
@@ -12,22 +17,20 @@
 #include "../math/numerictypes.hxx"
 
 
-/**
- * Include this header to all files that use
- * operations on `Matrix<Rational>' type.
- * Contents of this header is not intended for end-user.
- */
-
-
 namespace Eigen
 {
+  using NumericTypes::Integer;
+  using NumericTypes::Rational;
+
+
   template<>
-  struct NumTraits<NumericTypes::Rational> :
-    NumTraits<NumericTypes::Integer>
+  struct NumTraits<Rational> :
+    NumTraits<Integer>
   {
-    typedef NumericTypes::Rational Real;
-    typedef NumericTypes::Rational NonInteger;
-    typedef NumericTypes::Rational Nested;
+    typedef Rational Real;
+    typedef Rational NonInteger;
+    typedef Rational Nested;
+
     enum
     {
       IsComplex = 0,

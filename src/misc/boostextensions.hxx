@@ -4,6 +4,13 @@
 #define BOOSTEXTENSIONS_HXX
 
 
+/**
+ * Include this header to all files that use
+ * operations on `NumericTypes::Rational' data type.
+ * Contents of this header is not intended for end-user.
+ */
+
+
 #include <cmath>
 
 #include <QDebug>
@@ -14,45 +21,43 @@
 #include "../math/numerictypes.hxx"
 
 
-/**
- * Include this header to all files that use
- * operations on `Rational' type.
- * Contents of this header is not intended for end-user.
- */
-
-
 namespace boost
 {
-  inline NumericTypes::Rational
-  log(const NumericTypes::Rational& x)
+  using DataConvertors::numericCast;
+  using NumericTypes::Rational;
+  using NumericTypes::Real;
+  using std::log;
+  using std::sqrt;
+
+
+  inline Rational
+  log(const Rational& x)
   {
     return (
-      DataConvertors::numericCast<NumericTypes::Rational, NumericTypes::Real>(
-        NumericTypes::Real(std::log(double(x.numerator()))) /
-        NumericTypes::Real(std::log(double(x.denominator())))
+      numericCast<Rational, Real>(
+        Real(log(double(x.numerator()))) / Real(log(double(x.denominator())))
       )
     );
   }
 
 
-  inline NumericTypes::Rational
-  sqrt(const NumericTypes::Rational& x)
+  inline Rational
+  sqrt(const Rational& x)
   {
     return (
-      DataConvertors::numericCast<NumericTypes::Rational, NumericTypes::Real>(
-        NumericTypes::Real(std::sqrt(double(x.numerator()))) /
-        NumericTypes::Real(std::sqrt(double(x.denominator())))
+      numericCast<Rational, Real>(
+        Real(sqrt(double(x.numerator()))) / Real(sqrt(double(x.denominator())))
       )
     );
   }
 
 
   inline QDebug
-  operator <<(QDebug debug, const NumericTypes::Rational& x)
+  operator <<(QDebug debug, const Rational& x)
   {
     QDebugStateSaver stateSaver(debug);
-    debug.nospace() <<
-    DataConvertors::numericCast<QString, NumericTypes::Rational>(x);
+
+    debug.nospace() << numericCast<QString, NumericTypes::Rational>(x);
 
     return debug;
   }

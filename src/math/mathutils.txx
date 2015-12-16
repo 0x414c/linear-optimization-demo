@@ -8,22 +8,25 @@
 
 #include <cmath>
 
-#include <algorithm>
-#include <limits>
-#include <utility>
-
 #include <QDebug>
+
+#include <algorithm>
+#include <utility>
 
 #include "numerictypes.hxx"
 
 
 namespace MathUtils
 {
-  using namespace NumericTypes;
-  using namespace std;
+  using NumericTypes::Rational;
+  using NumericTypes::Real;
+  using std::fabs;
+  using std::max;
+  using std::pair;
+  using std::make_pair;
 
 
-  template<typename R>
+  template<typename R, typename>
   /**
    * @brief MathUtils::rationalize
    * Finds the "best" rational approximation of the given real number `x'
@@ -40,10 +43,10 @@ namespace MathUtils
   pair<R, R>
   rationalize(Real x, Real tolerance, uint16_t maxIterations, R maxDenominator)
   {
-    static_assert(
-      numeric_limits<R>::is_integer,
-      "MathUtils::rationalize<R>: `R' should be a primitive integer type!"
-    );
+//    static_assert(
+//      numeric_limits<R>::is_integer,
+//      "MathUtils::rationalize<R>: `R' should be a primitive integer type!"
+//    );
 
     Real r0(x); //See eq. (8)
     Real integerPart(floor(r0));
@@ -94,9 +97,10 @@ namespace MathUtils
 
             //Look at the n-th convergent `cn'
             const Real cn(Real(pn) / Real(qn));
-            if (++iterCount <= maxIterations &&
-                fabs(x - cn) > tolerance * fabs(x) &&
-                qn < maxDenominator
+            if (
+              ++iterCount <= maxIterations &&
+              fabs(x - cn) > tolerance * fabs(x) &&
+              qn < maxDenominator
             )
             {
               //Now "shift" all the coeffs to the left
@@ -174,7 +178,7 @@ namespace MathUtils
   {
     return (
       absoluteValue<Real>(x - y) <=
-      Epsilon * std::max(
+      Epsilon * max<Real>(
         {Real(1), absoluteValue<Real>(x), absoluteValue<Real>(y)}
       )
     );
@@ -207,7 +211,7 @@ namespace MathUtils
   {
     return (
       (x - y) <
-      (-Epsilon) * std::max<Real>(
+      (-Epsilon) * max<Real>(
         {Real(1), absoluteValue<Real>(y), absoluteValue<Real>(y)}
       )
     );
@@ -239,7 +243,7 @@ namespace MathUtils
   {
     return (
       absoluteValue<Real>(x) <=
-      Epsilon * std::max<Real>(Real(1), absoluteValue<Real>(x))
+      Epsilon * max<Real>(Real(1), absoluteValue<Real>(x))
     );
   }
 
@@ -267,7 +271,7 @@ namespace MathUtils
   isGreaterThanZero(Real x)
   {
     return (
-      x > Epsilon * std::max<Real>(Real(1), absoluteValue<Real>(x))
+      x > Epsilon * max<Real>(Real(1), absoluteValue<Real>(x))
     );
   }
 
@@ -295,7 +299,7 @@ namespace MathUtils
   isLessThanZero(Real x)
   {
     return (
-      x < (-Epsilon) * std::max<Real>(Real(1), absoluteValue<Real>(x))
+      x < (-Epsilon) * max<Real>(Real(1), absoluteValue<Real>(x))
     );
   }
 

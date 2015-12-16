@@ -4,6 +4,7 @@
 #define UTILS_HXX
 
 
+#include <algorithm>
 #include <iostream>
 #include <iterator>
 #include <list>
@@ -20,6 +21,16 @@
 
 namespace Utils
 {
+  using fmt::print;
+  using std::cerr;
+  using std::copy;
+  using std::list;
+  using std::ostream_iterator;
+  using std::ostringstream;
+  using std::string;
+  using std::vector;
+
+
   template<typename T1, typename... TN>
   /**
    * @brief The AlwaysFalse struct
@@ -65,17 +76,17 @@ namespace Utils
    * @return
    */
   [[deprecated("Use `cxx-prettyprint'!")]]
-  std::string
-  makeString(const std::list<T>& from)
+  string
+  makeString(const list<T>& from)
   {
-    std::ostringstream oss;
+    ostringstream oss;
 
     oss << '[';
 
-    std::copy(
+    copy(
       from.cbegin(),
       from.cend(),
-      std::ostream_iterator<T>(oss, " ")
+      ostream_iterator<T>(oss, " ")
     );
 
     oss << ']';
@@ -91,17 +102,17 @@ namespace Utils
    * @return
    */
   [[deprecated("Use `cxx-prettyprint'!")]]
-  std::string
-  makeString(const std::vector<T>& from)
+  string
+  makeString(const vector<T>& from)
   {
-    std::ostringstream oss;
+    ostringstream oss;
 
     oss << '[';
 
-    std::copy(
+    copy(
       from.cbegin(),
       from.cend(),
-      std::ostream_iterator<T>(oss, " ")
+      ostream_iterator<T>(oss, " ")
     );
 
     oss << ']';
@@ -128,9 +139,9 @@ namespace Utils
     const char* const format, const Args&... args
   )
   {
-    fmt::print(std::cerr, "\n|*** {0}  {1}  {2}\n|    ", func, file, line);
-    fmt::print(std::cerr, format, args...);
-    fmt::print(std::cerr, "\n");
+    print(cerr, "\n|*** {0}  {1}  {2}\n|    ", func, file, line);
+    print(cerr, format, args...);
+    print(cerr, "\n");
   }
 }
 
@@ -140,7 +151,8 @@ namespace Utils
 do \
 { \
   Utils::printDebugLog(__FUNCTION__, __FILE__, __LINE__, fmt, ##__VA_ARGS__); \
-} while (false)
+} \
+while (false)
 #else
 #define LOG(fmt,...) do { } while (false)
 #endif // LP_WITH_DEBUG_LOG

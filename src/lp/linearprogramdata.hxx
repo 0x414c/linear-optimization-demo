@@ -13,9 +13,11 @@
 
 namespace LinearProgramming
 {
-  using namespace Eigen;
-  using namespace NumericTypes;
-  using namespace std;
+  using Eigen::DenseIndex;
+  using Eigen::Dynamic;
+  using Eigen::Matrix;
+  using std::invalid_argument;
+  using NumericTypes::Real;
 
 
   template<typename T = Real>

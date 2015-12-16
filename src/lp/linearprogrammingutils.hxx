@@ -10,17 +10,18 @@
 #include "boost/optional.hpp"
 #include "eigen3/Eigen/Core"
 
-#include "linearprogramdata.hxx"
 #include "../math/numerictypes.hxx"
 
 
 namespace LinearProgrammingUtils
 {
-  using namespace boost;
-  using namespace Eigen;
-  using namespace LinearProgramming;
-  using namespace NumericTypes;
-  using namespace std;
+  using boost::optional;
+  using Eigen::DenseIndex;
+  using Eigen::Dynamic;
+  using Eigen::Matrix;
+  using NumericTypes::Real;
+  using std::list;
+  using std::pair;
 
 
   template<typename T = Real>

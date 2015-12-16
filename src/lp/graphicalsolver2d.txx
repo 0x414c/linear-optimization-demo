@@ -24,18 +24,33 @@
 #include "plotdatareal2d.hxx"
 #include "solutiontype.hxx"
 #include "../math/numericlimits.hxx"
+#include "../math/mathutils.hxx"
 #include "../misc/dataconvertors.hxx"
 #include "../misc/utils.hxx"
 
 
 namespace LinearProgramming
 {
-  using namespace boost;
-  using namespace DataConvertors;
-  using namespace Eigen;
-  using namespace LinearProgrammingUtils;
-  using namespace std;
-  using namespace Utils;
+  using boost::optional;
+  using DataConvertors::numericCast;
+  using Eigen::DenseIndex;
+  using Eigen::Dynamic;
+  using Eigen::Matrix;
+  using LinearProgrammingUtils::reducedRowEchelonForm;
+  using LinearProgrammingUtils::findIntersection;
+  using LinearProgrammingUtils::isSolutionFeasible;
+  using MathUtils::isEqual;
+  using MathUtils::isLessThan;
+  using LinearProgrammingUtils::sortPointsByPolarAngle;
+  using LinearProgrammingUtils::computeBoundingBox;
+  using NumericTypes::Real;
+  using std::all_of;
+  using std::transform;
+  using std::make_pair;
+  using std::pair;
+  using std::list;
+  using std::vector;
+  using Utils::makeString;
 
 
   template<typename T>
@@ -70,7 +85,7 @@ namespace LinearProgramming
     LinearProgramData<T>&& linearProgramData
   )
   {
-    _linearProgramData = std::move(linearProgramData);
+    _linearProgramData = move(linearProgramData);
   }
 
 

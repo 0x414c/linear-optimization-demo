@@ -24,11 +24,14 @@
 
 namespace LinearProgramming
 {
-  using namespace boost;
+  using boost::optional;
   using namespace Config::LinearProgramming;
-  using namespace Eigen;
-  using namespace NumericTypes;
-  using namespace std;
+  using Eigen::DenseIndex;
+  using Eigen::Dynamic;
+  using Eigen::Matrix;
+  using NumericTypes::Rational;
+  using NumericTypes::Real;
+  using std::pair;
 
   using MaybeIndex2D = optional<pair<DenseIndex, DenseIndex>>;
   using MaybeIndex1D = optional<DenseIndex>;

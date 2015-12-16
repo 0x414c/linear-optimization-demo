@@ -13,7 +13,6 @@
 #include <QLocale>
 #include <QRegExp>
 #include <QString>
-#include <QStringList>
 
 #include "../math/mathutils.hxx"
 #include "../math/numericlimits.hxx"
@@ -24,9 +23,11 @@
 namespace DataConvertors
 {
   using namespace Config::MathUtils;
-  using namespace MathUtils;
-  using namespace NumericTypes;
-  using namespace std;
+  using MathUtils::rationalize;
+  using NumericTypes::Integer;
+  using NumericTypes::Rational;
+  using NumericTypes::Real;
+  using std::pair;
 
 
   template<>
@@ -61,8 +62,7 @@ namespace DataConvertors
   {
     const pair<Integer, Integer> rationalized =
       rationalize<Integer>(
-        from, Epsilon,
-        MaxRationalizeIterations, DefaultRationalizeDemoninator
+        from, Epsilon, MaxRationalizeIterations, DefaultRationalizeDemoninator
       );
 
     return Rational(rationalized.first, rationalized.second);
@@ -96,9 +96,7 @@ namespace DataConvertors
       }
       else
       {
-        value = QString("%1/%2").
-                arg(from.numerator()).
-                arg(from.denominator());
+        value = QString("%1/%2").arg(from.numerator()).arg(from.denominator());
       }
     }
 
@@ -115,9 +113,8 @@ namespace DataConvertors
 
     const Real value(cLocale.toDouble(from, &isOk));
     if (!isOk) {
-      qCritical() <<
-        QString("DataConvertors::numericCast<Real>: could not convert '%1'").
-        arg(from).toLatin1().data(); //TODO: ~? Possible crash here
+      qCritical() << "DataConvertors::numericCast<Real>:"
+                     " could not convert" << from;
 
       return NumericLimits::min<Real>();
     }
@@ -137,9 +134,8 @@ namespace DataConvertors
 
     const Integer value(cLocale.toLongLong(from, &isOk));
     if (!isOk) {
-      qCritical() <<
-        QString("DataConvertors::numericCast<Integer>: could not convert '%1'").
-        arg(from).toLatin1().data(); //TODO: ~? The same as above
+      qCritical() << "DataConvertors::numericCast<Integer>:"
+                     " could not convert" << from;
 
       return NumericLimits::min<Integer>();
     }

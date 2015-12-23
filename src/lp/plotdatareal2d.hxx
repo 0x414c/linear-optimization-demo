@@ -6,6 +6,7 @@
 
 #include <list>
 #include <utility>
+#include <vector>
 
 #include "eigen3/Eigen/Core"
 
@@ -14,12 +15,15 @@
 
 namespace LinearProgramming
 {
-  using Eigen::Matrix;
+  using Eigen::DenseIndex;
   using Eigen::Dynamic;
+  using Eigen::Matrix;
   using NumericTypes::Real;
   using std::list;
+  using std::vector;
 
 
+//  template<typename TCoeff = Real, DenseIndex TDim = 2>
   struct PlotDataReal2D
   {
     PlotDataReal2D() = default;
@@ -30,7 +34,8 @@ namespace LinearProgramming
       const list<Matrix<Real, 2, 1>>& feasibleRegionExtremePoints,
       const Matrix<Real, 1, Dynamic>& gradientVector,
       const Matrix<Real, 2, 2>& feasibleRegionBoundingBox,
-      const Matrix<Real, 2, 2>& feasibleRegionBoundingBoxHeights
+      const Matrix<Real, 2, 2>& feasibleRegionBoundingBoxHeights,
+      const vector<DenseIndex>& variablesNames
     );
     PlotDataReal2D(
       list<Matrix<Real, 2, 1>>&& extremePoints,
@@ -38,7 +43,8 @@ namespace LinearProgramming
       list<Matrix<Real, 2, 1>>&& feasibleRegionExtremePoints,
       Matrix<Real, 1, Dynamic>&& gradientVector,
       Matrix<Real, 2, 2>&& feasibleRegionBoundingBox,
-      Matrix<Real, 2, 2>&& feasibleRegionBoundingBoxHeights
+      Matrix<Real, 2, 2>&& feasibleRegionBoundingBoxHeights,
+      vector<DenseIndex>&& variablesNames
     );
 
 
@@ -53,6 +59,8 @@ namespace LinearProgramming
     Matrix<Real, 2, 2> feasibleRegionBoundingBox;
 
     Matrix<Real, 2, 2> feasibleRegionBoundingBoxHeights;
+
+    vector<DenseIndex> variablesNames;
   };
 }
 

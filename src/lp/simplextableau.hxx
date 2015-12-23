@@ -101,29 +101,29 @@ namespace LinearProgramming
 
     private:
       /**
-       * @brief _phase
+       * @brief phase_
        * Marks the phase of the Simplex algorithm
        * for which the tableau was created.
        */
-      SolutionPhase _phase;
+      SolutionPhase phase_;
 
       /**
-       * @brief _basicVars
+       * @brief basicVars_
        * Maps row indices to the basic variables indices.
        */
-      vector<DenseIndex> _basicVars;
+      vector<DenseIndex> basicVars_;
 
       /**
-       * @brief _freeVars
+       * @brief freeVars_
        * Maps columns indices to the free variables indices.
        */
-      vector<DenseIndex> _freeVars;
+      vector<DenseIndex> freeVars_;
 
       /**
-       * @brief _entries
+       * @brief entries_
        * Stores all the entries of the tableau.
        */
-      Matrix<T, Dynamic, Dynamic> _entries;
+      Matrix<T, Dynamic, Dynamic> entries_;
   };
 }
 

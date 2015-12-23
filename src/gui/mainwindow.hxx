@@ -16,6 +16,7 @@
 #include <QMainWindow>
 #include <QMouseEvent>
 #include <QString>
+#include <QWheelEvent>
 #include <QWidget>
 
 #include "qcustomplot/qcustomplot.h"
@@ -63,21 +64,19 @@ namespace GUI
 
       ~MainWindow();
 
-      virtual void closeEvent(QCloseEvent* closeEvent) override;
+      virtual void closeEvent(QCloseEvent* ev) override;
 
-      virtual void dragEnterEvent(QDragEnterEvent* event) override;
-      virtual void dragMoveEvent(QDragMoveEvent* event) override;
-      virtual void dragLeaveEvent(QDragLeaveEvent* event) override;
-      virtual void dropEvent(QDropEvent* event) override;
+      virtual void dragEnterEvent(QDragEnterEvent* ev) override;
+      virtual void dragMoveEvent(QDragMoveEvent* ev) override;
+      virtual void dragLeaveEvent(QDragLeaveEvent* ev) override;
+      virtual void dropEvent(QDropEvent* ev) override;
 
 
     private slots:
       void on_graphical_solutionPlotQCustomPlot_selectionChangedByUser();
-      void on_graphical_solutionPlotQCustomPlot_mousePress();
-      void on_graphical_solutionPlotQCustomPlot_mouseWheel();
-      void on_graphical_solutionPlotQCustomPlot_mouseMove(
-        QMouseEvent* mouseEvent
-      );
+      void on_graphical_solutionPlotQCustomPlot_mousePress(QMouseEvent* ev);
+      void on_graphical_solutionPlotQCustomPlot_mouseWheel(QWheelEvent* ev);
+      void on_graphical_solutionPlotQCustomPlot_mouseMove(QMouseEvent* ev);
 
       void on_anyProgramModel_dataChanged(
         const QModelIndex & topLeft, const QModelIndex & bottomRight,
@@ -141,25 +140,25 @@ namespace GUI
 
       Ui::MainWindow* ui = 0;
 
-      Field _field = Field::Real;
+      Field field_ = Field::Real;
 
-//      TODO: ~ `_isDirty' <- `dataChanged' =>
-//      reload data only when it is needed
-      bool _isDirty = false;
+      //TODO: ~ `_isDirty' <- `dataChanged' =>
+      //reload data only when it is needed
+      bool isDirty_ = false;
 
-      bool _isLoaded = false;
+      bool isLoaded_ = false;
 
-      QVector<SimpleTableModel*> _programTableModels;
-      QVector<SimpleTableModel*> _simplexTableModels;
+      QVector<SimpleTableModel*> programTableModels_;
+      QVector<SimpleTableModel*> simplexTableModels_;
 
-      QVector<NumericStyledItemDelegate<Real>*> _realNumericDelegates;
-      QVector<NumericStyledItemDelegate<Rational>*> _ratNumericDelegates;
+      QVector<NumericStyledItemDelegate<Real>*> realNumericDelegates_;
+      QVector<NumericStyledItemDelegate<Rational>*> rationalNumericDelegates_;
 
-      shared_ptr<DantzigNumericSolver<Real>> _realSolver;
-      shared_ptr<DantzigNumericSolver<Rational>> _rationalSolver;
+      shared_ptr<DantzigNumericSolver<Real>> realNumericSolver_;
+      shared_ptr<DantzigNumericSolver<Rational>> rationalNumericSolver_;
 
-      DantzigNumericSolverController<Real> _realSolverController;
-      DantzigNumericSolverController<Rational> _rationalSolverController;
+      DantzigNumericSolverController<Real> realNumericSolverController_;
+      DantzigNumericSolverController<Rational> rationalNumericSolverController_;
 
 
       void setupDefaults();

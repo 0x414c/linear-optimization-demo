@@ -264,6 +264,7 @@ namespace LinearProgrammingUtils
   template<typename T>
   /**
    * @brief computeBoundingBox
+   * TODO: ~? Use `std::minmax_element'.
    * @param points
    * @return
    */

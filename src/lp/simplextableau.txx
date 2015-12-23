@@ -49,10 +49,10 @@ namespace LinearProgramming
    * @param simplexTableau
    */
   SimplexTableau<T>::SimplexTableau(const SimplexTableau<T>& simplexTableau) :
-    _phase(simplexTableau._phase),
-    _basicVars(simplexTableau._basicVars),
-    _freeVars(simplexTableau._freeVars),
-    _entries(simplexTableau._entries)
+    phase_(simplexTableau.phase_),
+    basicVars_(simplexTableau.basicVars_),
+    freeVars_(simplexTableau.freeVars_),
+    entries_(simplexTableau.entries_)
   { }
 
 
@@ -63,10 +63,10 @@ namespace LinearProgramming
    * @param simplexTableau
    */
   SimplexTableau<T>::SimplexTableau(SimplexTableau<T>&& simplexTableau) :
-    _phase(simplexTableau._phase),
-    _basicVars(std::move(simplexTableau._basicVars)),
-    _freeVars(std::move(simplexTableau._freeVars)),
-    _entries(std::move(simplexTableau._entries))
+    phase_(simplexTableau.phase_),
+    basicVars_(std::move(simplexTableau.basicVars_)),
+    freeVars_(std::move(simplexTableau.freeVars_)),
+    entries_(std::move(simplexTableau.entries_))
   { }
 
 
@@ -81,7 +81,7 @@ namespace LinearProgramming
   T&
   SimplexTableau<T>::operator ()(DenseIndex rowIdx, DenseIndex colIdx)
   {
-    return _entries(rowIdx, colIdx);
+    return entries_(rowIdx, colIdx);
   }
 
 
@@ -96,7 +96,7 @@ namespace LinearProgramming
   const T&
   SimplexTableau<T>::operator ()(DenseIndex rowIdx, DenseIndex colIdx) const
   {
-    return _entries(rowIdx, colIdx);
+    return entries_(rowIdx, colIdx);
   }
 
 
@@ -110,7 +110,7 @@ namespace LinearProgramming
   Block<Matrix<T, Dynamic, Dynamic>, Dynamic, Dynamic>
   SimplexTableau<T>::entries()
   {
-    return _entries.block(0, 0, _entries.rows(), _entries.cols());
+    return entries_.block(0, 0, entries_.rows(), entries_.cols());
   }
 
 
@@ -123,7 +123,7 @@ namespace LinearProgramming
   const Block<const Matrix<T, Dynamic, Dynamic>, Dynamic, Dynamic>
   SimplexTableau<T>::entries() const
   {
-    return _entries.block(0, 0, _entries.rows(), _entries.cols());
+    return entries_.block(0, 0, entries_.rows(), entries_.cols());
   }
 
 
@@ -139,7 +139,7 @@ namespace LinearProgramming
   typename Matrix<T, Dynamic, Dynamic>::RowXpr
   SimplexTableau<T>::row(DenseIndex rowIdx)
   {
-    return _entries.row(rowIdx);
+    return entries_.row(rowIdx);
   }
 
 
@@ -153,7 +153,7 @@ namespace LinearProgramming
   typename Matrix<T, Dynamic, Dynamic>::ConstRowXpr
   SimplexTableau<T>::row(DenseIndex rowIdx) const
   {
-    return _entries.row(rowIdx);
+    return entries_.row(rowIdx);
   }
 
 
@@ -167,7 +167,7 @@ namespace LinearProgramming
   typename Matrix<T, Dynamic, Dynamic>::ColXpr
   SimplexTableau<T>::col(DenseIndex colIdx)
   {
-    return _entries.col(colIdx);
+    return entries_.col(colIdx);
   }
 
 
@@ -181,7 +181,7 @@ namespace LinearProgramming
   typename Matrix<T, Dynamic, Dynamic>::ConstColXpr
   SimplexTableau<T>::col(DenseIndex colIdx) const
   {
-    return _entries.col(colIdx);
+    return entries_.col(colIdx);
   }
 
 
@@ -194,7 +194,7 @@ namespace LinearProgramming
   DenseIndex
   SimplexTableau<T>::rows() const
   {
-    return _entries.rows();
+    return entries_.rows();
   }
 
 
@@ -207,7 +207,7 @@ namespace LinearProgramming
   DenseIndex
   SimplexTableau<T>::cols() const
   {
-    return _entries.cols();
+    return entries_.cols();
   }
 
 
@@ -221,7 +221,7 @@ namespace LinearProgramming
   SolutionPhase
   SimplexTableau<T>::phase() const
   {
-    return _phase;
+    return phase_;
   }
 
 
@@ -234,7 +234,7 @@ namespace LinearProgramming
   vector<DenseIndex>&
   SimplexTableau<T>::basicVars()
   {
-    return _basicVars;
+    return basicVars_;
   }
 
 
@@ -247,7 +247,7 @@ namespace LinearProgramming
   const vector<DenseIndex>&
   SimplexTableau<T>::basicVars() const
   {
-    return _basicVars;
+    return basicVars_;
   }
 
 
@@ -260,7 +260,7 @@ namespace LinearProgramming
   vector<DenseIndex>&
   SimplexTableau<T>::freeVars()
   {
-    return _freeVars;
+    return freeVars_;
   }
 
 
@@ -273,7 +273,7 @@ namespace LinearProgramming
   const vector<DenseIndex>&
   SimplexTableau<T>::freeVars() const
   {
-    return _freeVars;
+    return freeVars_;
   }
 
 
@@ -286,7 +286,7 @@ namespace LinearProgramming
   size_t
   SimplexTableau<T>::basicVarsCount() const
   {
-    return _basicVars.size();
+    return basicVars_.size();
   }
 
 
@@ -299,7 +299,7 @@ namespace LinearProgramming
   size_t
   SimplexTableau<T>::freeVarsCount() const
   {
-    return _freeVars.size();
+    return freeVars_.size();
   }
 
 
@@ -314,17 +314,17 @@ namespace LinearProgramming
   Matrix<T, Dynamic, 1>
   SimplexTableau<T>::extremePoint() const
   {
-    Matrix<T, Dynamic, 1> x_(_basicVars.size() + _freeVars.size(), 1);
+    Matrix<T, Dynamic, 1> x_(basicVars_.size() + freeVars_.size(), 1);
 
-    for (DenseIndex i(0); i < _entries.rows() - 1; ++i)
+    for (DenseIndex i(0); i < entries_.rows() - 1; ++i)
     {
-      const DenseIndex varIdx(_basicVars[i]);
-      x_(varIdx) = _entries(i, _entries.cols() - 1);
+      const DenseIndex varIdx(basicVars_[i]);
+      x_(varIdx) = entries_(i, entries_.cols() - 1);
     }
 
-    for (DenseIndex j(0); j < _entries.cols() - 1; j++)
+    for (DenseIndex j(0); j < entries_.cols() - 1; j++)
     {
-      const DenseIndex varIdx(_freeVars[j]);
+      const DenseIndex varIdx(freeVars_[j]);
       x_(varIdx) = T(0);
     }
 
@@ -342,10 +342,10 @@ namespace LinearProgramming
   {
     switch (goalType) {
       case OptimizationGoalType::Minimize:
-        return _entries(_entries.rows() - 1, _entries.cols() - 1) * T(-1);
+        return entries_(entries_.rows() - 1, entries_.cols() - 1) * T(-1);
 
       case OptimizationGoalType::Maximize:
-        return _entries(_entries.rows() - 1, _entries.cols() - 1);
+        return entries_(entries_.rows() - 1, entries_.cols() - 1);
 
       default:
         return T(0);
@@ -398,55 +398,55 @@ namespace LinearProgramming
     SimplexTableau<T> phase1Tableau;
 
     //Set phase to `One'
-    phase1Tableau._phase = SolutionPhase::One;
+    phase1Tableau.phase_ = SolutionPhase::One;
 
     //Initialize vectors w/ variables indices
-    phase1Tableau._basicVars = vector<DenseIndex>(basicVarsCount);
+    phase1Tableau.basicVars_ = vector<DenseIndex>(basicVarsCount);
     //For the basic artificial vars `~x[i]' where `i' in [N; N + M)
     for (DenseIndex i(freeVarsCount); i < freeVarsCount + basicVarsCount; ++i)
     {
-      phase1Tableau._basicVars[i - freeVarsCount] = i;
+      phase1Tableau.basicVars_[i - freeVarsCount] = i;
     }
 
-    phase1Tableau._freeVars = vector<DenseIndex>(freeVarsCount);
+    phase1Tableau.freeVars_ = vector<DenseIndex>(freeVarsCount);
     //For the free decision vars `x[i]' where i in [0; N)
     for (DenseIndex i(0); i < freeVarsCount; ++i)
     {
-      phase1Tableau._freeVars[i] = i;
+      phase1Tableau.freeVars_[i] = i;
     }
 
     //Let's build an auxilliary program tableau `~X(0)'
     //Initialize some of its entries (constraints coeffs matrix `α'
     //and right-hand-side column-vector `β' ) directly
     //from `linearProgramData'. `P' is left unintialized.
-    phase1Tableau._entries = Matrix<T, Dynamic, Dynamic>(
+    phase1Tableau.entries_ = Matrix<T, Dynamic, Dynamic>(
       basicVarsCount + 1, freeVarsCount + 1
     );
-    phase1Tableau._entries.block(0, 0, basicVarsCount, freeVarsCount) =
+    phase1Tableau.entries_.block(0, 0, basicVarsCount, freeVarsCount) =
     linearProgramData.constraintsCoeffs;
-    phase1Tableau._entries.block(0, freeVarsCount, basicVarsCount, 1) =
+    phase1Tableau.entries_.block(0, freeVarsCount, basicVarsCount, 1) =
     linearProgramData.constraintsRHS;
 
     //Further, we need to multiply some equations by (-1) to make (β >= (0))
-    for (DenseIndex i(0); i < phase1Tableau._entries.rows(); ++i)
+    for (DenseIndex i(0); i < phase1Tableau.entries_.rows(); ++i)
     {
       if (
         isLessThanZero<T>(
-          phase1Tableau._entries(i, phase1Tableau._entries.cols() - 1)
+          phase1Tableau.entries_(i, phase1Tableau.entries_.cols() - 1)
         )
       )
       {
-        phase1Tableau._entries.row(i) *= T(-1);
+        phase1Tableau.entries_.row(i) *= T(-1);
       }
     }
 
     //Now, set values for the bottom row containing
     //objective function coeffs `P[j]' and func. value `P[0]'
-    for (DenseIndex j(0); j < phase1Tableau._entries.cols(); ++j)
+    for (DenseIndex j(0); j < phase1Tableau.entries_.cols(); ++j)
     {
       //Each `P[j]' is the negative sum of the column `α.col[j]' above it
-      phase1Tableau._entries(phase1Tableau._entries.rows() - 1, j) =
-      phase1Tableau._entries.col(j).head(basicVarsCount).sum() * T(-1);
+      phase1Tableau.entries_(phase1Tableau.entries_.rows() - 1, j) =
+      phase1Tableau.entries_.col(j).head(basicVarsCount).sum() * T(-1);
     }
 
     return phase1Tableau;
@@ -470,7 +470,7 @@ namespace LinearProgramming
     const SimplexTableau<T>& phase1Tableau
   ) throw(invalid_argument)
   {
-    if (phase1Tableau._phase != SolutionPhase::One)
+    if (phase1Tableau.phase_ != SolutionPhase::One)
     {
       throw invalid_argument("Tableau is not a Phase-1 tableau");
     }
@@ -490,25 +490,25 @@ namespace LinearProgramming
     SimplexTableau<T> phase2Tableau;
 
     //Set phase to `Two'
-    phase2Tableau._phase = SolutionPhase::Two;
+    phase2Tableau.phase_ = SolutionPhase::Two;
 
     //Initialize vectors w/ variables indices
     //Copy all the basic variables `~x' from the Phase-1 tableau
-    phase2Tableau._basicVars = vector<DenseIndex>(phase2BasicVarsCount);
+    phase2Tableau.basicVars_ = vector<DenseIndex>(phase2BasicVarsCount);
     std::copy(
-      phase1Tableau._basicVars.begin(),
-      phase1Tableau._basicVars.end(),
-      phase2Tableau._basicVars.begin()
+      phase1Tableau.basicVars_.begin(),
+      phase1Tableau.basicVars_.end(),
+      phase2Tableau.basicVars_.begin()
     );
 
     //Copy all the free variables `x[i]' except those vars
     //that was forced out of the basis at the Phase-1 (artificial)
-    phase2Tableau._freeVars = vector<DenseIndex>(phase2FreeVarsCount);
+    phase2Tableau.freeVars_ = vector<DenseIndex>(phase2FreeVarsCount);
     size_t varsCount(0);
     std::copy_if(
-      phase1Tableau._freeVars.begin(),
-      phase1Tableau._freeVars.end(),
-      phase2Tableau._freeVars.begin(),
+      phase1Tableau.freeVars_.begin(),
+      phase1Tableau.freeVars_.end(),
+      phase2Tableau.freeVars_.begin(),
       [phase1FreeVarsCount, phase2FreeVarsCount, &varsCount]
       (DenseIndex varIdx)
       {
@@ -537,25 +537,25 @@ namespace LinearProgramming
 //    phase2FreeVarsCount = phase2Tableau._freeVars.size();
 
     //Fill the coeffs matrix `α' using the Phase-1 tableau
-    phase2Tableau._entries = Matrix<T, Dynamic, Dynamic>(
+    phase2Tableau.entries_ = Matrix<T, Dynamic, Dynamic>(
       phase2BasicVarsCount + 1, phase2FreeVarsCount + 1
     );
 
     //Copy only necessary coeffs `α' from the Phase-1 tableau
     //From the columns corresponding to the free variables
     DenseIndex colIdx(0);
-    for (DenseIndex j(0); j < phase1Tableau._entries.cols() - 1; ++j)
+    for (DenseIndex j(0); j < phase1Tableau.entries_.cols() - 1; ++j)
     {
       if (colIdx < phase2FreeVarsCount)
       {
         //If it is the column corresponding to the free variable
-        if (phase1Tableau._freeVars[j] < phase1FreeVarsCount)
+        if (phase1Tableau.freeVars_[j] < phase1FreeVarsCount)
         {
           //Copy this column w/o the last element to the Phase-2 tableau
-          for (DenseIndex i(0); i < phase2Tableau._entries.rows() - 1; ++i)
+          for (DenseIndex i(0); i < phase2Tableau.entries_.rows() - 1; ++i)
           {
-            phase2Tableau._entries(i, colIdx) =
-            phase1Tableau._entries(i, j);
+            phase2Tableau.entries_(i, colIdx) =
+            phase1Tableau.entries_(i, j);
           }
           ++colIdx;
         }
@@ -568,46 +568,46 @@ namespace LinearProgramming
 
     //Fill the RHS vector `β' (the last column)
     //Copy its entries from the Phase-1 tableau w/o the last element
-    for (DenseIndex i(0); i < phase1Tableau._entries.rows() - 1; ++i)
+    for (DenseIndex i(0); i < phase1Tableau.entries_.rows() - 1; ++i)
     {
-      phase2Tableau._entries(i, phase2Tableau._entries.cols() - 1) =
-      phase1Tableau._entries(i, phase1Tableau._entries.cols() - 1);
+      phase2Tableau.entries_(i, phase2Tableau.entries_.cols() - 1) =
+      phase1Tableau.entries_(i, phase1Tableau.entries_.cols() - 1);
     }
 
     //Fill the objective function coeffs `P[j]' (row at the bottom)
-    for (DenseIndex j(0); j < phase2Tableau._entries.cols() - 1; ++j)
+    for (DenseIndex j(0); j < phase2Tableau.entries_.cols() - 1; ++j)
     {
       T sum(0); //Dot product of `c' and `-α.col[j]'
       //(free variable x[j] in `α.col[j]' is set to -1,
       //other free vars are set to 0)
-      for (DenseIndex i(0); i < phase2Tableau._entries.rows() - 1; ++i)
+      for (DenseIndex i(0); i < phase2Tableau.entries_.rows() - 1; ++i)
       {
-        const DenseIndex varIdx(phase2Tableau._basicVars[i]);
+        const DenseIndex varIdx(phase2Tableau.basicVars_[i]);
         sum += linearProgramData.objectiveFunctionCoeffs(varIdx) *
-               phase2Tableau._entries(i, j) *
+               phase2Tableau.entries_(i, j) *
                T(-1);
       }
 
-      const DenseIndex varIdx(phase2Tableau._freeVars[j]);
+      const DenseIndex varIdx(phase2Tableau.freeVars_[j]);
       sum += linearProgramData.objectiveFunctionCoeffs(varIdx);
 
-      phase2Tableau._entries(phase2Tableau._entries.rows() - 1, j) = sum;
+      phase2Tableau.entries_(phase2Tableau.entries_.rows() - 1, j) = sum;
     }
 
     //Set objective function value P[0] (the rightmost bottom element)
     T sum(0); //Dot product of `c' and `-β'
     //(all free vars in `β' are set to 0)
-    for (DenseIndex i(0); i < phase2Tableau._entries.rows() - 1; ++i)
+    for (DenseIndex i(0); i < phase2Tableau.entries_.rows() - 1; ++i)
     {
-      const DenseIndex varIdx(phase2Tableau._basicVars[i]);
+      const DenseIndex varIdx(phase2Tableau.basicVars_[i]);
       sum += linearProgramData.objectiveFunctionCoeffs(varIdx) *
-             phase2Tableau._entries(i, phase2Tableau._entries.cols() - 1) *
+             phase2Tableau.entries_(i, phase2Tableau.entries_.cols() - 1) *
              T(-1);
     }
 
-    phase2Tableau._entries(
-      phase2Tableau._entries.rows() - 1,
-      phase2Tableau._entries.cols() - 1
+    phase2Tableau.entries_(
+      phase2Tableau.entries_.rows() - 1,
+      phase2Tableau.entries_.cols() - 1
     ) = sum;
 
     return phase2Tableau;

@@ -39,7 +39,7 @@ namespace LinearProgramming
 
 
     private:
-      LinearProgramData<T> _linearProgramData;
+      LinearProgramData<T> linearProgramData_;
   };
 }
 

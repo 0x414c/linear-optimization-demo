@@ -79,6 +79,20 @@ namespace MathUtils
 
   template<typename T = Real>
   bool
+  isGreaterThan(T x, T y)
+  {
+    static_assert(
+      AlwaysFalse<T>::value,
+      "MathUtils::isGreaterThan<T>:"
+      " You can only use one of the specified specializations!"
+    );
+
+    return false;
+  }
+
+
+  template<typename T = Real>
+  bool
   isEqualToZero(T x)
   {
     static_assert(

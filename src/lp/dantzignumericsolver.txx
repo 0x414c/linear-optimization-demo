@@ -16,7 +16,6 @@
 #include <QDebug>
 
 #include "boost/optional.hpp"
-#include "boost/variant.hpp"
 #include "eigen3/Eigen/Core"
 
 #include "linearprogramdata.hxx"
@@ -71,7 +70,7 @@ namespace LinearProgramming
   DantzigNumericSolver<T>::DantzigNumericSolver(
     const LinearProgramData<T>& linearProgramData
   ) :
-    _linearProgramData(linearProgramData)
+    linearProgramData_(linearProgramData)
   { }
 
 
@@ -95,7 +94,7 @@ namespace LinearProgramming
   DantzigNumericSolver<T>::DantzigNumericSolver(
     LinearProgramData<T>&& linearProgramData
   ) :
-    _linearProgramData(std::move(linearProgramData))
+    linearProgramData_(std::move(linearProgramData))
   { }
 
 
@@ -108,7 +107,7 @@ namespace LinearProgramming
   const LinearProgramData<T>&
   DantzigNumericSolver<T>::linearProgramData() const
   {
-    return _linearProgramData;
+    return linearProgramData_;
   }
 
 
@@ -122,7 +121,7 @@ namespace LinearProgramming
     const LinearProgramData<T>& linearProgramData
   )
   {
-    _linearProgramData = linearProgramData;
+    linearProgramData_ = linearProgramData;
   }
 
 
@@ -136,7 +135,7 @@ namespace LinearProgramming
     LinearProgramData<T>&& linearProgramData
   )
   {
-    _linearProgramData = std::move(linearProgramData);
+    linearProgramData_ = std::move(linearProgramData);
   }
 
 
@@ -174,19 +173,19 @@ namespace LinearProgramming
 
     LOG(
       "c := \n{0},\nA :=\n{1},\nb :=\n{2}",
-      _linearProgramData.objectiveFunctionCoeffs,
-      _linearProgramData.constraintsCoeffs,
-      _linearProgramData.constraintsRHS
+      linearProgramData_.objectiveFunctionCoeffs,
+      linearProgramData_.constraintsCoeffs,
+      linearProgramData_.constraintsRHS
     );
 
     //Make a new Phase-1 tableau
     SimplexTableau<T> phase1Tableau(
-      SimplexTableau<T>::makePhaseOne(_linearProgramData)
+      SimplexTableau<T>::makePhaseOne(linearProgramData_)
     );
 
     LOG(
       "~X({0}) :=\n{1},\n~x := {2},\n x := {3}",
-      _iterCount,
+      iterCount_,
       phase1Tableau.entries(),
       makeString(phase1Tableau.basicVars()),
       makeString(phase1Tableau.freeVars())
@@ -197,7 +196,7 @@ namespace LinearProgramming
 
     LOG(
       "~X({0}) :=\n{1},\n~x := {2},\n x := {3}",
-      _iterCount,
+      iterCount_,
       phase1Tableau.entries(),
       makeString(phase1Tableau.basicVars()),
       makeString(phase1Tableau.freeVars())
@@ -217,15 +216,15 @@ namespace LinearProgramming
 
       if (phase1SolutionType == SolutionType::Optimal)
       {
-        ++_iterCount;
+        ++iterCount_;
 
         SimplexTableau<T> phase2Tableau(
-          SimplexTableau<T>::makePhaseTwo(_linearProgramData, phase1Tableau)
+          SimplexTableau<T>::makePhaseTwo(linearProgramData_, phase1Tableau)
         );
 
         LOG(
           "X({0}) :=\n{1},\n~x := {2},\n x := {3}",
-          _iterCount,
+          iterCount_,
           phase2Tableau.entries(),
           makeString(phase2Tableau.basicVars()),
           makeString(phase2Tableau.freeVars())
@@ -236,7 +235,7 @@ namespace LinearProgramming
 
         LOG(
           "X({0}) :=\n{1},\n~x := {2},\n x := {3}",
-          _iterCount,
+          iterCount_,
           phase2Tableau.entries(),
           makeString(phase2Tableau.basicVars()),
           makeString(phase2Tableau.freeVars())
@@ -296,7 +295,7 @@ namespace LinearProgramming
   void
   DantzigNumericSolver<T>::reset()
   {
-    _iterCount = 0;
+    iterCount_ = 0;
   }
 
 
@@ -351,7 +350,7 @@ namespace LinearProgramming
   SolutionType
   DantzigNumericSolver<T>::iterate(SimplexTableau<T>& tableau)
   {
-    if (_iterCount >= MaxSimplexIterations) //If can iterate
+    if (iterCount_ >= MaxSimplexIterations) //If can iterate
     {
       return SolutionType::Unknown;
     }
@@ -361,7 +360,7 @@ namespace LinearProgramming
 
       if (pivotIdx.second) //If indices is present
       {
-        ++_iterCount;
+        ++iterCount_;
 
         pivotize(tableau, (*pivotIdx.second).first, (*pivotIdx.second).second);
 
@@ -388,13 +387,13 @@ namespace LinearProgramming
     SimplexTableau<T>& tableau, pair<DenseIndex, DenseIndex> pivotIdx
   )
   {
-    if (_iterCount >= MaxSimplexIterations) //If can iterate
+    if (iterCount_ >= MaxSimplexIterations) //If can iterate
     {
       return SolutionType::Unknown;
     }
     else
     {
-      ++_iterCount;
+      ++iterCount_;
 
       pivotize(tableau, pivotIdx.first, pivotIdx.second);
 
@@ -420,7 +419,7 @@ namespace LinearProgramming
     const optional<DenseIndex> pivotColIdx(computePivotColIdx(tableau));
     if (pivotColIdx)
     {
-      //If (∃s: P[s] < 0)
+      //If (∃s: P[s] < 0), we can try to select pivot row `k'
       const optional<DenseIndex> pivotRowIdx(
         computePivotRowIdx(tableau, *pivotColIdx)
       );
@@ -719,7 +718,7 @@ namespace LinearProgramming
 
     LOG(
       "T({0}) :=\n{1},\n~x := {2},\n x := {3}",
-      _iterCount, tableau.entries(),
+      iterCount_, tableau.entries(),
       makeString(tableau.basicVars()),
       makeString(tableau.freeVars())
     );

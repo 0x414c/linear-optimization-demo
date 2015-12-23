@@ -62,9 +62,9 @@ namespace LinearProgramming
 
 
     private:
-      LinearProgramData<T> _linearProgramData;
+      LinearProgramData<T> linearProgramData_;
 
-      uint16_t _iterCount;
+      uint16_t iterCount_;
 
 
       void reset();

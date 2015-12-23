@@ -431,7 +431,7 @@
       </widget>
       <widget class="QTabWidget" name="detailsTabWidget">
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="graphicalMethodTab">
         <attribute name="icon">
@@ -885,6 +885,9 @@
     <addaction name="action_Fill_w_random_numbers"/>
    </widget>
    <widget class="QMenu" name="menu_View">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="title">
      <string>&amp;View</string>
     </property>
@@ -901,7 +904,7 @@
     <addaction name="separator"/>
     <addaction name="action_About_Qt"/>
    </widget>
-   <widget class="QMenu" name="menuProblem">
+   <widget class="QMenu" name="menu_Problem">
     <property name="title">
      <string>&amp;Program</string>
     </property>
@@ -911,7 +914,7 @@
    <addaction name="menu_File"/>
    <addaction name="menu_Edit"/>
    <addaction name="menu_View"/>
-   <addaction name="menuProblem"/>
+   <addaction name="menu_Problem"/>
    <addaction name="menu_help"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
@@ -930,6 +933,9 @@
   <widget class="QToolBar" name="toolBar">
    <property name="windowTitle">
     <string>toolBar</string>
+   </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonFollowStyle</enum>
    </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
@@ -981,6 +987,9 @@
    </property>
   </action>
   <action name="action_Undo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../res/resources.qrc">
      <normaloff>:/icons/@16/edit-undo.png</normaloff>:/icons/@16/edit-undo.png</iconset>
@@ -993,6 +1002,9 @@
    </property>
   </action>
   <action name="action_Redo">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../res/resources.qrc">
      <normaloff>:/icons/@16/edit-redo.png</normaloff>:/icons/@16/edit-redo.png</iconset>
@@ -1020,6 +1032,9 @@
    </property>
   </action>
   <action name="action_Fill_w_random_numbers">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../res/resources.qrc">
      <normaloff>:/icons/@16/document-revert.png</normaloff>:/icons/@16/document-revert.png</iconset>
@@ -1062,6 +1077,9 @@
    </property>
   </action>
   <action name="action_How_to">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="icon">
     <iconset resource="../res/resources.qrc">
      <normaloff>:/icons/@16/help-contents.png</normaloff>:/icons/@16/help-contents.png</iconset>
@@ -1071,6 +1089,9 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+H</string>
+   </property>
+   <property name="visible">
+    <bool>true</bool>
    </property>
   </action>
   <action name="action_About">
@@ -1111,6 +1132,9 @@
    <property name="text">
     <string>&amp;Minimize w/ Simplex method</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
+   </property>
   </action>
   <action name="action_Plot">
    <property name="icon">
@@ -1119,6 +1143,9 @@
    </property>
    <property name="text">
     <string>&amp;Minimize w/ Graphical method</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+P</string>
    </property>
   </action>
  </widget>

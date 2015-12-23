@@ -2,6 +2,7 @@
 
 #include <list>
 #include <utility>
+#include <vector>
 
 #include "eigen3/Eigen/Core"
 
@@ -14,7 +15,7 @@ namespace LinearProgramming
   using Eigen::Dynamic;
   using NumericTypes::Real;
   using std::list;
-  using std::move;
+  using std::vector;
 
 
   PlotDataReal2D::PlotDataReal2D(
@@ -23,14 +24,16 @@ namespace LinearProgramming
     const list<Matrix<Real, 2, 1>>& feasibleRegionExtremePoints,
     const Matrix<Real, 1, Dynamic>& gradientVector,
     const Matrix<Real, 2, 2>& feasibleRegionBoundingBox,
-    const Matrix<Real, 2, 2>& feasibleRegionBoundingBoxHeights
+    const Matrix<Real, 2, 2>& feasibleRegionBoundingBoxHeights,
+    const vector<DenseIndex>& variablesNames
   ) :
     extremePoints(extremePoints),
     extremeValue(extremeValue),
     feasibleRegionExtremePoints(feasibleRegionExtremePoints),
     gradientVector(gradientVector),
     feasibleRegionBoundingBox(feasibleRegionBoundingBox),
-    feasibleRegionBoundingBoxHeights(feasibleRegionBoundingBoxHeights)
+    feasibleRegionBoundingBoxHeights(feasibleRegionBoundingBoxHeights),
+    variablesNames(variablesNames)
   { }
 
 
@@ -40,13 +43,17 @@ namespace LinearProgramming
     list<Matrix<Real, 2, 1>>&& feasibleRegionExtremePoints,
     Matrix<Real, 1, Dynamic>&& gradientVector,
     Matrix<Real, 2, 2>&& feasibleRegionBoundingBox,
-    Matrix<Real, 2, 2>&& feasibleRegionBoundingBoxHeights
+    Matrix<Real, 2, 2>&& feasibleRegionBoundingBoxHeights,
+    vector<DenseIndex>&& variablesNames
   ) :
-    extremePoints(move(extremePoints)),
+    extremePoints(std::move(extremePoints)),
     extremeValue(extremeValue),
-    feasibleRegionExtremePoints(move(feasibleRegionExtremePoints)),
-    gradientVector(move(gradientVector)),
-    feasibleRegionBoundingBox(move(feasibleRegionBoundingBox)),
-    feasibleRegionBoundingBoxHeights(move(feasibleRegionBoundingBoxHeights))
+    feasibleRegionExtremePoints(std::move(feasibleRegionExtremePoints)),
+    gradientVector(std::move(gradientVector)),
+    feasibleRegionBoundingBox(std::move(feasibleRegionBoundingBox)),
+    feasibleRegionBoundingBoxHeights(
+      std::move(feasibleRegionBoundingBoxHeights)
+    ),
+    variablesNames(std::move(variablesNames))
   { }
 }

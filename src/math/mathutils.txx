@@ -13,11 +13,14 @@
 #include <algorithm>
 #include <utility>
 
+#include "../misc/boostextensions.hxx"
+#include "../misc/boostqtinterop.hxx"
 #include "numerictypes.hxx"
 
 
 namespace MathUtils
 {
+  using namespace BoostQtInterop;
   using NumericTypes::Rational;
   using NumericTypes::Real;
   using std::fabs;
@@ -30,29 +33,24 @@ namespace MathUtils
   /**
    * @brief MathUtils::rationalize
    * Finds the "best" rational approximation of the given real number `x'
-   * within the given constraints (Relative Error (Tolerance) and
+   * that satisfies given constraints (Relative Error (Tolerance) and
    * Maximal Denominator) by using Continued Fractions method.
    * For the reference see:
-   *  `http://mathworld.wolfram.com/ContinuedFraction.html'.
+   *   `http://mathworld.wolfram.com/ContinuedFraction.html'.
    * @param x Number to approximate.
    * @param tolerance Tolerance value (default is `1E-16').
    * @param maxIterations Maximum iterations count allowed.
    * @param maxDenominator Maximum denominator value.
-   * @return Pair 〈p; q〉 where (p / q ≈ x) ∧ (q < maxDenominator).
+   * @return Pair 〈p; q〉 where (x ≈ p/q) ∧ (q < maxDenominator).
    */
   pair<R, R>
   rationalize(Real x, Real tolerance, uint16_t maxIterations, R maxDenominator)
   {
-//    static_assert(
-//      numeric_limits<R>::is_integer,
-//      "MathUtils::rationalize<R>: `R' should be a primitive integer type!"
-//    );
-
     Real r0(x); //See eq. (8)
-    Real integerPart(floor(r0));
+    Real r0_integerPart(floor(r0));
 
     //Check for overflow
-    if (integerPart > Real(NumericLimits::max<R>()))
+    if (r0_integerPart > Real(NumericLimits::max<R>()))
     {
       qWarning() << "MathUtils::rationalize<R>:"
                     " overflow at the upper bound of `R'";
@@ -61,7 +59,7 @@ namespace MathUtils
     }
     else
     {
-      if (integerPart < Real(NumericLimits::min<R>()))
+      if (r0_integerPart < Real(NumericLimits::min<R>()))
       {
         qWarning() << "MathUtils::rationalize<R>:"
                       " overflow at the lower bound of `R'";
@@ -71,11 +69,11 @@ namespace MathUtils
       else
       {
         //Now we can safely cast ⌊r0⌋ to R
-        R a0(integerPart); //See eq. (5)
+        R a0(r0_integerPart); //See eq. (5)
 
         //If we got "almost integer" `x', we should return 〈a_0; 1〉
         //(or the loop will stuck at division by 0.)
-        if (fabs(r0 - a0) <= tolerance * fabs(r0))
+        if (fabs(r0 - Real(a0)) <= tolerance * fabs(r0))
         {
           return make_pair(a0, 1);
         }
@@ -90,7 +88,7 @@ namespace MathUtils
           uint16_t iterCount(0);
           while (true)
           {
-            Real rn(Real(1) / Real(r0 - a0)); //See eq. (9)
+            Real rn(Real(1) / Real(r0 - Real(a0))); //See eq. (9)
             R an(floor(rn)); //See eq. (10)
             pn = an * p1 + p0; //See eq. (27), (28)
             qn = an * q1 + q0;
@@ -234,6 +232,39 @@ namespace MathUtils
 
   template<>
   /**
+   * @brief isGreaterThan
+   * @param x
+   * @param y
+   * @return `true' if (x ≲ y), `false' otherwise.
+   */
+  inline bool
+  isGreaterThan(Real x, Real y)
+  {
+    return (
+      (x - y) >
+      Epsilon * max<Real>(
+        {Real(1), absoluteValue<Real>(y), absoluteValue<Real>(y)}
+      )
+    );
+  }
+
+
+  template<>
+  /**
+   * @brief isGreaterThan
+   * @param x
+   * @param y
+   * @return `true' if (x < y), `false' otherwise.
+   */
+  inline bool
+  isGreaterThan(Rational x, Rational y)
+  {
+    return (x > y);
+  }
+
+
+  template<>
+  /**
    * @brief isEqualToZero
    * @param x
    * @return `true' if (x ~= 0), `false' otherwise.
@@ -248,6 +279,7 @@ namespace MathUtils
   }
 
 
+#ifdef LP_WITH_MULTIPRECISION
   template<>
   /**
    * @brief isEqualToZero
@@ -255,10 +287,23 @@ namespace MathUtils
    * @return `true' if (x == 0), `false' otherwise.
    */
   inline bool
-  isEqualToZero(Rational x)
+  isEqualToZero(NumericTypes::BoostRational x)
   {
-    return (x.numerator() == Integer(0));
+    return (numerator(x) == NumericTypes::BoostInteger(0));
   }
+#else
+  template<>
+  /**
+   * @brief isEqualToZero
+   * @param x
+   * @return `true' if (x == 0), `false' otherwise.
+   */
+  inline bool
+  isEqualToZero(NumericTypes::BoostRational x)
+  {
+    return (x.numerator() == NumericTypes::BuiltinInteger(0));
+  }
+#endif // LP_WITH_MULTIPRECISION
 
 
   template<>

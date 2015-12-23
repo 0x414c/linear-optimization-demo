@@ -26,6 +26,7 @@
 #include <QMessageBox>
 #include <QMimeData>
 #include <QModelIndex>
+#include <QMouseEvent>
 #include <QPen>
 #include <QSettings>
 #include <QStandardPaths>
@@ -33,8 +34,10 @@
 #include <QUrl>
 #include <QVariant>
 #include <QVector>
+#include <QWheelEvent>
 
 #include "boost/optional.hpp"
+#include "cppformat/format.h"
 #include "eigen3/Eigen/Core"
 #include "qcustomplot/qcustomplot.h"
 
@@ -64,6 +67,7 @@ namespace GUI
   using Eigen::DenseIndex;
   using Eigen::Dynamic;
   using Eigen::Matrix;
+  using fmt::format;
   using LinearProgramming::GraphicalSolver2D;
   using LinearProgramming::LinearProgramData;
   using LinearProgramming::LinearProgramSolution;
@@ -72,7 +76,6 @@ namespace GUI
   using LinearProgrammingUtils::blerp;
   using LinearProgrammingUtils::perp;
   using std::make_shared;
-  using std::move;
   using std::pair;
   using std::vector;
 }
@@ -103,7 +106,7 @@ GUI::MainWindow::MainWindow(QWidget* parent) :
 
   loadSettings();
 
-  _isLoaded = true;
+  isLoaded_ = true;
 }
 
 
@@ -123,7 +126,7 @@ GUI::MainWindow::~MainWindow()
 #pragma region event handlers
 
 void
-GUI::MainWindow::closeEvent(QCloseEvent* closeEvent)
+GUI::MainWindow::closeEvent(QCloseEvent* ev)
 {
   //TODO: ~ Check if the content is _really_ modified.
   if (isWindowModified()) {
@@ -148,7 +151,7 @@ GUI::MainWindow::closeEvent(QCloseEvent* closeEvent)
 
         if (!isWindowModified())
         {
-          closeEvent->accept();
+          ev->accept();
 
           break;
         }
@@ -158,11 +161,11 @@ GUI::MainWindow::closeEvent(QCloseEvent* closeEvent)
         }
 
       case QMessageBox::Discard:
-        closeEvent->accept();
+        ev->accept();
         break;
 
       case QMessageBox::Cancel:
-        closeEvent->ignore();
+        ev->ignore();
         break;
 
       default:
@@ -171,50 +174,50 @@ GUI::MainWindow::closeEvent(QCloseEvent* closeEvent)
   }
   else
   {
-    closeEvent->accept();
+    ev->accept();
   }
 }
 
 
 void
-GUI::MainWindow::dragEnterEvent(QDragEnterEvent* event)
+GUI::MainWindow::dragEnterEvent(QDragEnterEvent* ev)
 {
-  if (event->mimeData()->hasUrls())
+  if (ev->mimeData()->hasUrls())
   {
-    event->acceptProposedAction();
+    ev->acceptProposedAction();
   }
   else
   {
-    event->ignore();
+    ev->ignore();
   }
 }
 
 
 void
-GUI::MainWindow::dragMoveEvent(QDragMoveEvent* event)
+GUI::MainWindow::dragMoveEvent(QDragMoveEvent* ev)
 {
-  if (event->mimeData()->hasUrls())
+  if (ev->mimeData()->hasUrls())
   {
-    event->acceptProposedAction();
+    ev->acceptProposedAction();
   }
   else
   {
-    event->ignore();
+    ev->ignore();
   }
 }
 
 
 void
-GUI::MainWindow::dragLeaveEvent(QDragLeaveEvent* event)
+GUI::MainWindow::dragLeaveEvent(QDragLeaveEvent* ev)
 {
-  event->accept();
+  ev->accept();
 }
 
 
 void
-GUI::MainWindow::dropEvent(QDropEvent* event)
+GUI::MainWindow::dropEvent(QDropEvent* ev)
 {
-  const QMimeData* const mimeData = event->mimeData();
+  const QMimeData* const mimeData = ev->mimeData();
 
   if (mimeData->hasUrls())
   {
@@ -225,30 +228,29 @@ GUI::MainWindow::dropEvent(QDropEvent* event)
       const QFileInfo fileInfo(url.toLocalFile());
       if (fileInfo.isFile())
       {
-        const QString suffix(fileInfo.completeSuffix());
+        const QString suffix(fileInfo.suffix());
         if (
           (suffix.compare(QStringLiteral("json"), Qt::CaseInsensitive) == 0) ||
           (suffix.compare(QStringLiteral("txt"), Qt::CaseInsensitive) == 0)
         )
         {
-          openFileHandler(fileInfo.canonicalFilePath());
-
-          event->acceptProposedAction();
+          openFileHandler(fileInfo.filePath());
+          ev->acceptProposedAction();
         }
         else
         {
-          event->ignore();
+          ev->ignore();
         }
       }
       else
       {
-        event->ignore();
+        ev->ignore();
       }
     }
   }
   else
   {
-    event->ignore();
+    ev->ignore();
   }
 }
 
@@ -292,7 +294,7 @@ GUI::MainWindow::setupSignals()
   for (int i(0); i < ProgramModelsCount; ++i)
   {
     connect(
-      _programTableModels[i],
+      programTableModels_[i],
       SIGNAL(
         dataChanged(
           const QModelIndex&, const QModelIndex&, const QVector<int>&
@@ -307,35 +309,35 @@ GUI::MainWindow::setupSignals()
     );
 
     connect(
-      _programTableModels[i],
+      programTableModels_[i],
       SIGNAL(rowsInserted(const QModelIndex&, int, int)),
       this,
       SLOT(on_anyProgramModel_dimensionsChanged(const QModelIndex&, int, int))
     );
 
     connect(
-      _programTableModels[i],
+      programTableModels_[i],
       SIGNAL(rowsRemoved(const QModelIndex&, int, int)),
       this,
       SLOT(on_anyProgramModel_dimensionsChanged(const QModelIndex&, int, int))
     );
 
     connect(
-      _programTableModels[i],
+      programTableModels_[i],
       SIGNAL(columnsInserted(const QModelIndex&, int, int)),
       this,
       SLOT(on_anyProgramModel_dimensionsChanged(const QModelIndex&, int, int))
     );
 
     connect(
-      _programTableModels[i],
+      programTableModels_[i],
       SIGNAL(columnsRemoved(const QModelIndex&, int, int)),
       this,
       SLOT(on_anyProgramModel_dimensionsChanged(const QModelIndex&, int, int))
     );
 
     connect(
-      _programTableModels[i], SIGNAL(modelReset()),
+      programTableModels_[i], SIGNAL(modelReset()),
       this, SLOT(on_anyProgramModel_modelReset())
     );
   }
@@ -345,44 +347,44 @@ GUI::MainWindow::setupSignals()
 void
 GUI::MainWindow::setupProgramView()
 {
-  _ratNumericDelegates =
+  rationalNumericDelegates_ =
     QVector<NumericStyledItemDelegate<Rational>*>(ProgramModelsCount);
 
-  _realNumericDelegates =
+  realNumericDelegates_ =
     QVector<NumericStyledItemDelegate<Real>*>(ProgramModelsCount);
 
-  _programTableModels = QVector<SimpleTableModel*>(ProgramModelsCount);
+  programTableModels_ = QVector<SimpleTableModel*>(ProgramModelsCount);
   for (int i(0); i < ProgramModelsCount; ++i)
   {
-    _realNumericDelegates[i] = new NumericStyledItemDelegate<Real>(this);
-    _ratNumericDelegates[i] = new NumericStyledItemDelegate<Rational>(this);
-    _programTableModels[i] = new SimpleTableModel(this);
+    realNumericDelegates_[i] = new NumericStyledItemDelegate<Real>(this);
+    rationalNumericDelegates_[i] = new NumericStyledItemDelegate<Rational>(this);
+    programTableModels_[i] = new SimpleTableModel(this);
   }
 
-  _programTableModels[int(ProgramModel::ObjFunc)]->insertRow(0);
-  _programTableModels[int(ProgramModel::ObjFunc)]->insertColumns(
+  programTableModels_[int(ProgramModel::ObjFunc)]->insertRow(0);
+  programTableModels_[int(ProgramModel::ObjFunc)]->insertColumns(
     0, DefaultVariables
   );
   ui->program_objFuncCoeffsTableView->setModel(
-    _programTableModels[int(ProgramModel::ObjFunc)]
+    programTableModels_[int(ProgramModel::ObjFunc)]
   );
 
-  _programTableModels[int(ProgramModel::Constrs)]->insertRows(
+  programTableModels_[int(ProgramModel::Constrs)]->insertRows(
     0, DefaultConstraints
   );
-  _programTableModels[int(ProgramModel::Constrs)]->insertColumns(
+  programTableModels_[int(ProgramModel::Constrs)]->insertColumns(
     0, DefaultVariables
   );
   ui->program_constrsCoeffsTableView->setModel(
-    _programTableModels[int(ProgramModel::Constrs)]
+    programTableModels_[int(ProgramModel::Constrs)]
   );
 
-  _programTableModels[int(ProgramModel::RHS)]->insertRows(
+  programTableModels_[int(ProgramModel::RHS)]->insertRows(
     0, DefaultConstraints
   );
-  _programTableModels[int(ProgramModel::RHS)]->insertColumn(0);
+  programTableModels_[int(ProgramModel::RHS)]->insertColumn(0);
   ui->program_constrsRHSTableView->setModel(
-    _programTableModels[int(ProgramModel::RHS)]
+    programTableModels_[int(ProgramModel::RHS)]
   );
 }
 
@@ -392,7 +394,7 @@ GUI::MainWindow::clearProgramView()
 {
   for (int i(0); i < ProgramModelsCount; ++i)
   {
-    _programTableModels[i]->clear(QStringLiteral("0"));
+    programTableModels_[i]->clear(QStringLiteral("0"));
   }
 }
 
@@ -402,9 +404,9 @@ GUI::MainWindow::destroyProgramView()
 {
   for (int i(0); i < ProgramModelsCount; ++i)
   {
-    delete _realNumericDelegates[i];
-    delete _ratNumericDelegates[i];
-    delete _programTableModels[i];
+    delete realNumericDelegates_[i];
+    delete rationalNumericDelegates_[i];
+    delete programTableModels_[i];
   }
 }
 
@@ -452,8 +454,8 @@ GUI::MainWindow::setupGraphicalSolutionView(QCustomPlot* const customPlot)
   customPlot->xAxis->setRange(0., 1.);
   customPlot->yAxis->setRange(0., 1.);
 
-  customPlot->xAxis->setLabel(QString("x%1").arg(1)); //TODO: ! Use proper names here
-  customPlot->yAxis->setLabel(QString("x%1").arg(2)); //TODO: ! Use proper names here
+  customPlot->xAxis->setLabel(QStringLiteral("x1"));
+  customPlot->yAxis->setLabel(QStringLiteral("x2"));
 
   customPlot->setBackgroundScaled(true);
   customPlot->setBackgroundScaledMode(Qt::IgnoreAspectRatio);
@@ -465,13 +467,13 @@ GUI::MainWindow::setupGraphicalSolutionView(QCustomPlot* const customPlot)
 
   connect(
     customPlot, SIGNAL(mousePress(QMouseEvent*)),
-    this, SLOT(on_graphical_solutionPlotQCustomPlot_mousePress())
+    this, SLOT(on_graphical_solutionPlotQCustomPlot_mousePress(QMouseEvent*))
   );
 
   connect(
     customPlot, SIGNAL(mouseWheel(QWheelEvent*)),
     this,
-    SLOT(on_graphical_solutionPlotQCustomPlot_mouseWheel())
+    SLOT(on_graphical_solutionPlotQCustomPlot_mouseWheel(QWheelEvent*))
   );
 
   connect(
@@ -541,6 +543,7 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
 
   const int colorsCount(colors.count());
 
+  //TODO: ~ Avoid copying
   const vector<Matrix<Real, 2, 1>> vertices(
     plotData.feasibleRegionExtremePoints.cbegin(),
     plotData.feasibleRegionExtremePoints.cend()
@@ -548,35 +551,31 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
 
   const size_t verticesCount(plotData.feasibleRegionExtremePoints.size());
 
-  //Add colormap for obj. func. values...
+  //Add colormap for obj. func. values `F^'...
   const int xSize(
-    ColorMapResolution *
-    (
+    ColorMapResolution * (
       plotData.feasibleRegionBoundingBox(0, 1) -
       plotData.feasibleRegionBoundingBox(0, 0) + .5
     )
   );
   const int ySize(
-    ColorMapResolution *
-    (
+    ColorMapResolution * (
       plotData.feasibleRegionBoundingBox(1, 1) -
       plotData.feasibleRegionBoundingBox(1, 0) + .5
     )
   );
-
-  LOG("{} {}", xSize, ySize);
 
   QCPColorMap* const colorMap =
     new QCPColorMap(customPlot->xAxis, customPlot->yAxis);
   colorMap->data()->setSize(xSize, ySize);
   colorMap->data()->setRange(
     QCPRange(
-      plotData.feasibleRegionBoundingBox(0, 0),
-      plotData.feasibleRegionBoundingBox(0, 1)
+      qreal(plotData.feasibleRegionBoundingBox(0, 0)),
+      qreal(plotData.feasibleRegionBoundingBox(0, 1))
     ),
     QCPRange(
-      plotData.feasibleRegionBoundingBox(1, 0),
-      plotData.feasibleRegionBoundingBox(1, 1)
+      qreal(plotData.feasibleRegionBoundingBox(1, 0)),
+      qreal(plotData.feasibleRegionBoundingBox(1, 1))
     )
   );
 
@@ -599,14 +598,14 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
       )
     );
 
-    double x, y;
+    qreal x0, y0;
     for (int xIdx(0); xIdx < xSize; ++xIdx)
     {
       for (int yIdx(0); yIdx < ySize; ++yIdx)
       {
-        colorMap->data()->cellToCoord(xIdx, yIdx, &x, &y);
-        const double z(blerpOverBoundingBox(x, y));
-        colorMap->data()->setCell(xIdx, yIdx, z);
+        colorMap->data()->cellToCoord(xIdx, yIdx, &x0, &y0);
+        const qreal z0(blerpOverBoundingBox(x0, y0));
+        colorMap->data()->setCell(xIdx, yIdx, z0);
       }
     }
   }
@@ -616,7 +615,6 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
 //    for (size_t i(0); i < verticesCount; ++i)
 //    {
 //      const PointReal2D point(vertices[i]);
-
 //      colormap->data()->coordToCell(
 //        point.x, point.y, &xIdx, &yIdx
 //      );
@@ -641,12 +639,12 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   colorMap->setInterpolate(true);
   colorMap->setTightBoundary(true);
   colorMap->rescaleDataRange(true);
-  colorMap->setName(QString("F^"));
+  colorMap->setName(QStringLiteral("F^"));
   colorMap->updateLegendIcon();
   colorMap->setSelectable(true);
   customPlot->addPlottable(colorMap);
 
-  //Make sure the axis rect and color scale synchronize their
+  //Make sure that the axis rect and color scale synchronize their
   //bottom and top margins (so they line up)
   QCPMarginGroup* const marginGroup = new QCPMarginGroup(customPlot);
   customPlot->axisRect()->setMarginGroup(
@@ -672,17 +670,25 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   yAxisPlotLine->setSelectable(false);
   customPlot->addItem(yAxisPlotLine);
 
-  //Add feasible region `U' as `QCPCurve'
+  //Set axes names according to solution
+  customPlot->xAxis->setLabel(
+    QString("x%1").arg(plotData.variablesNames.at(0))
+  );
+  customPlot->yAxis->setLabel(
+    QString("x%1").arg(plotData.variablesNames.at(1))
+  );
+
+  //Add feasible region `Q'
   QCPCurve* const feasibleRegionCurve =
     new QCPCurve(customPlot->xAxis, customPlot->yAxis);
-  QVector<Real> x1(verticesCount + 1), y1(verticesCount + 1);
+  QVector<qreal> x1(verticesCount + 1), y1(verticesCount + 1);
   for (size_t i(0); i < verticesCount; ++i)
   {
-    x1[i] = vertices[i].x();
-    y1[i] = vertices[i].y();
+    x1[i] = qreal(vertices[i].x());
+    y1[i] = qreal(vertices[i].y());
   }
-  x1[verticesCount] = vertices.front().x();
-  y1[verticesCount] = vertices.front().y();
+  x1[verticesCount] = qreal(vertices.front().x());
+  y1[verticesCount] = qreal(vertices.front().y());
   feasibleRegionCurve->setData(x1, y1);
   feasibleRegionCurve->setPen(QPen(Qt::transparent));
   feasibleRegionCurve->setBrush(QBrush(QColor(31, 31, 31, 31)));
@@ -691,37 +697,37 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   feasibleRegionCurve->setScatterStyle(
     QCPScatterStyle(QCPScatterStyle::ssCircle, QColor(255, 0, 0), 8)
   );
-  feasibleRegionCurve->setName(QStringLiteral("U"));
+  feasibleRegionCurve->setName(QStringLiteral("Q"));
   feasibleRegionCurve->setSelectable(true);
   customPlot->addPlottable(feasibleRegionCurve);
 
   //Add constraints
   for (size_t i(0); i < verticesCount; ++i) {
     //Add constraint as infinite line
-    QCPItemStraightLine* const constraintAsContiniousLine =
+    QCPItemStraightLine* const constraintStraightLine =
       new QCPItemStraightLine(customPlot);
-    constraintAsContiniousLine->setPen(QPen(Qt::gray));
-    constraintAsContiniousLine->point1->setCoords(
-      QPointF(vertices[i].x(), vertices[i].y())
+    constraintStraightLine->setPen(QPen(Qt::gray));
+    constraintStraightLine->point1->setCoords(
+      QPointF(qreal(vertices[i].x()), qreal(vertices[i].y()))
     );
-    constraintAsContiniousLine->point2->setCoords(
+    constraintStraightLine->point2->setCoords(
       QPointF(
-        vertices[(i + 1) % verticesCount].x(),
-        vertices[(i + 1) % verticesCount].y()
+        qreal(vertices[(i + 1) % verticesCount].x()),
+        qreal(vertices[(i + 1) % verticesCount].y())
       )
     );
-    constraintAsContiniousLine->setSelectable(false);
-    customPlot->addItem(constraintAsContiniousLine);
+    constraintStraightLine->setSelectable(false);
+    customPlot->addItem(constraintStraightLine);
 
     //Constraint as a feasible region edge
-    QVector<Real> x(2), y(2); //add edge data
-    x[0] = vertices[i].x();
-    x[1] = vertices[(i + 1) % verticesCount].x();
-    y[0] = vertices[i].y();
-    y[1] = vertices[(i + 1) % verticesCount].y();
-    customPlot->addGraph(); //create graph and assign data to it
+    QVector<qreal> x(2), y(2);
+    x[0] = qreal(vertices[i].x());
+    x[1] = qreal(vertices[(i + 1) % verticesCount].x());
+    y[0] = qreal(vertices[i].y());
+    y[1] = qreal(vertices[(i + 1) % verticesCount].y());
+    customPlot->addGraph();
     customPlot->graph(i)->setData(x, y);
-    auto defaultColor(colors[i % colorsCount]); //set graph look
+    auto defaultColor(colors[i % colorsCount]);
 //    auto brushColor(defaultColor); brushColor.setAlphaF(.25);
 //    auto selectedBrushColor(brushColor); selectedBrushColor.setAlphaF(.125);
     customPlot->graph(i)->setPen(QPen(defaultColor));
@@ -730,7 +736,7 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
       QPen(QBrush(defaultColor), SelectedPenWidth)
     );
 //    customPlot->graph(i)->setSelectedBrush(QBrush(selectedBrushColor));
-    customPlot->graph(i)->setName(QString("Eq. (%1)").arg(i + 1));
+    customPlot->graph(i)->setName(QString("Eq. (%1)").arg(i + 1)); //TODO: ~
     customPlot->graph(i)->setSelectable(true);
   }
 
@@ -739,7 +745,9 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   QCPItemStraightLine* const objFuncPlotLine =
     new QCPItemStraightLine(customPlot);
   objFuncPlotLine->point1->setCoords(0., 0.);
-  objFuncPlotLine->point2->setCoords(levelLine.x(), levelLine.y());
+  objFuncPlotLine->point2->setCoords(
+    qreal(levelLine.x()), qreal(levelLine.y())
+  );
   objFuncPlotLine->setPen(QPen(Qt::darkBlue));
   objFuncPlotLine->setSelectedPen(
     QPen(QBrush(Qt::darkBlue), SelectedPenWidth)
@@ -747,22 +755,22 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   objFuncPlotLine->setSelectable(true);
   customPlot->addItem(objFuncPlotLine);
 
-  //HACK: Invisible level line (only a section) to obtain anchor for text label.
+  //HACK: Invisible level line (only a section) to obtain anchor for text label
   QCPItemLine* const levelLineSection = new QCPItemLine(customPlot);
   levelLineSection->start->setCoords(0., 0.);
-  levelLineSection->end->setCoords(levelLine.x(), levelLine.y());
+  levelLineSection->end->setCoords(qreal(levelLine.x()), qreal(levelLine.y()));
   levelLineSection->setPen(QPen(Qt::transparent));
   levelLineSection->setSelectable(false);
   customPlot->addItem(levelLineSection);
 
-  //...w/ label
+  //...w/ text label
   QCPItemText* const objFuncLevelLineText = new QCPItemText(customPlot);
   objFuncLevelLineText->setPositionAlignment(Qt::AlignTop | Qt::AlignRight);
   objFuncLevelLineText->position->setParentAnchor(levelLineSection->start);
 //  objFuncLevelLineText->position->setType(QCPItemPosition::ptPlotCoords);
   objFuncLevelLineText->position->setCoords(-1., 0.);
 //  objFuncLevelLineText->setRotation(levelLine.angle());
-  objFuncLevelLineText->setText(QStringLiteral("F(⃗x) = const"));
+  objFuncLevelLineText->setText(QStringLiteral(" F(⃗x) = const "));
   objFuncLevelLineText->setFont(boldFont);
   objFuncLevelLineText->setSelectable(false);
   customPlot->addItem(objFuncLevelLineText);
@@ -771,7 +779,7 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   QCPItemLine* const objFuncGradientVectorArrow = new QCPItemLine(customPlot);
   objFuncGradientVectorArrow->start->setCoords(QPointF(0., 0.));
   objFuncGradientVectorArrow->end->setCoords(
-    plotData.gradientVector.x(), plotData.gradientVector.y()
+    qreal(plotData.gradientVector.x()), qreal(plotData.gradientVector.y())
   );
   objFuncGradientVectorArrow->setHead(QCPLineEnding::esLineArrow);
   objFuncGradientVectorArrow->setPen(QPen(Qt::darkRed));
@@ -796,30 +804,38 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
 //  objFuncGradientVectorArrowText->position->setType(QCPItemPosition::ptPlotCoords);
   objFuncGradientVectorArrowText->setFont(boldFont);
   objFuncGradientVectorArrowText->setText(
-    QString("∇F(⃗x) = (%1; %2)").
-    arg(plotData.gradientVector.x()).
-    arg(plotData.gradientVector.y())
+    QString::fromStdString(
+      format(
+        " ∇F(⃗x) = ({}; {}) ",
+        plotData.gradientVector.x(),
+        plotData.gradientVector.y()
+      )
+    )
   );
   objFuncGradientVectorArrowText->setSelectable(false);
   customPlot->addItem(objFuncGradientVectorArrowText);
 
-  //Add text label at the top:
+  //Add text label w/ objective value at the top
   QCPItemText* const objectiveValueText = new QCPItemText(customPlot);
   objectiveValueText->setPositionAlignment(Qt::AlignTop | Qt::AlignHCenter);
   objectiveValueText->position->setType(QCPItemPosition::ptAxisRectRatio);
   objectiveValueText->position->setCoords(.33, .033);
   objectiveValueText->setFont(boldFont);
   objectiveValueText->setText(
-    QString(" F* = F(%1, %2) = %3 ").
-    arg(plotData.extremePoints.front().x()).
-    arg(plotData.extremePoints.front().y()).
-    arg(plotData.extremeValue)
+    QString::fromStdString(
+      format(
+        " F* = min{{F^}} =\n = F({}, {}) = {} ",
+        plotData.extremePoints.front().x(),
+        plotData.extremePoints.front().y(),
+        plotData.extremeValue
+      )
+    )
   );
   objectiveValueText->setPen(QPen(Qt::black)); //Show black border around text
   objectiveValueText->setSelectable(false);
   customPlot->addItem(objectiveValueText);
 
-  //Add arrows pointing to the objective function extreme points:
+  //Add arrows pointing to the objective values
   for (
     auto it(plotData.extremePoints.cbegin());
     it != plotData.extremePoints.cend();
@@ -828,7 +844,7 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   {
     QCPItemLine* const objectiveValueArrow = new QCPItemLine(customPlot);
     objectiveValueArrow->start->setParentAnchor(objectiveValueText->bottomLeft);
-    objectiveValueArrow->end->setCoords((*it).x(), (*it).y());
+    objectiveValueArrow->end->setCoords(qreal((*it).x()), qreal((*it).y()));
     objectiveValueArrow->setHead(QCPLineEnding::esLineArrow);
     objectiveValueArrow->setSelectable(false);
     customPlot->addItem(objectiveValueArrow);
@@ -854,33 +870,33 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
 void
 GUI::MainWindow::setupSimplexView()
 {
-  _simplexTableModels = QVector<SimpleTableModel*>(SimplexModelsCount);
+  simplexTableModels_ = QVector<SimpleTableModel*>(SimplexModelsCount);
   for (int i(0); i < SimplexModelsCount; ++i)
   {
-    _simplexTableModels[i] = new SimpleTableModel(this);
+    simplexTableModels_[i] = new SimpleTableModel(this);
   }
 
-  _simplexTableModels[int(SimplexModel::Solution)]->insertRow(0);
-  _simplexTableModels[int(SimplexModel::Solution)]->insertColumn(0);
-  _simplexTableModels[int(SimplexModel::Solution)]->setEditable(false);
-  _simplexTableModels[int(SimplexModel::Solution)]->setSelectable(false);
+  simplexTableModels_[int(SimplexModel::Solution)]->insertRow(0);
+  simplexTableModels_[int(SimplexModel::Solution)]->insertColumn(0);
+  simplexTableModels_[int(SimplexModel::Solution)]->setEditable(false);
+  simplexTableModels_[int(SimplexModel::Solution)]->setSelectable(false);
   ui->simplex_solutionVectorTableView->setModel(
-    _simplexTableModels[int(SimplexModel::Solution)]
+    simplexTableModels_[int(SimplexModel::Solution)]
   );
 
-  _simplexTableModels[int(SimplexModel::ObjectiveValue)]->insertRow(0);
-  _simplexTableModels[int(SimplexModel::ObjectiveValue)]->insertColumn(0);
-  _simplexTableModels[int(SimplexModel::ObjectiveValue)]->setEditable(false);
-  _simplexTableModels[int(SimplexModel::ObjectiveValue)]->setSelectable(false);
+  simplexTableModels_[int(SimplexModel::ObjectiveValue)]->insertRow(0);
+  simplexTableModels_[int(SimplexModel::ObjectiveValue)]->insertColumn(0);
+  simplexTableModels_[int(SimplexModel::ObjectiveValue)]->setEditable(false);
+  simplexTableModels_[int(SimplexModel::ObjectiveValue)]->setSelectable(false);
   ui->simplex_objectiveValueTableView->setModel(
-    _simplexTableModels[int(SimplexModel::ObjectiveValue)]
+    simplexTableModels_[int(SimplexModel::ObjectiveValue)]
   );
 
-  _simplexTableModels[int(SimplexModel::Tableau)]->insertRow(0);
-  _simplexTableModels[int(SimplexModel::Tableau)]->insertColumn(0);
-  _simplexTableModels[int(SimplexModel::Tableau)]->setEditable(false);
+  simplexTableModels_[int(SimplexModel::Tableau)]->insertRow(0);
+  simplexTableModels_[int(SimplexModel::Tableau)]->insertColumn(0);
+  simplexTableModels_[int(SimplexModel::Tableau)]->setEditable(false);
   ui->simplex_simplexTableauTableView->setModel(
-    _simplexTableModels[int(SimplexModel::Tableau)]
+    simplexTableModels_[int(SimplexModel::Tableau)]
   );
 }
 
@@ -918,7 +934,7 @@ GUI::MainWindow::clearSimplexView()
 {
   for (int i(0); i < SimplexModelsCount; ++i)
   {
-    _simplexTableModels[i]->clear(QStringLiteral("0"));
+    simplexTableModels_[i]->clear(QStringLiteral("0"));
   }
 }
 
@@ -926,22 +942,22 @@ GUI::MainWindow::clearSimplexView()
 void
 GUI::MainWindow::refreshSimplexView()
 {
-  switch (_field)
+  switch (field_)
   {
     case Field::Real:
       if (
-        !_realSolverController.isEmpty() &&
-        _realSolverController.stateChanged()
+        !realNumericSolverController_.isEmpty() &&
+        realNumericSolverController_.stateChanged()
       )
       {
-        const SimplexTableau<Real> tableau(_realSolverController.current());
+        const SimplexTableau<Real> tableau(realNumericSolverController_.current());
 
-        _simplexTableModels[int(SimplexModel::Tableau)]->resize(
+        simplexTableModels_[int(SimplexModel::Tableau)]->resize(
           tableau.rows(), tableau.cols()
         );
 
         TableModelUtils::fill<Real>(
-          _simplexTableModels[int(SimplexModel::Tableau)],
+          simplexTableModels_[int(SimplexModel::Tableau)],
           tableau
         );
 
@@ -949,19 +965,19 @@ GUI::MainWindow::refreshSimplexView()
 
         const Matrix<Real, Dynamic, 1> extremePoint(tableau.extremePoint());
 
-        _simplexTableModels[int(SimplexModel::Solution)]->resize(
+        simplexTableModels_[int(SimplexModel::Solution)]->resize(
           1, extremePoint.rows()
         );
 
         TableModelUtils::fill<Real>(
-          _simplexTableModels[int(SimplexModel::Solution)],
+          simplexTableModels_[int(SimplexModel::Solution)],
           extremePoint.transpose()
         );
 
         ui->simplex_solutionVectorTableView->resizeColumnsToContents();
 
         TableModelUtils::fill(
-          _simplexTableModels[int(SimplexModel::ObjectiveValue)],
+          simplexTableModels_[int(SimplexModel::ObjectiveValue)],
           numericCast<QString, Real>(
             tableau.extremeValue()
           )
@@ -971,7 +987,7 @@ GUI::MainWindow::refreshSimplexView()
         const DenseIndex rows(tableau.rows());
         const DenseIndex cols(tableau.cols());
         TableModelUtils::setFlags<Real>(
-          _simplexTableModels[int(SimplexModel::Tableau)],
+          simplexTableModels_[int(SimplexModel::Tableau)],
           tableau.entries(),
           [rows, cols, &idx, &tableau]
           (const Real& x) {
@@ -996,42 +1012,42 @@ GUI::MainWindow::refreshSimplexView()
       ui->simplex_simplexTableauTableView->selectionModel()->clearCurrentIndex();
 
       ui->simplex_stepBackPushButton->setEnabled(
-        _realSolverController.hasPrevious()
+        realNumericSolverController_.hasPrevious()
       );
 
       ui->simplex_stepForwardPushButton->setEnabled(
-        _realSolverController.hasNext()
+        realNumericSolverController_.hasNext()
       );
 
       ui->simplex_iterCountLcdNumber->display(
-        int(_realSolverController.iterationsCount())
+        int(realNumericSolverController_.iterationsCount())
       );
 
       ui->simplex_manualPivotCheckBox->setEnabled(
-        _realSolverController.hasNext()
+        realNumericSolverController_.hasNext()
       );
 
       ui->simplex_pivotHintPushButton->setEnabled(
-        _realSolverController.hasNext()
+        realNumericSolverController_.hasNext()
       );
       break;
 
     case Field::Rational:
       if (
-        !_rationalSolverController.isEmpty() &&
-        _rationalSolverController.stateChanged()
+        !rationalNumericSolverController_.isEmpty() &&
+        rationalNumericSolverController_.stateChanged()
       )
       {
         const SimplexTableau<Rational> tableau(
-          _rationalSolverController.current()
+          rationalNumericSolverController_.current()
         );
 
-        _simplexTableModels[int(SimplexModel::Tableau)]->resize(
+        simplexTableModels_[int(SimplexModel::Tableau)]->resize(
           tableau.rows(), tableau.cols()
         );
 
         TableModelUtils::fill<Rational>(
-          _simplexTableModels[int(SimplexModel::Tableau)],
+          simplexTableModels_[int(SimplexModel::Tableau)],
           tableau
         );
 
@@ -1039,19 +1055,19 @@ GUI::MainWindow::refreshSimplexView()
 
         const Matrix<Rational, Dynamic, 1> extremePoint(tableau.extremePoint());
 
-        _simplexTableModels[int(SimplexModel::Solution)]->resize(
+        simplexTableModels_[int(SimplexModel::Solution)]->resize(
           1, extremePoint.rows()
         );
 
         TableModelUtils::fill<Rational>(
-          _simplexTableModels[int(SimplexModel::Solution)],
+          simplexTableModels_[int(SimplexModel::Solution)],
           extremePoint.transpose()
         );
 
         ui->simplex_solutionVectorTableView->resizeColumnsToContents();
 
         TableModelUtils::fill(
-          _simplexTableModels[int(SimplexModel::ObjectiveValue)],
+          simplexTableModels_[int(SimplexModel::ObjectiveValue)],
           numericCast<QString, Rational>(
             tableau.extremeValue()
           )
@@ -1061,7 +1077,7 @@ GUI::MainWindow::refreshSimplexView()
         const DenseIndex rows(tableau.rows());
         const DenseIndex cols(tableau.cols());
         TableModelUtils::setFlags<Rational>(
-          _simplexTableModels[int(SimplexModel::Tableau)],
+          simplexTableModels_[int(SimplexModel::Tableau)],
           tableau.entries(),
           [rows, cols, &idx, &tableau]
           (const Rational& x) {
@@ -1086,23 +1102,23 @@ GUI::MainWindow::refreshSimplexView()
       ui->simplex_simplexTableauTableView->selectionModel()->clearCurrentIndex();
 
       ui->simplex_stepBackPushButton->setEnabled(
-        _rationalSolverController.hasPrevious()
+        rationalNumericSolverController_.hasPrevious()
       );
 
       ui->simplex_stepForwardPushButton->setEnabled(
-        _rationalSolverController.hasNext()
+        rationalNumericSolverController_.hasNext()
       );
 
       ui->simplex_iterCountLcdNumber->display(
-        int(_rationalSolverController.iterationsCount())
+        int(rationalNumericSolverController_.iterationsCount())
       );
 
       ui->simplex_manualPivotCheckBox->setEnabled(
-        _rationalSolverController.hasNext()
+        rationalNumericSolverController_.hasNext()
       );
 
       ui->simplex_pivotHintPushButton->setEnabled(
-        _rationalSolverController.hasNext()
+        rationalNumericSolverController_.hasNext()
       );
       break;
 
@@ -1117,7 +1133,7 @@ GUI::MainWindow::destroySimplexView()
 {
   for (int i(0); i < SimplexModelsCount; ++i)
   {
-    delete _simplexTableModels[i];
+    delete simplexTableModels_[i];
   }
 }
 
@@ -1125,17 +1141,17 @@ GUI::MainWindow::destroySimplexView()
 void
 GUI::MainWindow::assignTableModelsHeaders()
 {
-  _programTableModels[int(ProgramModel::ObjFunc)]->setHeaderData(
+  programTableModels_[int(ProgramModel::ObjFunc)]->setHeaderData(
     0, Qt::Vertical, QStringLiteral("c")
   );
-  _programTableModels[int(ProgramModel::RHS)]->setHeaderData(
+  programTableModels_[int(ProgramModel::RHS)]->setHeaderData(
     0, Qt::Horizontal, QStringLiteral("β")
   );
 
-  _simplexTableModels[int(SimplexModel::Solution)]->setHeaderData(
+  simplexTableModels_[int(SimplexModel::Solution)]->setHeaderData(
     0, Qt::Vertical, QStringLiteral("x*")
   );
-  _simplexTableModels[int(SimplexModel::ObjectiveValue)]->setHeaderData(
+  simplexTableModels_[int(SimplexModel::ObjectiveValue)]->setHeaderData(
     0, Qt::Vertical, QStringLiteral("F*")
   );
 }
@@ -1144,19 +1160,19 @@ GUI::MainWindow::assignTableModelsHeaders()
 void
 GUI::MainWindow::convertTableModelsContents()
 {
-  switch (_field)
+  switch (field_)
   {
     case Field::Real:
       for (int i(0); i < ProgramModelsCount; ++i)
       {
-        TableModelUtils::convert<Real, Rational>(_programTableModels[i]);
+        TableModelUtils::convert<Real, Rational>(programTableModels_[i]);
       }
       break;
 
     case Field::Rational:
       for (int i(0); i < ProgramModelsCount; ++i)
       {
-        TableModelUtils::convert<Rational, Real>(_programTableModels[i]);
+        TableModelUtils::convert<Rational, Real>(programTableModels_[i]);
       }
       break;
 
@@ -1169,19 +1185,19 @@ GUI::MainWindow::convertTableModelsContents()
 void
 GUI::MainWindow::toggleTableViewsDelegates()
 {
-  switch (_field)
+  switch (field_)
   {
     case Field::Real:
       qInfo() << "MainWindow::toggleTableViewsDelegates:"
                  " switching to `Real'";
       ui->program_objFuncCoeffsTableView->setItemDelegate(
-        _realNumericDelegates[int(ProgramModel::ObjFunc)]
+        realNumericDelegates_[int(ProgramModel::ObjFunc)]
       );
       ui->program_constrsCoeffsTableView->setItemDelegate(
-        _realNumericDelegates[int(ProgramModel::Constrs)]
+        realNumericDelegates_[int(ProgramModel::Constrs)]
       );
       ui->program_constrsRHSTableView->setItemDelegate(
-        _realNumericDelegates[int(ProgramModel::RHS)]
+        realNumericDelegates_[int(ProgramModel::RHS)]
       );
       break;
 
@@ -1189,19 +1205,19 @@ GUI::MainWindow::toggleTableViewsDelegates()
       qInfo() << "MainWindow::toggleTableViewsDelegates:"
                   " switching to `Rational'";
       ui->program_objFuncCoeffsTableView->setItemDelegate(
-        _ratNumericDelegates[int(ProgramModel::ObjFunc)]
+        rationalNumericDelegates_[int(ProgramModel::ObjFunc)]
       );
       ui->program_constrsCoeffsTableView->setItemDelegate(
-        _ratNumericDelegates[int(ProgramModel::Constrs)]
+        rationalNumericDelegates_[int(ProgramModel::Constrs)]
       );
       ui->program_constrsRHSTableView->setItemDelegate(
-        _ratNumericDelegates[int(ProgramModel::RHS)]
+        rationalNumericDelegates_[int(ProgramModel::RHS)]
       );
       break;
 
     default:
       qCritical() << "MainWindow::toggleTableViewsDelegates:"
-                     " unknown value of `_currentField'";
+                     " unsupported value of `_currentField'";
       break;
   }
 }
@@ -1222,9 +1238,9 @@ GUI::MainWindow::toggleField()
 void
 GUI::MainWindow::setField(Field field)
 {
-  if (_field != field)
+  if (field_ != field)
   {
-    _field = field;
+    field_ = field;
 
     toggleField();
   }
@@ -1234,9 +1250,9 @@ GUI::MainWindow::setField(Field field)
 void
 GUI::MainWindow::setDirty(bool dirty)
 {
-  if (_isDirty != dirty)
+  if (isDirty_ != dirty)
   {
-    _isDirty = dirty;
+    isDirty_ = dirty;
 
     setWindowModified(dirty);
   }
@@ -1246,39 +1262,39 @@ GUI::MainWindow::setDirty(bool dirty)
 void
 GUI::MainWindow::setupNumericSolvers()
 {
-  _realSolver = make_shared<DantzigNumericSolver<Real>>();
-  _rationalSolver = make_shared<DantzigNumericSolver<Rational>>();
+  realNumericSolver_ = make_shared<DantzigNumericSolver<Real>>();
+  rationalNumericSolver_ = make_shared<DantzigNumericSolver<Rational>>();
 }
 
 
 void
 GUI::MainWindow::setupNumericSolversControllers()
 {
-  _realSolverController = DantzigNumericSolverController<Real>(_realSolver);
-  _rationalSolverController =
-      DantzigNumericSolverController<Rational>(_rationalSolver);
+  realNumericSolverController_ = DantzigNumericSolverController<Real>(realNumericSolver_);
+  rationalNumericSolverController_ =
+      DantzigNumericSolverController<Rational>(rationalNumericSolver_);
 }
 
 
 void GUI::MainWindow::updateNumericSolversData()
 {
-  switch (_field)
+  switch (field_)
   {
     case Field::Real:
       {
         Matrix<Real, 1, Dynamic> objFuncCoeffs(
           TableModelUtils::makeRowVector<Real>(
-            _programTableModels[int(ProgramModel::ObjFunc)]
+            programTableModels_[int(ProgramModel::ObjFunc)]
           )
         );
         Matrix<Real, Dynamic, Dynamic> constrsCoeffs(
           TableModelUtils::makeMatrix<Real>(
-            _programTableModels[int(ProgramModel::Constrs)]
+            programTableModels_[int(ProgramModel::Constrs)]
           )
         );
         Matrix<Real, Dynamic, 1> constrsRHS(
           TableModelUtils::makeColumnVector<Real>(
-            _programTableModels[int(ProgramModel::RHS)]
+            programTableModels_[int(ProgramModel::RHS)]
           )
         );
 
@@ -1287,7 +1303,7 @@ void GUI::MainWindow::updateNumericSolversData()
           std::move(constrsCoeffs),
           std::move(constrsRHS)
         );
-        _realSolver->setLinearProgramData(std::move(linearProgramData));
+        realNumericSolver_->setLinearProgramData(std::move(linearProgramData));
 
         break;
       }
@@ -1296,17 +1312,17 @@ void GUI::MainWindow::updateNumericSolversData()
       {
         Matrix<Rational, 1, Dynamic> objFuncCoeffs(
           TableModelUtils::makeRowVector<Rational>(
-            _programTableModels[int(ProgramModel::ObjFunc)]
+            programTableModels_[int(ProgramModel::ObjFunc)]
           )
         );
         Matrix<Rational, Dynamic, Dynamic> constrsCoeffs(
           TableModelUtils::makeMatrix<Rational>(
-            _programTableModels[int(ProgramModel::Constrs)]
+            programTableModels_[int(ProgramModel::Constrs)]
           )
         );
         Matrix<Rational, Dynamic, 1> constrsRHS(
           TableModelUtils::makeColumnVector<Rational>(
-            _programTableModels[int(ProgramModel::RHS)]
+            programTableModels_[int(ProgramModel::RHS)]
           )
         );
 
@@ -1315,7 +1331,7 @@ void GUI::MainWindow::updateNumericSolversData()
           std::move(constrsCoeffs),
           std::move(constrsRHS)
         );
-        _rationalSolver->setLinearProgramData(linearProgramData);
+        rationalNumericSolver_->setLinearProgramData(linearProgramData);
 
         break;
       }
@@ -1337,26 +1353,26 @@ GUI::MainWindow::solveSimplexHandler()
   enableCurrentSolutionSimplexView();
   ui->simplex_startPushButton->setEnabled(true);
 
-  switch (_field)
+  switch (field_)
   {
     case Field::Real:
       {
         const pair<SolutionType, optional<LinearProgramSolution<Real>>>
-        linearProgramSolution(_realSolver->solve());
+        linearProgramSolution(realNumericSolver_->solve());
 
         if (linearProgramSolution.second)
         {
-          _simplexTableModels[int(SimplexModel::Solution)]->resize(
+          simplexTableModels_[int(SimplexModel::Solution)]->resize(
             1,
             (*linearProgramSolution.second).extremePoint.rows()
           );
           TableModelUtils::fill<Real>(
-            _simplexTableModels[int(SimplexModel::Solution)],
+            simplexTableModels_[int(SimplexModel::Solution)],
             (*linearProgramSolution.second).extremePoint.transpose()
           );
 
           TableModelUtils::fill(
-            _simplexTableModels[int(SimplexModel::ObjectiveValue)],
+            simplexTableModels_[int(SimplexModel::ObjectiveValue)],
             numericCast<QString, Real>(
               (*linearProgramSolution.second).extremeValue
             )
@@ -1371,8 +1387,9 @@ GUI::MainWindow::solveSimplexHandler()
         else
         {
           solutionErrorHandler(
-            QStringLiteral("This linear program can not be solved by"
-                           " the Simplex method."),
+            QStringLiteral(
+              "This linear program can not be solved by the Simplex method."
+            ),
             linearProgramSolution.first
           );
           goto error;
@@ -1383,21 +1400,21 @@ GUI::MainWindow::solveSimplexHandler()
     case Field::Rational:
       {
         const pair<SolutionType, optional<LinearProgramSolution<Rational>>>
-        linearProgramSolution(_rationalSolver->solve());
+        linearProgramSolution(rationalNumericSolver_->solve());
 
         if (linearProgramSolution.second)
         {
-          _simplexTableModels[int(SimplexModel::Solution)]->resize(
+          simplexTableModels_[int(SimplexModel::Solution)]->resize(
             1,
             (*linearProgramSolution.second).extremePoint.rows()
           );
           TableModelUtils::fill<Rational>(
-            _simplexTableModels[int(SimplexModel::Solution)],
+            simplexTableModels_[int(SimplexModel::Solution)],
             (*linearProgramSolution.second).extremePoint.transpose()
           );
 
           TableModelUtils::fill(
-            _simplexTableModels[int(SimplexModel::ObjectiveValue)],
+            simplexTableModels_[int(SimplexModel::ObjectiveValue)],
             numericCast<QString, Rational>(
               (*linearProgramSolution.second).extremeValue
             )
@@ -1412,8 +1429,9 @@ GUI::MainWindow::solveSimplexHandler()
         else
         {
           solutionErrorHandler(
-            QStringLiteral("This linear program can not be solved by"
-                           " the Simplex method."),
+            QStringLiteral(
+              "This linear program can not be solved by the Simplex method."
+            ),
             linearProgramSolution.first
           );
           goto error;
@@ -1441,25 +1459,25 @@ GUI::MainWindow::solveGraphicalHandler()
 
   enableGraphicalSolutionView();
 
-  switch (_field)
+  switch (field_)
   {
     case Field::Real:
       {
         Matrix<Real, 1, Dynamic> objFuncCoeffs(
           TableModelUtils::makeRowVector<Real>(
-            _programTableModels[int(ProgramModel::ObjFunc)]
+            programTableModels_[int(ProgramModel::ObjFunc)]
           )
         );
 
         Matrix<Real, Dynamic, Dynamic> constrsCoeffs(
           TableModelUtils::makeMatrix<Real>(
-            _programTableModels[int(ProgramModel::Constrs)]
+            programTableModels_[int(ProgramModel::Constrs)]
           )
         );
 
         Matrix<Real, Dynamic, 1> constrsRHS(
           TableModelUtils::makeColumnVector<Real>(
-            _programTableModels[int(ProgramModel::RHS)]
+            programTableModels_[int(ProgramModel::RHS)]
           )
         );
 
@@ -1484,8 +1502,10 @@ GUI::MainWindow::solveGraphicalHandler()
         else
         {
           solutionErrorHandler(
-            QStringLiteral("This linear program can not be solved by"
-                           " the 2D graphical method."),
+            QStringLiteral(
+              "This linear program can not be solved by"
+              " the 2D graphical method."
+            ),
             plotData2D.first
           );
 
@@ -1499,19 +1519,19 @@ GUI::MainWindow::solveGraphicalHandler()
       {
         Matrix<Rational, 1, Dynamic> objFuncCoeffs(
           TableModelUtils::makeRowVector<Rational>(
-            _programTableModels[int(ProgramModel::ObjFunc)]
+            programTableModels_[int(ProgramModel::ObjFunc)]
           )
         );
 
         Matrix<Rational, Dynamic, Dynamic> constrsCoeffs(
           TableModelUtils::makeMatrix<Rational>(
-            _programTableModels[int(ProgramModel::Constrs)]
+            programTableModels_[int(ProgramModel::Constrs)]
           )
         );
 
         Matrix<Rational, Dynamic, 1> constrsRHS(
           TableModelUtils::makeColumnVector<Rational>(
-            _programTableModels[int(ProgramModel::RHS)]
+            programTableModels_[int(ProgramModel::RHS)]
           )
         );
 
@@ -1536,8 +1556,10 @@ GUI::MainWindow::solveGraphicalHandler()
         else
         {
           solutionErrorHandler(
-            QStringLiteral("This linear program can not be solved by"
-                           " the 2D graphical method."),
+            QStringLiteral(
+              "This linear program cannot be solved by"
+              " the 2D graphical method."
+            ),
             plotData2D.first
           );
 
@@ -1566,8 +1588,11 @@ GUI::MainWindow::solutionErrorHandler(
   QString details;
   switch (type) {
     case SolutionType::Unknown:
-      details = QStringLiteral("Some error has encountered..."
-                               "\nThe program could not be solved.");
+      details = QStringLiteral(
+        "The program could not be solved:\n"
+        "Either the selected solver does not support this kind of"
+        " linear programs\nor some unknown error was encountered..."
+      );
       break;
 
     case SolutionType::Incomplete:
@@ -1575,13 +1600,18 @@ GUI::MainWindow::solutionErrorHandler(
       break;
 
     case SolutionType::Infeasible:
-      details = QStringLiteral("This linear program is infeasible:"
-                               "\nThe feasible region `U' is empty set.");
+      details = QStringLiteral(
+        "This linear program is infeasible:\n"
+        "The feasible region `Q' is empty set."
+      );
       break;
 
     case SolutionType::Unbounded:
-      details = QStringLiteral("The objective function `F' is unbounded"
-                               " over the feasible region `U'.");
+      details = QStringLiteral(
+        "This linear program cannot be solved:\n"
+        "The objective function `F' is unbounded"
+        " over the feasible region `Q'."
+      );
       break;
 
     case SolutionType::Optimal:
@@ -1596,7 +1626,7 @@ GUI::MainWindow::solutionErrorHandler(
   QMessageBox::warning(
     this,
     QStringLiteral("Error..."),
-    description + QStringLiteral("\n") + details
+    description + QStringLiteral("\n\n") + details
   );
 }
 
@@ -1618,8 +1648,11 @@ GUI::MainWindow::pivotingErrorHandler(
       break;
 
     case SolutionType::Unbounded:
-      details = QStringLiteral("The objective function `F' is unbounded"
-                               " over the feasible region `U'.");
+      details = QStringLiteral(
+        "This linear program cannot be solved:\n"
+        "The objective function `F' is unbounded"
+        " over the feasible region `Q'."
+      );
       break;
 
     case SolutionType::Optimal:
@@ -1634,7 +1667,7 @@ GUI::MainWindow::pivotingErrorHandler(
   QMessageBox::warning(
     this,
     QStringLiteral("Error..."),
-    description + QStringLiteral("\n") + details
+    description + QStringLiteral("\n\n") + details
   );
 }
 
@@ -1659,6 +1692,13 @@ GUI::MainWindow::openFileHandler(const QString& filename)
       break;
 
     case ResultType::Nothing:
+      QMessageBox::critical(
+        this,
+        QStringLiteral("File Reading Error"),
+        QStringLiteral("Could not read contents of the selected file.")
+      );
+      break;
+
     default:
       break;
   }
@@ -1680,10 +1720,16 @@ GUI::MainWindow::saveFileHandler(const QString& filename)
       QMessageBox::critical(
         this,
         QStringLiteral("File Writing Error"),
-        QStringLiteral("Could not save file to the selected location.")
+        QStringLiteral("Could not write contents to the selected location.")
       );
 
     case ResultType::Nothing:
+      QMessageBox::critical(
+        this,
+        QStringLiteral("File Writing Error"),
+        QStringLiteral("Could not save file to the selected location.")
+      );
+
     default:
       break;
   }
@@ -1723,22 +1769,22 @@ GUI::MainWindow::loadData(const QString& fileName)
             for (int i(0); i < ProgramModelsCount; ++i)
             {
               //Transfer contents...
-              (*_programTableModels[i]) = std::move(tableModelStorage[i]);
+              (*programTableModels_[i]) = std::move(tableModelStorage[i]);
                //...and update ownerhsip
-              (*_programTableModels[i]).setParent(this);
+              (*programTableModels_[i]).setParent(this);
             }
             assignTableModelsHeaders();
 
             ui->program_constrsSpinBox->setValue(
-              _programTableModels[int(ProgramModel::Constrs)]->rowCount()
+              programTableModels_[int(ProgramModel::Constrs)]->rowCount()
             );
 
             ui->program_varsSpinBox->setValue(
-              _programTableModels[int(ProgramModel::Constrs)]->columnCount()
+              programTableModels_[int(ProgramModel::Constrs)]->columnCount()
             );
 
-            _field = tableModelStorage.field();
-            switch (_field)
+            field_ = tableModelStorage.field();
+            switch (field_)
             {
               case Field::Real:
                 ui->program_realRadioButton->setChecked(true);
@@ -1804,11 +1850,11 @@ GUI::MainWindow::saveData(const QString& fileName)
       //TODO: ~? Use pointers here
       TableModelStorage tableModelStorage(
         QVector<SimpleTableModel>{
-          (*_programTableModels[int(ProgramModel::ObjFunc)]),
-          (*_programTableModels[int(ProgramModel::Constrs)]),
-          (*_programTableModels[int(ProgramModel::RHS)])
+          (*programTableModels_[int(ProgramModel::ObjFunc)]),
+          (*programTableModels_[int(ProgramModel::Constrs)]),
+          (*programTableModels_[int(ProgramModel::RHS)])
         },
-        _field
+        field_
       );
       const ResultType res(tableModelStorage.write(jsonObject));
 
@@ -1941,7 +1987,7 @@ GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_selectionChangedByUser()
 
 
 void
-GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_mousePress()
+GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_mousePress(QMouseEvent* ev)
 {
   if (
     ui->graphical_solutionPlotQCustomPlot->xAxis->selectedParts().
@@ -1974,7 +2020,7 @@ GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_mousePress()
 
 
 void
-GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_mouseWheel()
+GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_mouseWheel(QWheelEvent* ev)
 {
   if (
     ui->graphical_solutionPlotQCustomPlot->xAxis->selectedParts().
@@ -2007,18 +2053,16 @@ GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_mouseWheel()
 
 
 void
-GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_mouseMove(
-  QMouseEvent* mouseEvent
-)
+GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_mouseMove(QMouseEvent* ev)
 {
   const double x(
     ui->graphical_solutionPlotQCustomPlot->xAxis->pixelToCoord(
-      mouseEvent->pos().x()
+      ev->pos().x()
     )
   );
   const double y(
     ui->graphical_solutionPlotQCustomPlot->yAxis->pixelToCoord(
-      mouseEvent->pos().y()
+      ev->pos().y()
     )
   );
 
@@ -2033,7 +2077,7 @@ GUI::MainWindow::on_anyProgramModel_dataChanged(
   const QModelIndex& topLeft,
   const QModelIndex& bottomRight, const QVector<int>& roles)
 {
-  if (_isLoaded)
+  if (isLoaded_)
   {
     setDirty();
 
@@ -2049,7 +2093,7 @@ GUI::MainWindow::on_anyProgramModel_dimensionsChanged(
   const QModelIndex& parent, int start, int end
 )
 {
-  if (_isLoaded)
+  if (isLoaded_)
   {
     setDirty();
   }
@@ -2059,7 +2103,7 @@ GUI::MainWindow::on_anyProgramModel_dimensionsChanged(
 void
 GUI::MainWindow::on_anyProgramModel_modelReset()
 {
-  if (_isLoaded)
+  if (isLoaded_)
   {
     setDirty();
 
@@ -2081,19 +2125,19 @@ GUI::MainWindow::on_program_constrsSpinBox_valueChanged(int arg1)
     }
 
     const int oldRowsCount(
-      _programTableModels[int(ProgramModel::Constrs)]->rowCount()
+      programTableModels_[int(ProgramModel::Constrs)]->rowCount()
     );
     const int oldColsCount(
-      _programTableModels[int(ProgramModel::Constrs)]->columnCount()
+      programTableModels_[int(ProgramModel::Constrs)]->columnCount()
     );
 
-    _programTableModels[int(ProgramModel::Constrs)]->resize(arg1, 0);
-    _programTableModels[int(ProgramModel::Constrs)]->clear(
+    programTableModels_[int(ProgramModel::Constrs)]->resize(arg1, 0);
+    programTableModels_[int(ProgramModel::Constrs)]->clear(
       oldRowsCount, 0, arg1, oldColsCount, QStringLiteral("0")
     );
 
-    _programTableModels[int(ProgramModel::RHS)]->resize(arg1, 0);
-    _programTableModels[int(ProgramModel::RHS)]->clear(
+    programTableModels_[int(ProgramModel::RHS)]->resize(arg1, 0);
+    programTableModels_[int(ProgramModel::RHS)]->clear(
       oldRowsCount, 0, arg1, 1, QStringLiteral("0")
     );
   }
@@ -2111,19 +2155,19 @@ GUI::MainWindow::on_program_varsSpinBox_valueChanged(int arg1)
     }
 
     const int oldColsCount(
-      _programTableModels[int(ProgramModel::Constrs)]->columnCount()
+      programTableModels_[int(ProgramModel::Constrs)]->columnCount()
     );
     const int oldRowsCount(
-      _programTableModels[int(ProgramModel::Constrs)]->rowCount()
+      programTableModels_[int(ProgramModel::Constrs)]->rowCount()
     );
 
-    _programTableModels[int(ProgramModel::Constrs)]->resize(0, arg1);
-    _programTableModels[int(ProgramModel::Constrs)]->clear(
+    programTableModels_[int(ProgramModel::Constrs)]->resize(0, arg1);
+    programTableModels_[int(ProgramModel::Constrs)]->clear(
       0, oldColsCount, oldRowsCount, arg1, QStringLiteral("0")
     );
 
-    _programTableModels[int(ProgramModel::ObjFunc)]->resize(0, arg1);
-    _programTableModels[int(ProgramModel::ObjFunc)]->clear(
+    programTableModels_[int(ProgramModel::ObjFunc)]->resize(0, arg1);
+    programTableModels_[int(ProgramModel::ObjFunc)]->clear(
       0, oldColsCount, 1, arg1, QStringLiteral("0")
     );
   }
@@ -2225,17 +2269,17 @@ GUI::MainWindow::on_simplex_startPushButton_clicked()
   enableCurrentSolutionSimplexView();
   enableStepByStepSimplexView();
 
-  switch (_field)
+  switch (field_)
   {
     case Field::Real:
-      _realSolverController.reset();
-      _realSolverController.start();
+      realNumericSolverController_.reset();
+      realNumericSolverController_.start();
       refreshSimplexView();
       break;
 
     case Field::Rational:
-      _rationalSolverController.reset();
-      _rationalSolverController.start();
+      rationalNumericSolverController_.reset();
+      rationalNumericSolverController_.start();
       refreshSimplexView();
       break;
 
@@ -2248,20 +2292,20 @@ GUI::MainWindow::on_simplex_startPushButton_clicked()
 void
 GUI::MainWindow::on_simplex_stepBackPushButton_clicked()
 {
-  switch (_field)
+  switch (field_)
   {
     case Field::Real:
-      if (_realSolverController.hasPrevious())
+      if (realNumericSolverController_.hasPrevious())
       {
-        _realSolverController.previous();
+        realNumericSolverController_.previous();
       }
       refreshSimplexView();
       break;
 
     case Field::Rational:
-      if (_rationalSolverController.hasPrevious())
+      if (rationalNumericSolverController_.hasPrevious())
       {
-        _rationalSolverController.previous();
+        rationalNumericSolverController_.previous();
       }
       refreshSimplexView();
       break;
@@ -2289,20 +2333,20 @@ GUI::MainWindow::on_simplex_stepForwardPushButton_clicked()
     }
   }
 
-  switch (_field)
+  switch (field_)
   {
     case Field::Real:
-      if (_realSolverController.hasNext())
+      if (realNumericSolverController_.hasNext())
       {
-        _realSolverController.next(pivotIdx);
+        realNumericSolverController_.next(pivotIdx);
       }
       refreshSimplexView();
       break;
 
     case Field::Rational:
-      if (_rationalSolverController.hasNext())
+      if (rationalNumericSolverController_.hasNext())
       {
-        _rationalSolverController.next(pivotIdx);
+        rationalNumericSolverController_.next(pivotIdx);
       }
       refreshSimplexView();
       break;
@@ -2327,13 +2371,13 @@ GUI::MainWindow::on_simplex_manualPivotCheckBox_toggled(bool checked)
 void
 GUI::MainWindow::on_simplex_pivotHintPushButton_clicked()
 {
-  switch (_field)
+  switch (field_)
   {
     case Field::Real:
-      if (!_realSolverController.isEmpty())
+      if (!realNumericSolverController_.isEmpty())
       {
         const pair<SolutionType, MaybeIndex2D> pivot(
-          _realSolverController.pivot()
+          realNumericSolverController_.pivot()
         );
 
         if (pivot.second)
@@ -2341,7 +2385,7 @@ GUI::MainWindow::on_simplex_pivotHintPushButton_clicked()
           //TODO: ~ Depending on the specified command, the index can also
           //become part of the current selection.
           const QModelIndex idx(
-            _simplexTableModels[int(SimplexModel::Tableau)]->index(
+            simplexTableModels_[int(SimplexModel::Tableau)]->index(
              (*pivot.second).first, (*pivot.second).second
             )
           );
@@ -2364,10 +2408,10 @@ GUI::MainWindow::on_simplex_pivotHintPushButton_clicked()
       break;
 
     case Field::Rational:
-      if (!_rationalSolverController.isEmpty())
+      if (!rationalNumericSolverController_.isEmpty())
       {
         const pair<SolutionType, MaybeIndex2D> pivot(
-          _rationalSolverController.pivot()
+          rationalNumericSolverController_.pivot()
         );
 
         if (pivot.second)
@@ -2375,7 +2419,7 @@ GUI::MainWindow::on_simplex_pivotHintPushButton_clicked()
           //TODO: ~ Depending on the specified command, the index can also
           //become part of the current selection.
           const QModelIndex idx(
-            _simplexTableModels[int(SimplexModel::Tableau)]->index(
+            simplexTableModels_[int(SimplexModel::Tableau)]->index(
              (*pivot.second).first, (*pivot.second).second
             )
           );
@@ -2478,7 +2522,7 @@ GUI::MainWindow::on_action_Fill_w_random_numbers_triggered()
   for (int i(0); i < ProgramModelsCount; ++i)
   {
     TableModelUtils::fill(
-      _programTableModels[i],
+      programTableModels_[i],
       TableModelUtils::FillMethod::Random
     );
   }
@@ -2502,6 +2546,19 @@ GUI::MainWindow::on_action_Zoom_out_triggered()
 void
 GUI::MainWindow::on_action_Zoom_reset_triggered()
 {
+//  ui->graphical_solutionPlotQCustomPlot->xAxis->setRange(
+//    1.,
+//    ui->graphical_solutionPlotQCustomPlot->xAxis->range().size(),
+//    Qt::AlignCenter
+//  );
+
+//  ui->graphical_solutionPlotQCustomPlot->yAxis->setRange(
+//    1.,
+//    ui->graphical_solutionPlotQCustomPlot->yAxis->range().size(),
+//    Qt::AlignCenter
+//  );
+
+//  ui->graphical_solutionPlotQCustomPlot->replot();
   //TODO: ~ Connect to QCP
 }
 

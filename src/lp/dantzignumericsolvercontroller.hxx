@@ -49,28 +49,28 @@ namespace LinearProgramming
 
 
       DantzigNumericSolverController(DantzigNumericSolver<T>* const solver) :
-        _solver(make_shared<DantzigNumericSolver<T>>(solver))
+        solver_(make_shared<DantzigNumericSolver<T>>(solver))
       { }
 
 
       DantzigNumericSolverController(
         const shared_ptr<DantzigNumericSolver<T>>& solver
       ) :
-        _solver(solver)
+        solver_(solver)
       { }
 
 
       const shared_ptr<DantzigNumericSolver<T>>&
       solver() const
       {
-        return _solver;
+        return solver_;
       }
 
 
       void
       setSolver(const shared_ptr<DantzigNumericSolver<T>>& solver)
       {
-        _solver = solver;
+        solver_ = solver;
         reset();
       }
 
@@ -78,10 +78,10 @@ namespace LinearProgramming
       void
       reset()
       {
-        _solver->reset();
-        _tableausList.clear();
-        _hasNext = false;
-        _wasAdvanced = false;
+        solver_->reset();
+        tableaus_.clear();
+        hasNext_ = false;
+        wasAdvanced_ = false;
       }
 
 
@@ -90,14 +90,14 @@ namespace LinearProgramming
       {
         if (isEmpty())
         {
-          _solver->reset();
-          _tableausList.push_back(
+          solver_->reset();
+          tableaus_.push_back(
             std::move(
-              SimplexTableau<T>::makePhaseOne(_solver->_linearProgramData)
+              SimplexTableau<T>::makePhaseOne(solver_->linearProgramData_)
             )
           );
-          _hasNext = true;
-          _wasAdvanced = true;
+          hasNext_ = true;
+          wasAdvanced_ = true;
         }
       }
 
@@ -107,7 +107,7 @@ namespace LinearProgramming
       {
         if (!isEmpty())
         {
-          return _tableausList.back();
+          return tableaus_.back();
         }
         else
         {
@@ -119,7 +119,7 @@ namespace LinearProgramming
       pair<SolutionType, optional<pair<DenseIndex, DenseIndex>>>
       pivot() const throw(out_of_range)
       {
-        return _solver->computePivotIdx(current());
+        return solver_->computePivotIdx(current());
       }
 
 
@@ -133,11 +133,11 @@ namespace LinearProgramming
 
           if (pivotIdx)
           {
-            solutionType = _solver->iterate(tableau, *pivotIdx);
+            solutionType = solver_->iterate(tableau, *pivotIdx);
           }
           else
           {
-            solutionType = _solver->iterate(tableau);
+            solutionType = solver_->iterate(tableau);
           }
 
           switch (solutionType)
@@ -151,14 +151,14 @@ namespace LinearProgramming
                     {
                       if (iterationsCount() > 0)
                       {
-                        ++_solver->_iterCount;
-                        _tableausList.push_back(
+                        ++solver_->iterCount_;
+                        tableaus_.push_back(
                           SimplexTableau<T>::makePhaseTwo(
-                            _solver->linearProgramData(), tableau
+                            solver_->linearProgramData(), tableau
                           )
                         );
-                        _hasNext = true;
-                        _wasAdvanced = true;
+                        hasNext_ = true;
+                        wasAdvanced_ = true;
                       }
                       else
                       {
@@ -184,9 +184,9 @@ namespace LinearProgramming
 
             case SolutionType::Incomplete:
               {
-                _tableausList.push_back(std::move(tableau));
-                _hasNext = true;
-                _wasAdvanced = true;
+                tableaus_.push_back(std::move(tableau));
+                hasNext_ = true;
+                wasAdvanced_ = true;
               }
               break;
 
@@ -194,8 +194,8 @@ namespace LinearProgramming
               goto end;
 
             end:
-              _hasNext = false;
-              _wasAdvanced = false;
+              hasNext_ = false;
+              wasAdvanced_ = false;
               break;
 
             default:
@@ -214,10 +214,10 @@ namespace LinearProgramming
       {
         if (hasPrevious())
         {
-          --_solver->_iterCount;
-          _tableausList.pop_back();
-          _hasNext = true;
-          _wasAdvanced = true;
+          --solver_->iterCount_;
+          tableaus_.pop_back();
+          hasNext_ = true;
+          wasAdvanced_ = true;
         }
         else
         {
@@ -229,53 +229,53 @@ namespace LinearProgramming
       bool
       hasNext() const
       {
-        return _hasNext;
+        return hasNext_;
       }
 
 
       bool
       hasPrevious() const
       {
-        return (_tableausList.size() >= 2);
+        return (tableaus_.size() >= 2);
       }
 
 
       bool
       stateChanged() const
       {
-        return _wasAdvanced;
+        return wasAdvanced_;
       }
 
 
       bool
       isEmpty() const
       {
-        return _tableausList.empty();
+        return tableaus_.empty();
       }
 
 
       uint16_t
       iterationsCount() const
       {
-        return _solver->_iterCount;
+        return solver_->iterCount_;
       }
 
 
       size_t
       elementsCount() const
       {
-        return _tableausList.size();
+        return tableaus_.size();
       }
 
 
     private:
-      shared_ptr<DantzigNumericSolver<T>> _solver;
+      shared_ptr<DantzigNumericSolver<T>> solver_;
 
-      list<SimplexTableau<T>> _tableausList = list<SimplexTableau<T>>(0);
+      list<SimplexTableau<T>> tableaus_ = list<SimplexTableau<T>>(0);
 
-      bool _hasNext = false;
+      bool hasNext_ = false;
 
-      bool _wasAdvanced = false;
+      bool wasAdvanced_ = false;
   };
 }
 

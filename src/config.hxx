@@ -119,10 +119,10 @@ namespace Config
 
   namespace MathUtils
   {
-    constexpr NumericTypes::Real Epsilon = 1E-8;
+    const NumericTypes::Real Epsilon = 1E-8;
 
     constexpr uint16_t MaxRationalizeIterations = 22;
-    constexpr NumericTypes::Integer DefaultRationalizeDemoninator = 10;
+    const NumericTypes::Integer DefaultRationalizeDemoninator = 10;
   }
 
 

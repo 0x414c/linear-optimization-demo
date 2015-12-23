@@ -13,23 +13,20 @@
 
 #include "eigen3/Eigen/Core"
 
-#include "boostextensions.hxx"
 #include "../math/numerictypes.hxx"
 
 
 namespace Eigen
 {
-  using NumericTypes::Integer;
-  using NumericTypes::Rational;
-
-
+#ifdef LP_WITH_MULTIPRECISION
   template<>
-  struct NumTraits<Rational> :
-    NumTraits<Integer>
+  struct NumTraits<NumericTypes::BoostRational> :
+    GenericNumTraits<int>
   {
-    typedef Rational Real;
-    typedef Rational NonInteger;
-    typedef Rational Nested;
+    typedef NumericTypes::BoostRational Real;
+    typedef NumericTypes::BoostRational NonInteger;
+    typedef NumericTypes::BoostRational Nested;
+
 
     enum
     {
@@ -42,6 +39,28 @@ namespace Eigen
       MulCost = 8
     };
   };
+#else
+  template<>
+  struct NumTraits<NumericTypes::BoostRational> :
+    NumTraits<NumericTypes::BuiltinInteger>
+  {
+    typedef NumericTypes::BoostRational Real;
+    typedef NumericTypes::BoostRational NonInteger;
+    typedef NumericTypes::BoostRational Nested;
+
+
+    enum
+    {
+      IsComplex = 0,
+      IsInteger = 1,
+      IsSigned = 1,
+      RequireInitialization = 1,
+      ReadCost = 2,
+      AddCost = 10,
+      MulCost = 8
+    };
+  };
+#endif // LP_WITH_MULTIPRECISION
 }
 
 

@@ -51,11 +51,11 @@ namespace GUI
 
 
     private:
-      const QString _metadataHeader = QStringLiteral("1;");
+      const QString fileMetadataHeader_ = QStringLiteral("1;");
 
-      QVector<SimpleTableModel> _items = QVector<SimpleTableModel>(0);
+      QVector<SimpleTableModel> items_ = QVector<SimpleTableModel>(0);
 
-      Field _field = Field::Real;
+      Field field_ = Field::Real;
   };
 }
 

@@ -17,7 +17,7 @@
  * It allows user to set style as usual by using command-line args,
  * but will stick to Qt5's `Fusion' style by default.
  * TODO: ~ Replace this parser w/ dummy options w/ smth cleaner
- * (e.g. just check for presence of "style" in `argv').
+ * (? just check for presence of "style" in `argv').
  * @param argc Command-line arguments count.
  * @param argv Command-line arguments values.
  * @return Pointer to the QAplication object created using `argc' and `argv'.

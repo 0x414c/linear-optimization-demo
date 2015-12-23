@@ -14,6 +14,15 @@
 #include <QRegExp>
 #include <QString>
 
+#include <cppformat/format.h>
+#ifdef LP_WITH_MULTIPRECISION
+#include <stdexcept>
+
+#include "boost/multiprecision/cpp_bin_float.hpp"
+#include "boost/multiprecision/cpp_int.hpp"
+#endif // LP_WITH_MULTIPRECISION
+
+#include "boostextensions.hxx"
 #include "../math/mathutils.hxx"
 #include "../math/numericlimits.hxx"
 #include "../math/numerictypes.hxx"
@@ -23,8 +32,8 @@
 namespace DataConvertors
 {
   using namespace Config::MathUtils;
+  using fmt::format;
   using MathUtils::rationalize;
-  using NumericTypes::Integer;
   using NumericTypes::Rational;
   using NumericTypes::Real;
   using std::pair;
@@ -46,34 +55,45 @@ namespace DataConvertors
   }
 
 
+#ifdef LP_WITH_MULTIPRECISION
+  using NumericTypes::BoostReal;
+  using NumericTypes::BoostInteger;
+  using NumericTypes::BoostRational;
+  using namespace NumericTypes::mpr;
+  using std::runtime_error;
+
+
   template<>
-  inline Real
-  numericCast<Real, Rational>(const Rational& from)
+  inline BoostReal
+  numericCast<BoostReal, BoostRational>(const BoostRational& from)
   {
-    const Real value(Real(from.numerator()) / Real(from.denominator()));
+    const BoostReal value(
+      BoostReal(numerator(from)) / BoostReal(denominator(from))
+    );
 
     return value;
   }
 
 
   template<>
-  inline Rational
-  numericCast<Rational, Real>(const Real& from)
+  inline BoostRational
+  numericCast<BoostRational, BoostReal>(const BoostReal& from)
   {
-    const pair<Integer, Integer> rationalized =
-      rationalize<Integer>(
-        from, Epsilon, MaxRationalizeIterations, DefaultRationalizeDemoninator
+    const pair<BoostInteger, BoostInteger> rationalized =
+      rationalize<BoostInteger>(
+        from, Epsilon,
+        MaxRationalizeIterations, DefaultRationalizeDemoninator
       );
 
-    return Rational(rationalized.first, rationalized.second);
+    return BoostRational(rationalized.first, rationalized.second);
   }
 
 
   template<>
   inline QString
-  numericCast<QString, Real>(const Real& from)
+  numericCast<QString, BoostReal>(const BoostReal& from)
   {
-    const QString value(QString("%1").arg(from));
+    const QString value(QString::fromStdString(format("{}", from)));
 
     return value;
   }
@@ -81,22 +101,26 @@ namespace DataConvertors
 
   template<>
   inline QString
-  numericCast<QString, Rational>(const Rational& from)
+  numericCast<QString, BoostRational>(const BoostRational& from)
   {
     QString value; //TODO: ~ Remove assignment, just construct-and-return
-    if (from.denominator() == Integer(1))
+
+    if (denominator(from) == BoostInteger(1))
     {
-      value = QString("%1").arg(from.numerator());
+      value = QString::fromStdString(format("{}", numerator(from)));
     }
     else
     {
-      if (from.numerator() == Integer(0))
+      if (numerator(from) == BoostInteger(0))
       {
         value = QStringLiteral("0");
       }
       else
       {
-        value = QString("%1/%2").arg(from.numerator()).arg(from.denominator());
+        value =
+          QString::fromStdString(
+            format("{}/{}", numerator(from), denominator(from))
+          );
       }
     }
 
@@ -105,18 +129,139 @@ namespace DataConvertors
 
 
   template<>
-  inline Real
-  numericCast<Real>(const QString& from)
+  inline BoostReal
+  numericCast<BoostReal>(const QString& from)
+  {
+    try
+    {
+      const BoostReal value(from.toStdString());
+
+      return value;
+    }
+    catch (const std::runtime_error& ex)
+    {
+      return NumericLimits::min<BoostReal>();
+    }
+  }
+
+
+  template<>
+  inline BoostInteger
+  numericCast<BoostInteger>(const QString& from)
+  {
+    try
+    {
+      const BoostInteger value(from.toStdString());
+
+      return value;
+    }
+    catch (const std::runtime_error& ex)
+    {
+      return NumericLimits::min<BoostInteger>();
+    }
+  }
+
+
+  template<>
+  inline BoostRational
+  numericCast<BoostRational>(const QString& from)
+  {
+    try
+    {
+      const BoostRational value(from.toStdString());
+
+      return value;
+    }
+    catch (const std::runtime_error& ex)
+    {
+      return NumericLimits::min<BoostRational>();
+    }
+  }
+
+#else
+  using NumericTypes::BuiltinReal;
+  using NumericTypes::BuiltinInteger;
+  using NumericTypes::BoostRational;
+
+
+  template<>
+  inline BuiltinReal
+  numericCast<BuiltinReal, BoostRational>(const BoostRational& from)
+  {
+    const BuiltinReal value(
+      BuiltinReal(from.numerator()) / BuiltinReal(from.denominator())
+    );
+
+    return value;
+  }
+
+
+  template<>
+  inline BoostRational
+  numericCast<BoostRational, BuiltinReal>(const BuiltinReal& from)
+  {
+    const pair<BuiltinInteger, BuiltinInteger> rationalized =
+      rationalize<BuiltinInteger>(
+        from, Epsilon,
+        MaxRationalizeIterations, DefaultRationalizeDemoninator
+      );
+
+    return BoostRational(rationalized.first, rationalized.second);
+  }
+
+
+  template<>
+  inline QString
+  numericCast<QString, BuiltinReal>(const BuiltinReal& from)
+  {
+    const QString value(QString::fromStdString(format("{}", from)));
+
+    return value;
+  }
+
+
+  template<>
+  inline QString
+  numericCast<QString, BoostRational>(const BoostRational& from)
+  {
+    QString value; //TODO: ~ Remove assignment, just construct-and-return
+
+    if (from.denominator() == BuiltinInteger(1))
+    {
+      value = QString::fromStdString(format("{}", from.numerator()));
+    }
+    else
+    {
+      if (from.numerator() == BuiltinInteger(0))
+      {
+        value = QStringLiteral("0");
+      }
+      else
+      {
+        value =
+          QString::fromStdString(
+            format("{}/{}", from.numerator(), from.denominator())
+          );
+      }
+    }
+
+    return value;
+  }
+
+
+  template<>
+  inline BuiltinReal
+  numericCast<BuiltinReal>(const QString& from)
   {
     bool isOk(false);
     const QLocale cLocale(QLocale::C);
 
-    const Real value(cLocale.toDouble(from, &isOk));
+    const BuiltinReal value(cLocale.toDouble(from, &isOk));
     if (!isOk) {
       qCritical() << "DataConvertors::numericCast<Real>:"
                      " could not convert" << from;
 
-      return NumericLimits::min<Real>();
+      return NumericLimits::min<BuiltinReal>();
     }
     else
     {
@@ -126,18 +271,18 @@ namespace DataConvertors
 
 
   template<>
-  inline Integer
-  numericCast<Integer>(const QString& from)
+  inline BuiltinInteger
+  numericCast<BuiltinInteger>(const QString& from)
   {
     bool isOk(false);
     const QLocale cLocale(QLocale::C);
 
-    const Integer value(cLocale.toLongLong(from, &isOk));
+    const BuiltinInteger value(cLocale.toLongLong(from, &isOk));
     if (!isOk) {
       qCritical() << "DataConvertors::numericCast<Integer>:"
                      " could not convert" << from;
 
-      return NumericLimits::min<Integer>();
+      return NumericLimits::min<BuiltinInteger>();
     }
     else
     {
@@ -147,8 +292,8 @@ namespace DataConvertors
 
 
   template<>
-  inline Rational
-  numericCast<Rational>(const QString& from)
+  inline BoostRational
+  numericCast<BoostRational>(const QString& from)
   {
     //We assume that the input string `from' was already
     //validated and no zero denominator can appear in
@@ -161,23 +306,24 @@ namespace DataConvertors
       const QString numCapture(re.cap(1));
       const QString denCapture(re.cap(2));
 
-      const Integer numValue(numericCast<Integer>(numCapture));
-      Integer denValue(1);
+      const BuiltinInteger numValue(numericCast<BuiltinInteger>(numCapture));
+      BuiltinInteger denValue(1);
       if (denCapture != QStringLiteral(""))
       {
-        denValue = numericCast<Integer>(denCapture);
+        denValue = numericCast<BuiltinInteger>(denCapture);
       }
 
-      return Rational(numValue, denValue);
+      return BoostRational(numValue, denValue);
     }
     else
     {
       qCritical() << "DataConvertors::numericCast<Rational>:"
                      " could not convert" << from;
 
-      return NumericLimits::min<Rational>();
+      return NumericLimits::min<BoostRational>();
     }
   }
+#endif // LP_WITH_MULTIPRECISION
 }
 
 

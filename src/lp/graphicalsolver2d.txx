@@ -57,7 +57,7 @@ namespace LinearProgramming
   GraphicalSolver2D<T>::GraphicalSolver2D(
     const LinearProgramData<T>& linearProgramData
   ) :
-    _linearProgramData(linearProgramData)
+    linearProgramData_(linearProgramData)
   { }
 
 
@@ -65,7 +65,7 @@ namespace LinearProgramming
   GraphicalSolver2D<T>::GraphicalSolver2D(
     LinearProgramData<T>&& linearProgramData
   ) :
-    _linearProgramData(std::move(linearProgramData))
+    linearProgramData_(std::move(linearProgramData))
   { }
 
 
@@ -75,7 +75,7 @@ namespace LinearProgramming
     const LinearProgramData<T>& linearProgramData
   )
   {
-    _linearProgramData = linearProgramData;
+    linearProgramData_ = linearProgramData;
   }
 
 
@@ -85,7 +85,7 @@ namespace LinearProgramming
     LinearProgramData<T>&& linearProgramData
   )
   {
-    _linearProgramData = move(linearProgramData);
+    linearProgramData_ = move(linearProgramData);
   }
 
 
@@ -100,9 +100,9 @@ namespace LinearProgramming
   {
     //Input linear program params
     //`M' is the constraints count
-    const DenseIndex M(_linearProgramData.constraintsCount());
+    const DenseIndex M(linearProgramData_.constraintsCount());
     //`N' is the decision variables count
-    const DenseIndex N(_linearProgramData.variablesCount());
+    const DenseIndex N(linearProgramData_.variablesCount());
 
     //For output
     optional<PlotDataReal2D> ret;
@@ -110,37 +110,38 @@ namespace LinearProgramming
     //Construct an augmented matrix A|b
     Matrix<T, Dynamic, Dynamic> A_b(M, N + 1);
     A_b <<
-      _linearProgramData.constraintsCoeffs,
-      _linearProgramData.constraintsRHS;
+      linearProgramData_.constraintsCoeffs,
+      linearProgramData_.constraintsRHS;
 
     //Construct an reduced row echelon forms of `A' and `A|b'
     const pair<Matrix<T, Dynamic, Dynamic>, DenseIndex> rref_A(
-      reducedRowEchelonForm<T>(_linearProgramData.constraintsCoeffs)
+      reducedRowEchelonForm<T>(linearProgramData_.constraintsCoeffs)
     );
+
     const pair<Matrix<T, Dynamic, Dynamic>, DenseIndex> rref_A_b(
       reducedRowEchelonForm<T>(A_b)
     );
 
-    LOG("A' :=\n{}\n(A|b)' :=\n{}", rref_A.first, rref_A_b.first);
-    LOG("rank(A) == {}, rank(A|b) == {}", rref_A.second, rref_A_b.second);
+    LOG("A^ :=\n{}\n(A|b)^ :=\n{}", rref_A.first, rref_A_b.first);
+    LOG("rank(A^) == {}, rank((A|b)^) == {}", rref_A.second, rref_A_b.second);
 
     //For the system {Ax == b} to be consistent
-    //rank(A) should be equal to rank(A|b)
-    if (rref_A.second != rref_A_b.second || rref_A_b.second == 0)
+    //rank(A^) should be equal to rank((A|b)^)
+    if (rref_A.second != rref_A_b.second)
     {
       qWarning() << "GraphicalSolver2D<T>::solve: inconsistent system:"
-                    " rank(A) != rank(A|b) || rank(A) == 0";
+                    " rank(A^) != rank((A|b)^)";
 
       return make_pair(SolutionType::Infeasible, ret);
     }
 
     //Constraints count `M^' in the new reduced system {A^x == b^}
-    //is equal to rank(A|b)
+    //is equal to rank((A|b)^)
     const DenseIndex M_(rref_A_b.second);
 
     //In the new system, the decision variables count `N^'
-    //is equal to N - M^
-    const DenseIndex N_(N - M_);
+    //is equal to (N - M)
+    const DenseIndex N_(N - M);
     if (N_ != 2)
     {
       qWarning() << "GraphicalSolver2D<T>::solve: could not solve this"
@@ -156,18 +157,18 @@ namespace LinearProgramming
       T sum(0);
       for (DenseIndex i(0); i < M_; ++i)
       {
-        sum += _linearProgramData.objectiveFunctionCoeffs(i) *
+        sum += linearProgramData_.objectiveFunctionCoeffs(i) *
                rref_A_b.first(i, j + M_) *
                T(-1);
       }
-      sum += _linearProgramData.objectiveFunctionCoeffs(j + M_);
+      sum += linearProgramData_.objectiveFunctionCoeffs(j + M_);
       c_(j) = sum;
     }
 
     T d_(0);
     for (DenseIndex i(0); i < M_; ++i)
     {
-      d_ += _linearProgramData.objectiveFunctionCoeffs(i) *
+      d_ += linearProgramData_.objectiveFunctionCoeffs(i) *
             rref_A_b.first(i, rref_A_b.first.cols() - 1) *
             T(-1);
     }
@@ -329,7 +330,8 @@ namespace LinearProgramming
           list<Matrix<Real, 2, 1>>(),
           Matrix<Real, 1, Dynamic>(1, 2),
           Matrix<Real, 2, 2>(2, 2),
-          Matrix<Real, 2, 2>(2, 2)
+          Matrix<Real, 2, 2>(2, 2),
+          vector<DenseIndex>(2)
         );
 
         plotData.extremePoints.resize(extremePoints.size());
@@ -403,19 +405,22 @@ namespace LinearProgramming
           numericCast<Real, T>(F_(boundingBox.col(0))),
           numericCast<Real, T>(F_(boundingBox.row(0).transpose().reverse()));
 
-        LOG(
-          "\n{}\n{}",
-          plotData.feasibleRegionBoundingBox,
-          plotData.feasibleRegionBoundingBoxHeights
-        );
+        for (DenseIndex j(0); j < N_; ++j)
+        {
+          plotData.variablesNames[j] = j + M_ + 1;
+        }
 
-//        LOG(
-//          "Solution: V == {}, G == {}, x* == {}, F* == {}",
-//          plotData2D.feasibleRegionExtremePoints,
-//          plotData2D.gradientDirection,
-//          plotData2D.extremePoints,
-//          plotData2D.extremeValue
-//        );
+        LOG(
+          "Solution: X* == {}, F* == {}, U == {},"
+          " grad(F) == {}, [U] == {}, [U]* == {}, X == {}",
+          plotData.extremePoints,
+          plotData.extremeValue,
+          plotData.feasibleRegionExtremePoints,
+          plotData.gradientVector,
+          plotData.feasibleRegionBoundingBox,
+          plotData.feasibleRegionBoundingBoxHeights,
+          plotData.variablesNames
+        );
 
         ret = plotData;
 

@@ -15,8 +15,8 @@
 
 namespace GUI
 {
-//  using namespace NumericTypes;
-//  using namespace Utils;
+  using NumericTypes::Field;
+  using Utils::ResultType;
 }
 
 
@@ -27,50 +27,50 @@ GUI::TableModelStorage::TableModelStorage()
 GUI::TableModelStorage::TableModelStorage(
   const QVector<SimpleTableModel>& items, Field field
 ) :
-  _items(items),
-  _field(field)
+  items_(items),
+  field_(field)
 { }
 
 
 GUI::SimpleTableModel&
 GUI::TableModelStorage::operator [](int idx)
 {
-  return _items[idx];
+  return items_[idx];
 }
 
 
 int
 GUI::TableModelStorage::count() const
 {
-  return _items.count();
+  return items_.count();
 }
 
 
 const QVector<GUI::SimpleTableModel>&
 GUI::TableModelStorage::items()
 {
-  return _items;
+  return items_;
 }
 
 
 const GUI::SimpleTableModel&
 GUI::TableModelStorage::itemAt(int idx) const
 {
-  return _items.at(idx);
+  return items_.at(idx);
 }
 
 
 NumericTypes::Field
 GUI::TableModelStorage::field() const
 {
-  return _field;
+  return field_;
 }
 
 
 QString
 GUI::TableModelStorage::metadata() const
 {
-  return (_metadataHeader + QString("%1").arg(int(_field)));
+  return (fileMetadataHeader_ + QString("%1").arg(int(field_)));
 }
 
 
@@ -87,8 +87,8 @@ GUI::TableModelStorage::read(const QJsonObject& jsonObject)
       int idx(re.indexIn(metadataString));
       if (idx > -1)
       {
-        _field = Field(re.cap(1).toInt());
-        _items.clear();
+        field_ = Field(re.cap(1).toInt());
+        items_.clear();
         const QJsonValue itemsValue(jsonObject[QStringLiteral("items")]);
         if (itemsValue.type() != QJsonValue::Undefined)
         {
@@ -103,7 +103,7 @@ GUI::TableModelStorage::read(const QJsonObject& jsonObject)
               const ResultType res(item.read(itemObject));
               if (res == ResultType::Success)
               {
-                _items.append(item);
+                items_.append(item);
               }
               else
               {
@@ -162,7 +162,7 @@ Utils::ResultType
 GUI::TableModelStorage::write(QJsonObject& jsonObject) const
 {
   QJsonArray itemsArray;
-  for (const SimpleTableModel& item : _items)
+  for (const SimpleTableModel& item : items_)
   {
     QJsonObject itemObject;
     const ResultType res(item.write(itemObject));
@@ -181,9 +181,9 @@ GUI::TableModelStorage::write(QJsonObject& jsonObject) const
 
   jsonObject[QStringLiteral("items")] = itemsArray;
 
-  jsonObject[QStringLiteral("metadata")] = _metadataHeader +
+  jsonObject[QStringLiteral("metadata")] = fileMetadataHeader_ +
                                            QString("%1").
-                                           arg(int(_field));
+                                           arg(int(field_));
 
   return ResultType::Success;
 }

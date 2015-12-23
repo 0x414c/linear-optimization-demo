@@ -45,7 +45,7 @@ namespace LinearProgramming
    *  `https://en.wikipedia.org/wiki/Linear_form',
    *  `https://en.wikipedia.org/wiki/Hyperplane'.
    */
-  template<typename T = Real, DenseIndex N = Dynamic>
+  template<typename TCoeff = Real, DenseIndex TDim = Dynamic>
   class LinearFunction
   {
     public:
@@ -53,78 +53,80 @@ namespace LinearProgramming
 
 
       explicit LinearFunction(
-        const Matrix<T, 1, N>& coeffs, T constTerm = T(0)
+        const Matrix<TCoeff, 1, TDim>& coeffs, TCoeff constTerm = TCoeff(0)
       ) :
-        _coeffs(coeffs), _constTerm(constTerm)
+        coeffs_(coeffs), constTerm_(constTerm)
       { }
 
 
-      explicit LinearFunction(Matrix<T, 1, N>&& coeffs, T constTerm = T(0)) :
-        _coeffs(std::move(coeffs)), _constTerm(constTerm)
+      explicit LinearFunction(
+        Matrix<TCoeff, 1, TDim>&& coeffs, TCoeff constTerm = TCoeff(0)
+      ) :
+        coeffs_(std::move(coeffs)), constTerm_(constTerm)
       { }
 
 
       DenseIndex
       dim() const
       {
-        return _coeffs.cols();
+        return coeffs_.cols();
       }
 
 
-      const Matrix<T, 1, N>&
+      const Matrix<TCoeff, 1, TDim>&
       coeffs() const
       {
-        return _coeffs;
+        return coeffs_;
       }
 
 
-//      typename Matrix<T, N, 1>::CoeffReturnType
-      const T&
+//      typename Matrix<T, TDim, 1>::CoeffReturnType
+      const TCoeff&
       coeffAt(DenseIndex coeffIdx) const
       {
-        return _coeffs(coeffIdx);
+        return coeffs_(coeffIdx);
       }
 
 
-      T&
+      TCoeff&
       coeffAt(DenseIndex coeffIdx)
       {
-        return _coeffs(coeffIdx);
+        return coeffs_(coeffIdx);
       }
 
 
-      const T&
+      const TCoeff&
       constTerm() const
       {
-        return _constTerm;
+        return constTerm_;
       }
 
 
-      T&
+      TCoeff&
       constTerm()
       {
-        return _constTerm;
+        return constTerm_;
       }
 
 
-      T
-      operator ()(const Matrix<T, N, 1>& args) const
+      TCoeff
+      operator ()(const Matrix<TCoeff, TDim, 1>& args) const
       {
         return valueAt(args);
       }
 
 
-      T
-      valueAt(const Matrix<T, N, 1>& args) const
+      TCoeff
+      valueAt(const Matrix<TCoeff, TDim, 1>& args) const
       {
-        return (_coeffs.dot(args) + _constTerm);
+        return (coeffs_.dot(args) + constTerm_);
       }
 
 
     private:
-      Matrix<T, 1, N> _coeffs;
+      Matrix<TCoeff, 1, TDim> coeffs_;
 
-      T _constTerm;
+      TCoeff constTerm_;
   };
 }
 

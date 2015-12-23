@@ -11,11 +11,12 @@
  */
 
 
+#ifdef LP_WITH_MULTIPRECISION
+#include "boost/multiprecision/cpp_bin_float.hpp"
+#include "boost/multiprecision/cpp_int.hpp"
+#else
 #include <cmath>
-
-#include <QDebug>
-#include <QDebugStateSaver>
-#include <QString>
+#endif // LP_WITH_MULTIPRECISION
 
 #include "dataconvertors.hxx"
 #include "../math/numerictypes.hxx"
@@ -23,44 +24,93 @@
 
 namespace boost
 {
-  using DataConvertors::numericCast;
-  using NumericTypes::Rational;
-  using NumericTypes::Real;
-  using std::log;
-  using std::sqrt;
+//  using DataConvertors::numericCast;
 
 
-  inline Rational
-  log(const Rational& x)
-  {
-    return (
-      numericCast<Rational, Real>(
-        Real(log(double(x.numerator()))) / Real(log(double(x.denominator())))
-      )
-    );
-  }
+//#ifdef LP_WITH_MULTIPRECISION
+//  using NumericTypes::BoostRational;
+//  using NumericTypes::BoostReal;
 
 
-  inline Rational
-  sqrt(const Rational& x)
-  {
-    return (
-      numericCast<Rational, Real>(
-        Real(sqrt(double(x.numerator()))) / Real(sqrt(double(x.denominator())))
-      )
-    );
-  }
+//  inline BoostRational
+//  log(const BoostRational& x)
+//  {
+//    return (
+//      BoostRational(
+//        multiprecision::log(BoostReal(x.numerator())) /
+//        multiprecision::log(BoostReal(x.denominator()))
+//      )
+//    );
+//  }
 
 
-  inline QDebug
-  operator <<(QDebug debug, const Rational& x)
-  {
-    QDebugStateSaver stateSaver(debug);
+//  inline BoostRational
+//  sqrt(const BoostRational& x)
+//  {
+//    return (
+//      BoostRational(
+//        multiprecision::sqrt(BoostReal(x.numerator())) /
+//        multiprecision::sqrt(BoostReal(x.denominator()))
+//      )
+//    );
+//  }
 
-    debug.nospace() << numericCast<QString, NumericTypes::Rational>(x);
 
-    return debug;
-  }
+//  inline BoostRational
+//  ceil(const BoostRational& x)
+//  {
+//    return (
+//      BoostRational(
+//        multiprecision::ceil(
+//          BoostReal(x.numerator()) / BoostReal(x.denominator())
+//        )
+//      )
+//    );
+//  }
+//#else
+//  using NumericTypes::BoostRational;
+//  using NumericTypes::BuiltinReal;
+
+
+//  inline BoostRational
+//  log(const BoostRational& x)
+//  {
+
+//    return 0;/*(
+//      numericCast<BoostRational, BuiltinReal>(
+//        BuiltinReal(
+//          std::log(double(x.numerator())) / std::log(double(x.denominator()))
+//        )
+//      )
+//    );*/
+//  }
+
+
+//  inline BoostRational
+//  sqrt(const BoostRational& x)
+//  {
+//    return 0;/*(
+//      numericCast<BoostRational, BuiltinReal>(
+//        BuiltinReal(
+//          std::sqrt(double(x.numerator())) / std::sqrt(double(x.denominator()))
+//        )
+//      )
+//    );*/
+//  }
+
+
+//  inline BoostRational
+//  ceil(const BoostRational& x)
+//  {
+//    return 0;/*(
+//      numericCast<BoostRational, BuiltinReal>(
+//        BuiltinReal(
+//          std::ceil(double(x.numerator()) / double(x.denominator()))
+//        )
+//      )
+//    );*/
+//  }
+//#endif // LP_WITH_MULTIPRECISION
 }
 
 

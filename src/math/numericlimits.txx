@@ -20,7 +20,7 @@ namespace NumericLimits
 
 
   template<>
-  inline constexpr Real
+  inline /*constexpr*/ Real
   max()
   {
     return numeric_limits<Real>::max();
@@ -28,7 +28,7 @@ namespace NumericLimits
 
 
   template<>
-  inline constexpr Real
+  inline /*constexpr*/ Real
   min()
   {
     return numeric_limits<Real>::min();
@@ -36,23 +36,7 @@ namespace NumericLimits
 
 
   template<>
-  inline constexpr Rational
-  max()
-  {
-    return Rational(numeric_limits<Integer>::max());
-  }
-
-
-  template<>
-  inline constexpr Rational
-  min()
-  {
-    return Rational(numeric_limits<Integer>::min());
-  }
-
-
-  template<>
-  inline constexpr Integer
+  inline /*constexpr*/ Integer
   max()
   {
     return numeric_limits<Integer>::max();
@@ -60,10 +44,26 @@ namespace NumericLimits
 
 
   template<>
-  inline constexpr Integer
+  inline /*constexpr*/ Integer
   min()
   {
     return numeric_limits<Integer>::min();
+  }
+
+
+  template<>
+  inline /*constexpr*/ Rational
+  max()
+  {
+    return Rational(max<Integer>());
+  }
+
+
+  template<>
+  inline /*constexpr*/ Rational
+  min()
+  {
+    return Rational(min<Integer>());
   }
 }
 

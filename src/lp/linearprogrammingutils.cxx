@@ -4,7 +4,6 @@
 #include <cmath>
 
 #include <list>
-#include <utility>
 
 #include "eigen3/Eigen/Core"
 
@@ -13,9 +12,9 @@
 
 namespace LinearProgrammingUtils
 {
-//  using namespace Eigen;
-//  using namespace NumericTypes;
-//  using namespace std;
+  using Eigen::Matrix;
+  using NumericTypes::Real;
+  using std::list;
 
 
   /**

@@ -114,21 +114,21 @@ namespace GUI
 
 
     private:
-      int _rows = 0;
-      int _cols = 0;
+      int rows_ = 0;
+      int cols_ = 0;
 
-      bool _isEditable = true;
-      bool _isSelectable = true;
+      bool isEditable_ = true;
+      bool isSelectable_ = true;
 
-      bool _haveCustomVerticalHeaderData = false;
-      bool _haveCustomHorizontalHeaderData = false;
+      bool haveCustomVerticalHeaderData_ = false;
+      bool haveCustomHorizontalHeaderData_ = false;
 
-      QVector<QVector<QString>> _values = QVector<QVector<QString>>(0);
+      QVector<QVector<QString>> values_ = QVector<QVector<QString>>(0);
 
-      QVector<QString> _horizontalHeaderData = QVector<QString>(0);
-      QVector<QString> _verticalHeaderData = QVector<QString>(0);
+      QVector<QString> horizontalHeaderData_ = QVector<QString>(0);
+      QVector<QString> verticalHeaderData_ = QVector<QString>(0);
 
-      QVector<QVector<Qt::ItemFlags>> _flags =
+      QVector<QVector<Qt::ItemFlags>> flags_ =
         QVector<QVector<Qt::ItemFlags>>(0);
 
 

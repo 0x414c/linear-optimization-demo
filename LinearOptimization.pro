@@ -13,6 +13,7 @@ CONFIG += c++14 warn_on
 QMAKE_CXX = ccache g++
 
 QMAKE_CXXFLAGS += \
+  -O0 \
   -march=native -msse -msse2 -msse3 -mfpmath=sse -m64 \
   -mieee-fp -mno-fp-ret-in-387 -mno-fancy-math-387 -malign-double \
   -ffp-contract=off -ffloat-store -frounding-math -fsignaling-nans
@@ -25,18 +26,22 @@ TARGET = LinearOptimization
 
 TEMPLATE = app
 
-CONFIG(release, debug|release) {
-  DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_INFO_OUTPUT #QT_NO_WARNING_OUTPUT
-}
+#CONFIG(release, debug|release) {
+#  DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_INFO_OUTPUT QT_NO_WARNING_OUTPUT
+#}
 
 DEFINES += \
-  EIGEN_MPL2_ONLY FMT_HEADER_ONLY \
-  LP_WITH_DEBUG_LOG LP_WITH_BLAND_RULE #LP_TEST_MODE
+  EIGEN_MPL2_ONLY \
+  FMT_HEADER_ONLY \
+  LP_WITH_DEBUG_LOG \
+  LP_WITH_BLAND_RULE
+#  LP_WITH_MULTIPRECISION
+#  LP_TEST_MODE \
 
 INCLUDEPATH += \
-  $$PWD/lib/boost \
+#  $$PWD/lib/boost \
   $$PWD/lib/cppformat \
-  $$PWD/lib/eigen \
+#  $$PWD/lib/eigen \
   $$PWD/lib/prettyprint \
   $$PWD/lib/qcustomplot
 
@@ -60,6 +65,7 @@ SOURCES += \
   src/lp/linearprogramsolution.cxx \
   src/lp/plotdatareal2d.cxx \
   src/main.cxx \
+  src/misc/boostqtinterop.cxx \
   src/misc/dataconvertors.cxx \
   src/misc/ijsonserializable.cxx \
   src/misc/utils.cxx \
@@ -104,6 +110,7 @@ HEADERS += \
   src/math/numericlimits.txx \
   src/math/numerictypes.hxx \
   src/misc/boostextensions.hxx \
+  src/misc/boostqtinterop.hxx \
   src/misc/dataconvertors.hxx \
   src/misc/dataconvertors.txx \
   src/misc/eigenextensions.hxx \
@@ -111,7 +118,6 @@ HEADERS += \
   src/misc/utils.hxx \
   src/test/test.hxx \
   src/config.hxx
-
 
 FORMS += forms/mainwindow.ui
 

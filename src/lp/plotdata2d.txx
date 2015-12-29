@@ -1,4 +1,8 @@
-﻿#include "plotdatareal2d.hxx"
+﻿#ifndef PLOTDATA2D_TXX
+#define PLOTDATA2D_TXX
+
+
+#include "plotdata2d.hxx"
 
 #include <list>
 #include <utility>
@@ -6,54 +10,64 @@
 
 #include "eigen3/Eigen/Core"
 
+#include "linearprogramsolution.hxx"
 #include "../math/numerictypes.hxx"
 
 
 namespace LinearProgramming
 {
+  using Eigen::DenseIndex;
   using Eigen::Matrix;
-  using Eigen::Dynamic;
   using NumericTypes::Real;
   using std::list;
   using std::vector;
 
 
-  PlotDataReal2D::PlotDataReal2D(
+  template<typename TCoeff/*, DenseIndex TDim*/>
+  PlotData2D<TCoeff>::PlotData2D(
+    const LinearProgramSolution<TCoeff>& linearProgramSolution,
     const list<Matrix<Real, 2, 1>>& extremePoints,
     Real extremeValue,
     const list<Matrix<Real, 2, 1>>& feasibleRegionExtremePoints,
-    const Matrix<Real, 1, Dynamic>& gradientVector,
     const Matrix<Real, 2, 2>& feasibleRegionBoundingBox,
     const Matrix<Real, 2, 2>& feasibleRegionBoundingBoxHeights,
-    const vector<DenseIndex>& variablesNames
+    const Matrix<Real, 1, 2>& gradientVector,
+    const vector<DenseIndex>& decisionVariables
   ) :
+    linearProgramSolution(linearProgramSolution),
     extremePoints(extremePoints),
     extremeValue(extremeValue),
     feasibleRegionExtremePoints(feasibleRegionExtremePoints),
-    gradientVector(gradientVector),
     feasibleRegionBoundingBox(feasibleRegionBoundingBox),
     feasibleRegionBoundingBoxHeights(feasibleRegionBoundingBoxHeights),
-    variablesNames(variablesNames)
+    gradientVector(gradientVector),
+    decisionVariables(decisionVariables)
   { }
 
 
-  PlotDataReal2D::PlotDataReal2D(
+  template<typename TCoeff/*, DenseIndex TDim*/>
+  PlotData2D<TCoeff>::PlotData2D(
+    LinearProgramSolution<TCoeff>&& linearProgramSolution,
     list<Matrix<Real, 2, 1>>&& extremePoints,
     Real extremeValue,
     list<Matrix<Real, 2, 1>>&& feasibleRegionExtremePoints,
-    Matrix<Real, 1, Dynamic>&& gradientVector,
     Matrix<Real, 2, 2>&& feasibleRegionBoundingBox,
     Matrix<Real, 2, 2>&& feasibleRegionBoundingBoxHeights,
-    vector<DenseIndex>&& variablesNames
+    Matrix<Real, 1, 2>&& gradientVector,
+    vector<DenseIndex>&& decisionVariables
   ) :
+    linearProgramSolution(std::move(linearProgramSolution)),
     extremePoints(std::move(extremePoints)),
     extremeValue(extremeValue),
     feasibleRegionExtremePoints(std::move(feasibleRegionExtremePoints)),
-    gradientVector(std::move(gradientVector)),
     feasibleRegionBoundingBox(std::move(feasibleRegionBoundingBox)),
     feasibleRegionBoundingBoxHeights(
       std::move(feasibleRegionBoundingBoxHeights)
     ),
-    variablesNames(std::move(variablesNames))
+    gradientVector(std::move(gradientVector)),
+    decisionVariables(std::move(decisionVariables))
   { }
 }
+
+
+#endif // PLOTDATA2D_TXX

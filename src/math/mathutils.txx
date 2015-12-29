@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <utility>
 
+#include "mathutils.hxx"
 #include "../misc/boostextensions.hxx"
 #include "../misc/boostqtinterop.hxx"
 #include "numerictypes.hxx"
@@ -21,15 +22,17 @@
 namespace MathUtils
 {
   using namespace BoostQtInterop;
+  using MathUtils::isEqual;
   using NumericTypes::Rational;
   using NumericTypes::Real;
   using std::fabs;
+  using std::floor;
   using std::max;
   using std::pair;
   using std::make_pair;
 
 
-  template<typename R, typename>
+  template<typename R, typename T/*, typename*/>
   /**
    * @brief MathUtils::rationalize
    * Finds the "best" rational approximation of the given real number `x'
@@ -44,13 +47,13 @@ namespace MathUtils
    * @return Pair 〈p; q〉 where (x ≈ p/q) ∧ (q < maxDenominator).
    */
   pair<R, R>
-  rationalize(Real x, Real tolerance, uint16_t maxIterations, R maxDenominator)
+  rationalize(T x, T tolerance, uint16_t maxIterations, R maxDenominator)
   {
-    Real r0(x); //See eq. (8)
-    Real r0_integerPart(floor(r0));
+    T r0(x); //See eq. (8)
+    T r0_integerPart(floor(r0));
 
-    //Check for overflow
-    if (r0_integerPart > Real(NumericLimits::max<R>()))
+    //Check for overflow (assuming that `T' is larger than `R')
+    if (r0_integerPart > T(NumericLimits::max<R>()))
     {
       qWarning() << "MathUtils::rationalize<R>:"
                     " overflow at the upper bound of `R'";
@@ -59,7 +62,7 @@ namespace MathUtils
     }
     else
     {
-      if (r0_integerPart < Real(NumericLimits::min<R>()))
+      if (r0_integerPart < T(NumericLimits::min<R>()))
       {
         qWarning() << "MathUtils::rationalize<R>:"
                       " overflow at the lower bound of `R'";
@@ -68,14 +71,14 @@ namespace MathUtils
       }
       else
       {
-        //Now we can safely cast ⌊r0⌋ to R
+        //Now we can safely cast ⌊r0⌋ from `T' to `R'
         R a0(r0_integerPart); //See eq. (5)
 
         //If we got "almost integer" `x', we should return 〈a_0; 1〉
         //(or the loop will stuck at division by 0.)
-        if (fabs(r0 - Real(a0)) <= tolerance * fabs(r0))
+        if (isEqual<T>(r0, T(a0)))
         {
-          return make_pair(a0, 1);
+          return make_pair(a0, R(1));
         }
         else
         {
@@ -88,16 +91,16 @@ namespace MathUtils
           uint16_t iterCount(0);
           while (true)
           {
-            Real rn(Real(1) / Real(r0 - Real(a0))); //See eq. (9)
+            T rn(T(1) / T(r0 - T(a0))); //See eq. (9)
             R an(floor(rn)); //See eq. (10)
             pn = an * p1 + p0; //See eq. (27), (28)
             qn = an * q1 + q0;
 
             //Look at the n-th convergent `cn'
-            const Real cn(Real(pn) / Real(qn));
+            const T cn(T(pn) / T(qn));
             if (
               ++iterCount <= maxIterations &&
-              fabs(x - cn) > tolerance * fabs(x) &&
+              !isEqual<T>(x, cn) &&
               qn < maxDenominator
             )
             {

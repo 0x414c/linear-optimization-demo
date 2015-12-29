@@ -25,10 +25,12 @@ namespace MathUtils
   using Utils::AlwaysFalse;
 
 
-  template<typename R, typename = enable_if<is_integral<R>::value>>
+  template<
+    typename R, typename T = Real/*, typename = enable_if<is_integral<R>::value>*/
+  >
   pair<R, R>
   rationalize(
-    Real x, Real tolerance = Epsilon,
+    T x, T tolerance = Epsilon,
     uint16_t maxIterations = MaxRationalizeIterations,
     R maxDenominator = NumericLimits::max<R>()
   );

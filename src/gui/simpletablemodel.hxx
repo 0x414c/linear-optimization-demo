@@ -96,7 +96,7 @@ namespace GUI
         int newRows, int newCols, const QModelIndex& parent = QModelIndex()
       );
 
-     QVariant valueAt(
+     QVariant at(
         int row, int col, const QModelIndex& parent = QModelIndex()
       ) const;
 

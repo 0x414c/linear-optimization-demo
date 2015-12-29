@@ -45,7 +45,7 @@ namespace Config
 
     const QString DefaultDocumentTitle = "Untitled";
 
-    constexpr double SelectedPenWidth = 2.5;
+    constexpr qreal SelectedPenWidth = 2.5;
 
     constexpr int FontSize = 9;
 
@@ -53,7 +53,7 @@ namespace Config
 
     constexpr int ColorMapLevelsCount = 80;
 
-    constexpr uint8_t ColorMapAlpha = 127;
+    constexpr uint8_t ColorMapAlpha = 95;
 
     //NOTE: Generated w/ `http://tristen.ca/hcl-picker'
     const QMap<double, QColor> ColorMap_BlGrYe = QMap<double, QColor>{
@@ -119,7 +119,11 @@ namespace Config
 
   namespace MathUtils
   {
-    const NumericTypes::Real Epsilon = 1E-8;
+#ifdef LP_WITH_MULTIPRECISION
+    const NumericTypes::BoostReal Epsilon = 1E-8; //TODO: ~
+#else
+    constexpr NumericTypes::BuiltinReal Epsilon = 1E-8;
+#endif // LP_WITH_MULTIPRECISION
 
     constexpr uint16_t MaxRationalizeIterations = 22;
     const NumericTypes::Integer DefaultRationalizeDemoninator = 10;

@@ -59,7 +59,6 @@ namespace DataConvertors
   using NumericTypes::BoostReal;
   using NumericTypes::BoostInteger;
   using NumericTypes::BoostRational;
-  using namespace NumericTypes::mpr;
   using std::runtime_error;
 
 
@@ -79,11 +78,12 @@ namespace DataConvertors
   inline BoostRational
   numericCast<BoostRational, BoostReal>(const BoostReal& from)
   {
-    const pair<BoostInteger, BoostInteger> rationalized =
-      rationalize<BoostInteger>(
+    const pair<BoostInteger, BoostInteger> rationalized(
+      rationalize<BoostInteger, BoostReal>(
         from, Epsilon,
         MaxRationalizeIterations, DefaultRationalizeDemoninator
-      );
+      )
+    );
 
     return BoostRational(rationalized.first, rationalized.second);
   }
@@ -201,7 +201,7 @@ namespace DataConvertors
   numericCast<BoostRational, BuiltinReal>(const BuiltinReal& from)
   {
     const pair<BuiltinInteger, BuiltinInteger> rationalized =
-      rationalize<BuiltinInteger>(
+      rationalize<BuiltinInteger, BuiltinReal>(
         from, Epsilon,
         MaxRationalizeIterations, DefaultRationalizeDemoninator
       );

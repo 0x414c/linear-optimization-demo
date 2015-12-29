@@ -23,9 +23,9 @@
 
 #include "numericstyleditemdelegate.hxx"
 #include "simpletablemodel.hxx"
-#include "../lp/dantzignumericsolver.hxx"
-#include "../lp/dantzignumericsolvercontroller.hxx"
-#include "../lp/plotdatareal2d.hxx"
+#include "../lp/simplexsolver.hxx"
+#include "../lp/simplexsolvercontroller.hxx"
+#include "../lp/plotdata2d.hxx"
 #include "../lp/solutiontype.hxx"
 #include "../math/numerictypes.hxx"
 #include "../misc/utils.hxx"
@@ -39,18 +39,15 @@ namespace Ui
 
 namespace GUI
 {
-  using LinearProgramming::DantzigNumericSolver;
-  using LinearProgramming::DantzigNumericSolverController;
-  using LinearProgramming::PlotDataReal2D;
+  using LinearProgramming::SimplexSolver;
+  using LinearProgramming::SimplexSolverController;
+  using LinearProgramming::PlotData2D;
   using LinearProgramming::SolutionType;
   using NumericTypes::Field;
   using NumericTypes::Rational;
   using NumericTypes::Real;
   using Utils::ResultType;
   using std::shared_ptr;
-
-//  template<class T>
-//  using shared_ptr = std::shared_ptr<T>;
 
 
   class MainWindow :
@@ -154,11 +151,11 @@ namespace GUI
       QVector<NumericStyledItemDelegate<Real>*> realNumericDelegates_;
       QVector<NumericStyledItemDelegate<Rational>*> rationalNumericDelegates_;
 
-      shared_ptr<DantzigNumericSolver<Real>> realNumericSolver_;
-      shared_ptr<DantzigNumericSolver<Rational>> rationalNumericSolver_;
+      shared_ptr<SimplexSolver<Real>> realSimplexSolver_;
+      shared_ptr<SimplexSolver<Rational>> rationalSimplexSolver_;
 
-      DantzigNumericSolverController<Real> realNumericSolverController_;
-      DantzigNumericSolverController<Rational> rationalNumericSolverController_;
+      SimplexSolverController<Real> realSimplexSolverController_;
+      SimplexSolverController<Rational> rationalSimplexSolverController_;
 
 
       void setupDefaults();
@@ -171,7 +168,9 @@ namespace GUI
       void setupGraphicalSolutionView(QCustomPlot* const customPlot);
       void enableGraphicalSolutionView(bool enabled = true);
       void clearGraphicalSolutionView(QCustomPlot* const customPlot);
-      void refreshGraphicalSolutionView(const PlotDataReal2D& plotData2D);
+
+      template<typename T = Real>
+      void refreshGraphicalSolutionView(const PlotData2D<T>& plotData2D);
 
       void setupSimplexView();
       void enableStepByStepSimplexView(bool enabled = true);

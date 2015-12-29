@@ -42,21 +42,43 @@ namespace Utils
 
 
   /**
-   * @brief The OperationResult enum
+   * @brief The ResultType enum
    */
   enum struct ResultType : int
   {
     Success = 0,
-    Fail = 1,
-    Nothing = 2
+    Nothing = 1,
+    Fail = 2
   };
 
 
   /**
    * @brief MathematicaFormat
+   * NOTE: For debugging purposes.
    */
   const Eigen::IOFormat MathematicaFormat(
-    Eigen::FullPrecision, 0, ", ", ",\n", "{", "}", "{", "}"
+    Eigen::FullPrecision, 0,
+    ", ", ",\n", "{", "}", "{", "}"
+  );
+
+
+  /**
+   * @brief RowVectorFormat
+   * NOTE: For printing.
+   */
+  const Eigen::IOFormat RowVectorFormat(
+    Eigen::StreamPrecision, Eigen::DontAlignCols,
+    ", ", "", "(", ")", "", ""
+  );
+
+
+  /**
+   * @brief ColVectorFormat
+   * NOTE: For printing.
+   */
+  const Eigen::IOFormat ColVectorFormat(
+    Eigen::StreamPrecision, Eigen::DontAlignCols,
+    "", ", ", "", "", "(", ")"
   );
 
 

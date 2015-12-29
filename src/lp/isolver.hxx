@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#ifndef INUMERICSOLVER_HXX
-#define INUMERICSOLVER_HXX
+#ifndef ISOLVER_HXX
+#define ISOLVER_HXX
 
 
 #include <utility>
@@ -19,17 +19,17 @@ namespace LinearProgramming
 
 
   template<typename T>
-  class INumericSolver
+  class ISolver
   {
     public:
-      virtual ~INumericSolver() = 0;
+      virtual ~ISolver() = 0;
 
       virtual pair<SolutionType, optional<T>> solve() = 0;
   };
 }
 
 
-#include "inumericsolver.txx"
+#include "isolver.txx"
 
 
-#endif // INUMERICSOLVER_HXX
+#endif // ISOLVER_HXX

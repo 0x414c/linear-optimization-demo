@@ -7,7 +7,7 @@
 #include "linearprogrammingutils.hxx"
 
 #include <functional>
-#include <iostream>
+#include <list>
 #include <utility>
 
 #include "boost/optional.hpp"
@@ -25,12 +25,11 @@ namespace LinearProgrammingUtils
   using Eigen::Dynamic;
   using Eigen::Matrix;
   using MathUtils::absoluteValue;
+  using MathUtils::isEqual;
   using MathUtils::isEqualToZero;
   using MathUtils::isGreaterThanOrEqualToZero;
   using NumericTypes::Real;
   using std::list;
-  using std::make_pair;
-  using std::pair;
   using std::ref;
 
 
@@ -93,7 +92,7 @@ namespace LinearProgrammingUtils
               r((A(1, 0) * b(0) - A(0, 0) * b(1)));
 
       sol <<
-        p / q,
+        p / q, //!
         r / s;
 
       ret = sol;
@@ -132,15 +131,15 @@ namespace LinearProgrammingUtils
    * @param matrix Matrix A to reduce.
    * @return Row-reduced echelon form of A' along w/ rank of A'.
    */
-  pair<Matrix<T, Dynamic, Dynamic>, DenseIndex>
+  RREF<T>
   reducedRowEchelonForm(const Matrix<T, Dynamic, Dynamic>& A)
   {
     const DenseIndex n(A.rows());
     const DenseIndex m(A.cols());
     DenseIndex rank(0);
 
-    Matrix<T, Dynamic, Dynamic> RREF(n, m);
-    RREF << A;
+    Matrix<T, Dynamic, Dynamic> rref(n, m);
+    rref << A;
 
     DenseIndex i(0), j(0);
     //1. Deal with each row i from 1 to n in turn, ...
@@ -149,7 +148,7 @@ namespace LinearProgrammingUtils
       //If we have reached the end
       if (i >= n || j >= m)
       {
-        return make_pair(RREF, rank);
+        return RREF<T>(std::move(rref), rank);
       }
       else
       {
@@ -163,16 +162,16 @@ namespace LinearProgrammingUtils
         //skipping any column of all zero entries.
         while (true)
         {
-          if (isEqualToZero<T>(RREF(x, j)))
+          if (isEqualToZero<T>(rref(x, j)))
           {
             ++x;
           }
           else
           {
-            if (absoluteValue<T>(RREF(x, j)) > absoluteValue<T>(maxValue))
+            if (absoluteValue<T>(rref(x, j)) > absoluteValue<T>(maxValue))
             {
               xMax = x;
-              maxValue = RREF(x, j);
+              maxValue = rref(x, j);
             }
             isColNonZero = true;
             ++x;
@@ -191,7 +190,7 @@ namespace LinearProgrammingUtils
               ++j;
               if (j >= m)
               {
-                return make_pair(RREF, rank);
+                return RREF<T>(std::move(rref), rank);
               }
               else
               {
@@ -208,41 +207,44 @@ namespace LinearProgrammingUtils
 
         if (x > i)
         {
-          RREF.row(x).swap(RREF.row(i));
+          rref.row(x).swap(rref.row(i));
         }
 
         //4. Make the pivot equal to 1 by dividing each element
         //in the pivot row by the value of the pivot.
-        const T pivot(RREF(i, j));
+        const T pivot(rref(i, j));
 
 //        LOG("A.row({0}) / pivot <=> [{1}] / {2}", i, A.row(i), pivot);
 
-        RREF.row(i) /= pivot;
+        if (!isEqual<T>(pivot, T(1)))
+        {
+          rref.row(i) /= pivot; //!
+        }
 
 //        LOG("A.row({0}) = [{1}]", i, A.row(i));
 
         //5. Make all elements above and below the pivot equal to 0 by
         //subtracting a suitable multiple of the pivot row from each other row.
-        const Matrix<T, 1, Dynamic> pivotRow(RREF.row(i));
+        const Matrix<T, 1, Dynamic> pivotRow(rref.row(i));
         for (DenseIndex k(0); k < i; ++k)
         {
-          const T factor(RREF(k, j));
+          const T factor(rref(k, j));
 
 //          LOG("A.row({0}) - factor * pivotRow <=> [{1}] - ({2} * [{3}])",
 //              k, A.row(k), factor, pivotRow);
 
-          RREF.row(k) -= factor * pivotRow;
+          rref.row(k) -= factor * pivotRow;
 
 //          LOG("A.row({0}) = [{1}]", k, A.row(k));
         }
         for (DenseIndex k(i + 1); k < n; ++k)
         {
-          const T factor(RREF(k, j));
+          const T factor(rref(k, j));
 
 //          LOG("A.row({0}) - factor * pivotRow <=> [{1}] - ({2} * [{3}])",
 //              k, A.row(k), factor, pivotRow);
 
-          RREF.row(k) -= factor * pivotRow;
+          rref.row(k) -= factor * pivotRow;
 
 //          LOG("A.row({0}) = [{1}]", k, A.row(k));
         }

@@ -1,10 +1,10 @@
 ﻿#pragma once
 
-#ifndef DANTZIGNUMERICSOLVER_TXX
-#define DANTZIGNUMERICSOLVER_TXX
+#ifndef SIMPLEXSOLVER_TXX
+#define SIMPLEXSOLVER_TXX
 
 
-#include "dantzignumericsolver.hxx"
+#include "simplexsolver.hxx"
 
 #include <algorithm>
 #include <functional>
@@ -52,7 +52,7 @@ namespace LinearProgramming
 
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::DantzigNumericSolver
+   * @brief SimplexSolver<T>::SimplexSolver
    * Solves small-scaled linear programs
    * using the Two-Phase Simplex method.
    * For the reference see:
@@ -67,7 +67,7 @@ namespace LinearProgramming
    * matrix `A', right-hand-side column-vector `b' and
    * objective function coefficients row-vector `c'.
    */
-  DantzigNumericSolver<T>::DantzigNumericSolver(
+  SimplexSolver<T>::SimplexSolver(
     const LinearProgramData<T>& linearProgramData
   ) :
     linearProgramData_(linearProgramData)
@@ -76,7 +76,7 @@ namespace LinearProgramming
 
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::DantzigNumericSolver
+   * @brief SimplexSolver<T>::SimplexSolver
    * Solves small-scaled linear programs
    * using the Two-Phase Simplex method.
    * For the reference see:
@@ -91,7 +91,7 @@ namespace LinearProgramming
    * matrix `A', right-hand-side column-vector `b' and
    * objective function coefficients row-vector `c'.
    */
-  DantzigNumericSolver<T>::DantzigNumericSolver(
+  SimplexSolver<T>::SimplexSolver(
     LinearProgramData<T>&& linearProgramData
   ) :
     linearProgramData_(std::move(linearProgramData))
@@ -100,12 +100,12 @@ namespace LinearProgramming
 
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::linearProgramData
+   * @brief SimplexSolver<T>::linearProgramData
    * Provides read-only access to source data.
    * @return
    */
   const LinearProgramData<T>&
-  DantzigNumericSolver<T>::linearProgramData() const
+  SimplexSolver<T>::linearProgramData() const
   {
     return linearProgramData_;
   }
@@ -113,11 +113,11 @@ namespace LinearProgramming
 
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::setLinearProgramData
+   * @brief SimplexSolver<T>::setLinearProgramData
    * Updates source data using `linearProgramData'.
    * @param linearProgramData
    */
-  void DantzigNumericSolver<T>::setLinearProgramData(
+  void SimplexSolver<T>::setLinearProgramData(
     const LinearProgramData<T>& linearProgramData
   )
   {
@@ -127,11 +127,11 @@ namespace LinearProgramming
 
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::setLinearProgramData
+   * @brief SimplexSolver<T>::setLinearProgramData
    * Updates source data using `linearProgramData'.
    * @param linearProgramData
    */
-  void DantzigNumericSolver<T>::setLinearProgramData(
+  void SimplexSolver<T>::setLinearProgramData(
     LinearProgramData<T>&& linearProgramData
   )
   {
@@ -143,7 +143,7 @@ namespace LinearProgramming
   //TODO: add Constant term to LinearFunction class
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::solve
+   * @brief SimplexSolver<T>::solve
    * Finds the extreme (minimum) value `w*' and
    * the extreme point `x*' of the given objective linear
    * function w(x) == (c, x) within the given constraints
@@ -163,7 +163,7 @@ namespace LinearProgramming
    * and the extreme (minimal) value `w*'.
    */
   pair<SolutionType, optional<LinearProgramSolution<T>>>
-  DantzigNumericSolver<T>::solve()
+  SimplexSolver<T>::solve()
   {
     //Reset internal state
     reset();
@@ -172,7 +172,7 @@ namespace LinearProgramming
     optional<LinearProgramSolution<T>> ret;
 
     LOG(
-      "c := \n{0},\nA :=\n{1},\nb :=\n{2}",
+      "c == \n{0},\nA ==\n{1},\nb ==\n{2}",
       linearProgramData_.objectiveFunctionCoeffs,
       linearProgramData_.constraintsCoeffs,
       linearProgramData_.constraintsRHS
@@ -184,7 +184,7 @@ namespace LinearProgramming
     );
 
     LOG(
-      "~X({0}) :=\n{1},\n~x := {2},\n x := {3}",
+      "~X({0}) ==\n{1},\n~x == {2},\n x == {3}",
       iterCount_,
       phase1Tableau.entries(),
       makeString(phase1Tableau.basicVars()),
@@ -195,17 +195,12 @@ namespace LinearProgramming
     const SolutionType phase1SolutionType(optimize(phase1Tableau));
 
     LOG(
-      "~X({0}) :=\n{1},\n~x := {2},\n x := {3}",
+      "~X({0}) ==\n{1},\n~x == {2},\n x == {3}",
       iterCount_,
       phase1Tableau.entries(),
       makeString(phase1Tableau.basicVars()),
       makeString(phase1Tableau.freeVars())
     );
-
-//    if (_iterCount == 0) //HACK: !
-//    {
-//      return make_pair(SolutionType::Unknown, ret);
-//    }
 
     if (phase1SolutionType == SolutionType::Optimal)
     {
@@ -223,7 +218,7 @@ namespace LinearProgramming
         );
 
         LOG(
-          "X({0}) :=\n{1},\n~x := {2},\n x := {3}",
+          "X({0}) ==\n{1},\n~x == {2},\n x == {3}",
           iterCount_,
           phase2Tableau.entries(),
           makeString(phase2Tableau.basicVars()),
@@ -234,7 +229,7 @@ namespace LinearProgramming
         const SolutionType phase2SolutionType(optimize(phase2Tableau));
 
         LOG(
-          "X({0}) :=\n{1},\n~x := {2},\n x := {3}",
+          "X({0}) ==\n{1},\n~x == {2},\n x == {3}",
           iterCount_,
           phase2Tableau.entries(),
           makeString(phase2Tableau.basicVars()),
@@ -289,11 +284,11 @@ namespace LinearProgramming
 
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::reset
+   * @brief SimplexSolver<T>::reset
    * Resets the internal state of the object.
    */
   void
-  DantzigNumericSolver<T>::reset()
+  SimplexSolver<T>::reset()
   {
     iterCount_ = 0;
   }
@@ -301,13 +296,13 @@ namespace LinearProgramming
 
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::optimize
+   * @brief SimplexSolver<T>::optimize
    * Performs the Simplex algorithm steps on the given tableau.
    * @param tableau
    * @return
    */
   SolutionType
-  DantzigNumericSolver<T>::optimize(SimplexTableau<T>& tableau)
+  SimplexSolver<T>::optimize(SimplexTableau<T>& tableau)
   {
     //Iterate while the solution is incomplete, stop if
     //the program is unsolvable, return value decribing why it is
@@ -341,14 +336,14 @@ namespace LinearProgramming
 
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::iterate
+   * @brief SimplexSolver<T>::iterate
    * Tries to execute one iteration of the Simplex method
    * on the given tableau.
    * @param tableau
    * @return
    */
   SolutionType
-  DantzigNumericSolver<T>::iterate(SimplexTableau<T>& tableau)
+  SimplexSolver<T>::iterate(SimplexTableau<T>& tableau)
   {
     if (iterCount_ >= MaxSimplexIterations) //If can iterate
     {
@@ -362,7 +357,7 @@ namespace LinearProgramming
       {
         ++iterCount_;
 
-        pivotize(tableau, (*pivotIdx.second).first, (*pivotIdx.second).second);
+        transformTableau(tableau, (*pivotIdx.second).first, (*pivotIdx.second).second);
 
         return SolutionType::Incomplete;
       }
@@ -376,14 +371,14 @@ namespace LinearProgramming
 
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::iterate
+   * @brief SimplexSolver<T>::iterate
    * Tries to execute one iteration of the Simplex method
    * on the given tableau.
    * @param tableau
    * @return
    */
   SolutionType
-  DantzigNumericSolver<T>::iterate(
+  SimplexSolver<T>::iterate(
     SimplexTableau<T>& tableau, pair<DenseIndex, DenseIndex> pivotIdx
   )
   {
@@ -395,7 +390,7 @@ namespace LinearProgramming
     {
       ++iterCount_;
 
-      pivotize(tableau, pivotIdx.first, pivotIdx.second);
+      transformTableau(tableau, pivotIdx.first, pivotIdx.second);
 
       return SolutionType::Incomplete;
     }
@@ -404,13 +399,13 @@ namespace LinearProgramming
 
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::computePivotIdx
+   * @brief SimplexSolver<T>::computePivotIdx
    * Tries to compute pivot element position in the given tableau.
    * @param tableau
    * @return
    */
   pair<SolutionType, MaybeIndex2D>
-  DantzigNumericSolver<T>::computePivotIdx(
+  SimplexSolver<T>::computePivotIdx(
     const SimplexTableau<T>& tableau
   ) const
   {
@@ -452,7 +447,7 @@ namespace LinearProgramming
 
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::computePivotColIdx
+   * @brief SimplexSolver<T>::computePivotColIdx
    * For the reference see:
    *  `http://www.math.toronto.edu/mpugh/Teaching/APM236_04/bland',
    *  `http://people.orie.cornell.edu/dpw/orie6300/Lectures/lec13.pdf',
@@ -466,7 +461,7 @@ namespace LinearProgramming
    * prevents cycling).
    */
   MaybeIndex1D
-  DantzigNumericSolver<T>::computePivotColIdx(
+  SimplexSolver<T>::computePivotColIdx(
     const SimplexTableau<T>& tableau
   ) const
   {
@@ -534,7 +529,7 @@ namespace LinearProgramming
 
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::computePivotRowIdx
+   * @brief SimplexSolver<T>::computePivotRowIdx
    * Computes pivot row index `k' for the pivot column index `s'.
    * @param tableau
    * @param pivotColIdx
@@ -544,7 +539,7 @@ namespace LinearProgramming
    * .
    */
   MaybeIndex1D
-  DantzigNumericSolver<T>::computePivotRowIdx(
+  SimplexSolver<T>::computePivotRowIdx(
     const SimplexTableau<T>& tableau, DenseIndex pivotColIdx
   ) const
   {
@@ -572,7 +567,7 @@ namespace LinearProgramming
 
         //Compute ratio β[k] / α[k, s]
         const T currRatio(
-          tableau(rowIdx, tableau.cols() - 1) /
+          tableau(rowIdx, tableau.cols() - 1) / //!
           tableau(rowIdx, pivotColIdx)
         );
 
@@ -648,8 +643,8 @@ namespace LinearProgramming
 
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::pivotize
-   * Performs pivoting operations for the selected
+   * @brief SimplexSolver<T>::pivotize
+   * Performs transforming operations using chosen
    * pivot row `k' and column `s' of the given tableau.
    * `k' is the leaving variable index,
    * `s' is the entering variable index.
@@ -659,7 +654,7 @@ namespace LinearProgramming
    * @param colIdx
    */
   void
-  DantzigNumericSolver<T>::pivotize(
+  SimplexSolver<T>::transformTableau(
     SimplexTableau<T>& tableau, DenseIndex rowIdx, DenseIndex colIdx
   )
   {
@@ -667,7 +662,7 @@ namespace LinearProgramming
     const T pivotElement(tableau(rowIdx, colIdx));
 
     LOG(
-      "pivotElement := {2}, rowIdx := {0}, colIdx := {1}, swap ~x{3} <> x{4}",
+      "pivotElement == {2}, rowIdx == {0}, colIdx == {1}, swap ~x{3} <> x{4}",
       rowIdx, colIdx, pivotElement,
       tableau.basicVars()[rowIdx], tableau.freeVars()[colIdx]
     );
@@ -681,13 +676,13 @@ namespace LinearProgramming
     {
       if (j != colIdx) //Skip pivot column
       {
-        tableau(rowIdx, j) /= pivotElement;
+        tableau(rowIdx, j) /= pivotElement; //!
       }
     }
 
     //For the new pivot element value
     //(new pivot) = 1 / (old pivot)
-    tableau(rowIdx, colIdx) = T(1) / pivotElement;
+    tableau(rowIdx, colIdx) = T(1) / pivotElement; //!
 
     //For each row above and below the pivot row
     for (DenseIndex i(0); i < tableau.rows(); ++i)
@@ -712,12 +707,12 @@ namespace LinearProgramming
     {
       if (i != rowIdx) //Skip pivot row
       {
-        tableau(i, colIdx) /= pivotElement * T(-1);
+        tableau(i, colIdx) /= pivotElement * T(-1); //!
       }
     }
 
     LOG(
-      "T({0}) :=\n{1},\n~x := {2},\n x := {3}",
+      "T({0}) ==\n{1},\n~x == {2},\n x == {3}",
       iterCount_, tableau.entries(),
       makeString(tableau.basicVars()),
       makeString(tableau.freeVars())
@@ -727,13 +722,13 @@ namespace LinearProgramming
 
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::checkPhase1Solution
+   * @brief SimplexSolver<T>::checkPhase1Solution
    * Checks if the solution obtained at the Phase-1 is valid.
    * @param tableau
    * @return
    */
   SolutionType
-  DantzigNumericSolver<T>::checkPhase1Solution(
+  SimplexSolver<T>::checkPhase1Solution(
     const SimplexTableau<T>& tableau
   ) const
   {
@@ -764,13 +759,13 @@ namespace LinearProgramming
 
   template<typename T>
   /**
-   * @brief DantzigNumericSolver<T>::checkPhase2Solution
+   * @brief SimplexSolver<T>::checkPhase2Solution
    * Checks if the solution obtained at the Phase-2 is valid.
    * @param tableau
    * @return `true' if (β >= (0)), `false' otherwise.
    */
   SolutionType
-  DantzigNumericSolver<T>::checkPhase2Solution(
+  SimplexSolver<T>::checkPhase2Solution(
     const SimplexTableau<T>& tableau
   ) const
   {
@@ -791,4 +786,4 @@ namespace LinearProgramming
 }
 
 
-#endif // DANTZIGNUMERICSOLVER_TXX
+#endif // SIMPLEXSOLVER_TXX

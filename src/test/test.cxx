@@ -6,7 +6,7 @@
 #include "boost/optional.hpp"
 #include "eigen3/Eigen/Core"
 
-#include "../lp/dantzignumericsolver.hxx"
+#include "../lp/simplexsolver.hxx"
 #include "../lp/linearprogramdata.hxx"
 #include "../lp/linearprogramsolution.hxx"
 #include "../lp/solutiontype.hxx"
@@ -35,7 +35,7 @@ namespace Test
   {
     const LinearProgramData<Real> lpData(c, A, b);
 
-    DantzigNumericSolver<Real> solver;
+    SimplexSolver<Real> solver;
 
     solver.setLinearProgramData(lpData);
 
@@ -45,7 +45,7 @@ namespace Test
     switch (sol.first) {
       case SolutionType::Optimal:
         LOG(
-          "Solution: x* := {0}\nF* := {1}",
+          "Solution: x* == {0}\nF* == {1}",
           (*sol.second).extremePoint,
           (*sol.second).extremeValue
         );
@@ -77,7 +77,7 @@ namespace Test
   {
     const LinearProgramData<Rational> lpData(c, A, b);
 
-    DantzigNumericSolver<Rational> solver;
+    SimplexSolver<Rational> solver;
 
     solver.setLinearProgramData(lpData);
 
@@ -87,7 +87,7 @@ namespace Test
     switch (sol.first) {
       case SolutionType::Optimal:
         LOG(
-          "Solution: x* := {0}\nF* := {1}",
+          "Solution: x* == {0}\nF* == {1}",
           (*sol.second).extremePoint,
           (*sol.second).extremeValue
         );

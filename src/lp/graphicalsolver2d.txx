@@ -21,7 +21,7 @@
 #include "linearfunction.hxx"
 #include "linearprogrammingutils.hxx"
 #include "linearprogramsolution.hxx"
-#include "plotdatareal2d.hxx"
+#include "plotdata2d.hxx"
 #include "solutiontype.hxx"
 #include "../math/numericlimits.hxx"
 #include "../math/mathutils.hxx"
@@ -37,6 +37,7 @@ namespace LinearProgramming
   using Eigen::Dynamic;
   using Eigen::Matrix;
   using LinearProgrammingUtils::reducedRowEchelonForm;
+  using LinearProgrammingUtils::RREF;
   using LinearProgrammingUtils::findIntersection;
   using LinearProgrammingUtils::isSolutionFeasible;
   using MathUtils::isEqual;
@@ -53,36 +54,36 @@ namespace LinearProgramming
   using Utils::makeString;
 
 
-  template<typename T>
-  GraphicalSolver2D<T>::GraphicalSolver2D(
-    const LinearProgramData<T>& linearProgramData
+  template<typename TCoeff>
+  GraphicalSolver2D<TCoeff>::GraphicalSolver2D(
+    const LinearProgramData<TCoeff>& linearProgramData
   ) :
     linearProgramData_(linearProgramData)
   { }
 
 
-  template<typename T>
-  GraphicalSolver2D<T>::GraphicalSolver2D(
-    LinearProgramData<T>&& linearProgramData
+  template<typename TCoeff>
+  GraphicalSolver2D<TCoeff>::GraphicalSolver2D(
+    LinearProgramData<TCoeff>&& linearProgramData
   ) :
     linearProgramData_(std::move(linearProgramData))
   { }
 
 
-  template<typename T>
+  template<typename TCoeff>
   void
-  GraphicalSolver2D<T>::setLinearProgramData(
-    const LinearProgramData<T>& linearProgramData
+  GraphicalSolver2D<TCoeff>::setLinearProgramData(
+    const LinearProgramData<TCoeff>& linearProgramData
   )
   {
     linearProgramData_ = linearProgramData;
   }
 
 
-  template<typename T>
+  template<typename TCoeff>
   void
-  GraphicalSolver2D<T>::setLinearProgramData(
-    LinearProgramData<T>&& linearProgramData
+  GraphicalSolver2D<TCoeff>::setLinearProgramData(
+    LinearProgramData<TCoeff>&& linearProgramData
   )
   {
     linearProgramData_ = move(linearProgramData);
@@ -94,9 +95,9 @@ namespace LinearProgramming
    * Naïve algorithm for solving two-dimensional linear programs.
    * @return
    */
-  template<typename T>
-  pair<SolutionType, optional<PlotDataReal2D>>
-  GraphicalSolver2D<T>::solve()
+  template<typename TCoeff>
+  pair<SolutionType, optional<PlotData2D<TCoeff>>>
+  GraphicalSolver2D<TCoeff>::solve()
   {
     //Input linear program params
     //`M' is the constraints count
@@ -105,29 +106,30 @@ namespace LinearProgramming
     const DenseIndex N(linearProgramData_.variablesCount());
 
     //For output
-    optional<PlotDataReal2D> ret;
+    optional<PlotData2D<TCoeff>> ret;
+
+/**************************************************************************/
 
     //Construct an augmented matrix A|b
-    Matrix<T, Dynamic, Dynamic> A_b(M, N + 1);
+    Matrix<TCoeff, Dynamic, Dynamic> A_b(M, N + 1);
     A_b <<
       linearProgramData_.constraintsCoeffs,
       linearProgramData_.constraintsRHS;
 
-    //Construct an reduced row echelon forms of `A' and `A|b'
-    const pair<Matrix<T, Dynamic, Dynamic>, DenseIndex> rref_A(
-      reducedRowEchelonForm<T>(linearProgramData_.constraintsCoeffs)
+    //Construct reduced row echelon forms of `A' and `A|b'
+    const RREF<TCoeff> rref_A(
+      reducedRowEchelonForm<TCoeff>(linearProgramData_.constraintsCoeffs)
     );
 
-    const pair<Matrix<T, Dynamic, Dynamic>, DenseIndex> rref_A_b(
-      reducedRowEchelonForm<T>(A_b)
-    );
+    const RREF<TCoeff> rref_A_b(reducedRowEchelonForm<TCoeff>(A_b));
 
-    LOG("A^ :=\n{}\n(A|b)^ :=\n{}", rref_A.first, rref_A_b.first);
-    LOG("rank(A^) == {}, rank((A|b)^) == {}", rref_A.second, rref_A_b.second);
+    LOG("A^ ==\n{}\n(A|b)^ ==\n{}", rref_A.rref, rref_A_b.rref);
+    LOG("rank(A^) == {}, rank((A|b)^) == {}", rref_A.rank, rref_A_b.rank);
 
+    //Perform preliminary checks
     //For the system {Ax == b} to be consistent
     //rank(A^) should be equal to rank((A|b)^)
-    if (rref_A.second != rref_A_b.second)
+    if (rref_A.rank != rref_A_b.rank)
     {
       qWarning() << "GraphicalSolver2D<T>::solve: inconsistent system:"
                     " rank(A^) != rank((A|b)^)";
@@ -135,13 +137,24 @@ namespace LinearProgramming
       return make_pair(SolutionType::Infeasible, ret);
     }
 
+    //If (rank((A|b)^) == 0), all values of `x' are solutions
+    if(rref_A_b.rank == 0)
+    {
+      qWarning() << "GraphicalSolver2D<T>::solve: empty system:"
+                    " rank((A|b)^) == 0";
+
+      return make_pair(SolutionType::Unbounded, ret);
+    }
+
+/**************************************************************************/
+
     //Constraints count `M^' in the new reduced system {A^x == b^}
     //is equal to rank((A|b)^)
-    const DenseIndex M_(rref_A_b.second);
+    const DenseIndex M_(rref_A_b.rank);
 
     //In the new system, the decision variables count `N^'
-    //is equal to (N - M)
-    const DenseIndex N_(N - M);
+    //is equal to (N - M^)
+    const DenseIndex N_(N - M_);
     if (N_ != 2)
     {
       qWarning() << "GraphicalSolver2D<T>::solve: could not solve this"
@@ -150,70 +163,80 @@ namespace LinearProgramming
       return make_pair(SolutionType::Unknown, ret);
     }
 
-    //`F^' in the terms of the new basis
-    Matrix<T, 1, Dynamic> c_(1, N_);
+/**************************************************************************/
+
+    //Function `F^' in the terms of the new basis
+    //Fill vector `c^'...
+    Matrix<TCoeff, 1, Dynamic> c_(1, N_);
     for (DenseIndex j(0); j < N_; ++j)
     {
-      T sum(0);
+      TCoeff sum(0);
       for (DenseIndex i(0); i < M_; ++i)
       {
         sum += linearProgramData_.objectiveFunctionCoeffs(i) *
-               rref_A_b.first(i, j + M_) *
-               T(-1);
+               rref_A_b.rref(i, j + M_) *
+               TCoeff(-1);
       }
       sum += linearProgramData_.objectiveFunctionCoeffs(j + M_);
       c_(j) = sum;
     }
 
-    T d_(0);
+    //...and compute constant term `d^'
+    TCoeff d_(0);
     for (DenseIndex i(0); i < M_; ++i)
     {
       d_ += linearProgramData_.objectiveFunctionCoeffs(i) *
-            rref_A_b.first(i, rref_A_b.first.cols() - 1) *
-            T(-1);
+            rref_A_b.rref(i, rref_A_b.rref.cols() - 1);
     }
-    const LinearFunction<T, 2> F_(c_, d_ * T(-1));
 
-    LOG("F^ := {} + {}", F_.coeffs(), F_.constTerm());
+    const LinearFunction<TCoeff, 2> F_(c_, d_);
+
+    LOG("F^ == ({}) + ({})", F_.coeffs(), F_.constTerm());
+
+/**************************************************************************/
 
     //Construct a new system of linear equations {A^x == b^}
     //w/ non-negativity constraints {-x1 <= 0; -x2 <= 0} added.
-    Matrix<T, Dynamic, Dynamic> A_(M_ + 2, N_);
+    //Drop the basic minor and append new constraints
+    Matrix<TCoeff, Dynamic, Dynamic> A_(M_ + 2, N_);
     for (DenseIndex i(0); i < M_; ++i)
     {
       for (DenseIndex j(0); j < N_; ++j)
       {
-        A_(i, j) = rref_A_b.first(i, j + M_);
+        A_(i, j) = rref_A_b.rref(i, j + M_);
       }
     }
+
     for (DenseIndex i(M_); i < M_ + 2; ++i)
     {
       for (DenseIndex j(0); j < N_; ++j)
       {
         if (j != i - M_)
         {
-          A_(i, j) = T(0);
+          A_(i, j) = TCoeff(0);
         }
         else
         {
-          A_(i, j) = T(-1);
+          A_(i, j) = TCoeff(-1);
         }
       }
     }
 
-    LOG("A^ :=\n{}", A_);
+    LOG("A^ ==\n{}", A_);
 
-    Matrix<T, Dynamic, 1> b_(M_ + 2, 1);
+    Matrix<TCoeff, Dynamic, 1> b_(M_ + 2, 1);
     for (DenseIndex i(0); i < M_; ++i)
     {
-      b_(i) = rref_A_b.first(i, N);
+      b_(i) = rref_A_b.rref(i, N);
     }
     for (DenseIndex i(M_); i < M_ + 2; ++i)
     {
-      b_(i) = T(0);
+      b_(i) = TCoeff(0);
     }
 
-    LOG("b^ :=\n{}", b_);
+    LOG("b^ ==\n{}", b_);
+
+/**************************************************************************/
 
     //In two-dimensional case we have two decision variables.
     //So, we need to generate 2-combinations from all the M + 2 equations
@@ -223,10 +246,11 @@ namespace LinearProgramming
     //NOTE: in general case we have N decision variables, and M equations,
     //so we need to check Binomial[M + N, N] intersection points for feasibility.
 
+    list<Matrix<TCoeff, 2, 1>> extremePoints;
+    TCoeff extremeValue(NumericLimits::max<TCoeff>());
+    list<Matrix<TCoeff, 2, 1>> feasibleRegionExtremePoints;
+
     vector<uint16_t> intersectionCounters(M_ + 2, 0);
-    list<Matrix<T, 2, 1>> extremePoints;
-    T extremeValue(NumericLimits::max<T>());
-    list<Matrix<T, 2, 1>> feasibleRegionExtremePoints;
 
     //For each constraint equation
     for (DenseIndex r(0); r < (M_ + 2) - 1; ++r)
@@ -235,12 +259,12 @@ namespace LinearProgramming
       for (DenseIndex s(r + 1); s < (M_ + 2); ++s)
       {
         //Take two rows and join them in new matrix...
-        Matrix<T, 2, 2> C(2, 2);
+        Matrix<TCoeff, 2, 2> C(2, 2);
         C <<
           A_.row(r),
           A_.row(s);
         //...and take also the corresponding RHS elements
-        Matrix<T, 2, 1> d(2, 1);
+        Matrix<TCoeff, 2, 1> d(2, 1);
         d <<
           b_(r),
           b_(s);
@@ -249,14 +273,14 @@ namespace LinearProgramming
 
         //Obtain basic solution `y': solve matrix equation {C * y == d}
         //& check solution correctness
-        const optional<Matrix<T, 2, 1>> y(findIntersection<T>(C, d));
-//        T err((eqs * sol - rhs).norm() / rhs.norm());
+        const optional<Matrix<TCoeff, 2, 1>> y(findIntersection<TCoeff>(C, d));
         if (y)
         {
-          const Matrix<T, 2, 1> y_(*y);
+          const Matrix<TCoeff, 2, 1> y_(*y);
 
-          LOG("y ==\n{}", y_);
+//          LOG("y ==\n{}", y_);
 
+//          TCoeff err((eqs * sol - rhs).norm() / rhs.norm());
           const bool isValid((C * y_).isApprox(d));
           if (isValid)
           {
@@ -268,9 +292,9 @@ namespace LinearProgramming
             //it satisfies the following matrix equation `A^ * y^ <= b^'
             //NOTE: non-vertices (inner points) are also subj. to this eq.
 
-            const bool isFeasible(isSolutionFeasible<T>(y_, A_, b_));
+            const bool isFeasible(isSolutionFeasible<TCoeff>(y_, A_, b_));
 
-            LOG("isFeasible == {}", isFeasible);
+//            LOG("isFeasible == {}", isFeasible);
 
             //If this is a feasible point and it is valid (non-degenerate)
             //solution, we can now try to compute objective function value
@@ -283,11 +307,11 @@ namespace LinearProgramming
 
               feasibleRegionExtremePoints.push_back(y_);
 
-              const T newValue(F_(y_));
+              const TCoeff newValue(F_(y_));
 
-              if (isLessThan<T>(newValue, extremeValue))
+              if (isLessThan<TCoeff>(newValue, extremeValue))
               {
-                LOG("<: newPoint == {}, newValue == {}", y_, newValue);
+//                LOG("<: newPoint == {}, newValue == {}", y_, newValue);
 
                 extremeValue = newValue;
                 extremePoints.clear();
@@ -295,9 +319,9 @@ namespace LinearProgramming
               }
               else
               {
-                if (isEqual<T>(newValue, extremeValue))
+                if (isEqual<TCoeff>(newValue, extremeValue))
                 {
-                  LOG("~: newPoint == {}, newValue == {}", y_, newValue);
+//                  LOG("~: newPoint == {}, newValue == {}", y_, newValue);
 
                   extremePoints.push_back(y_);
                 }
@@ -309,6 +333,8 @@ namespace LinearProgramming
     }
 
     LOG("intersectionCounters == {}", makeString(intersectionCounters));
+
+/**************************************************************************/
 
     if (feasibleRegionExtremePoints.empty())
     {
@@ -324,14 +350,15 @@ namespace LinearProgramming
         )
       )
       {
-        PlotDataReal2D plotData(
+        PlotData2D<TCoeff> plotData(
+          LinearProgramSolution<TCoeff>(),
           list<Matrix<Real, 2, 1>>(),
-          0.,
+          Real(0),
           list<Matrix<Real, 2, 1>>(),
-          Matrix<Real, 1, Dynamic>(1, 2),
           Matrix<Real, 2, 2>(2, 2),
           Matrix<Real, 2, 2>(2, 2),
-          vector<DenseIndex>(2)
+          Matrix<Real, 1, 2>(1, 2),
+          vector<DenseIndex>(N_)
         );
 
         plotData.extremePoints.resize(extremePoints.size());
@@ -340,19 +367,19 @@ namespace LinearProgramming
           extremePoints.cbegin(),
           extremePoints.cend(),
           plotData.extremePoints.begin(),
-          [](const Matrix<T, 2, 1>& point)
+          [](const Matrix<TCoeff, 2, 1>& point)
           {
             Matrix<Real, 2, 1> realPoint(2, 1);
 
             realPoint <<
-              numericCast<Real, T>(point.x()),
-              numericCast<Real, T>(point.y());
+              numericCast<Real, TCoeff>(point.x()),
+              numericCast<Real, TCoeff>(point.y());
 
             return realPoint;
           }
         );
 
-        plotData.extremeValue = numericCast<Real, T>(extremeValue);
+        plotData.extremeValue = numericCast<Real, TCoeff>(extremeValue);
 
         plotData.feasibleRegionExtremePoints.resize(
           feasibleRegionExtremePoints.size()
@@ -362,13 +389,13 @@ namespace LinearProgramming
           feasibleRegionExtremePoints.cbegin(),
           feasibleRegionExtremePoints.cend(),
           plotData.feasibleRegionExtremePoints.begin(),
-          [](const Matrix<T, 2, 1>& point)
+          [](const Matrix<TCoeff, 2, 1>& point)
           {
             Matrix<Real, 2, 1> realPoint(2, 1);
 
             realPoint <<
-              numericCast<Real, T>(point.x()),
-              numericCast<Real, T>(point.y());
+              numericCast<Real, TCoeff>(point.x()),
+              numericCast<Real, TCoeff>(point.y());
 
             return realPoint;
           }
@@ -377,49 +404,78 @@ namespace LinearProgramming
         //To plot a polygon we need to sort all its vertices in clockwise order.
         sortPointsByPolarAngle(plotData.feasibleRegionExtremePoints);
 
-//        for (DenseIndex i(0); i < M; ++i)
-//        {
-//          plotData.gradientVector(i) =
-//            rref_A_b.first(i, N) -
-//              plotData.extremePoints.front().dot(rref_A_b.first.block(i, M_, 1, 2));
-//        }
-
-        for (DenseIndex i(0); i < 2; ++i)
-        {
-          plotData.gradientVector(i) = numericCast<Real, T>(F_.coeffAt(i));
-        }
-
-        const Matrix<T, 2, 2> boundingBox(
+        const Matrix<TCoeff, 2, 2> boundingBox(
           computeBoundingBox(feasibleRegionExtremePoints)
         );
 
         plotData.feasibleRegionBoundingBox <<
-          numericCast<Real, T>(boundingBox(0, 0)),
-          numericCast<Real, T>(boundingBox(0, 1)),
-          numericCast<Real, T>(boundingBox(1, 0)),
-          numericCast<Real, T>(boundingBox(1, 1));
+          numericCast<Real, TCoeff>(boundingBox(0, 0)),
+          numericCast<Real, TCoeff>(boundingBox(0, 1)),
+          numericCast<Real, TCoeff>(boundingBox(1, 0)),
+          numericCast<Real, TCoeff>(boundingBox(1, 1));
 
         plotData.feasibleRegionBoundingBoxHeights <<
-          numericCast<Real, T>(F_(boundingBox.row(1).transpose())),
-          numericCast<Real, T>(F_(boundingBox.col(1))),
-          numericCast<Real, T>(F_(boundingBox.col(0))),
-          numericCast<Real, T>(F_(boundingBox.row(0).transpose().reverse()));
+          numericCast<Real, TCoeff>(F_(boundingBox.row(1).transpose())),
+          numericCast<Real, TCoeff>(F_(boundingBox.col(1))),
+          numericCast<Real, TCoeff>(F_(boundingBox.col(0))),
+          numericCast<Real, TCoeff>(
+            F_(boundingBox.row(0).transpose().reverse())
+          );
+
+/**************************************************************************/
+
+        for (DenseIndex i(0); i < 2; ++i)
+        {
+          plotData.gradientVector(i) = numericCast<Real, TCoeff>(F_.coeffAt(i));
+        }
 
         for (DenseIndex j(0); j < N_; ++j)
         {
-          plotData.variablesNames[j] = j + M_ + 1;
+          plotData.decisionVariables[j] = j + M_ + 1;
         }
 
+/**************************************************************************/
+
+        plotData.linearProgramSolution.extremePoint =
+          Matrix<TCoeff, Dynamic, 1>(N, 1);
+
+        const Matrix<TCoeff, 2, 1> extremePoint2D(extremePoints.front());
+
+        for (DenseIndex i(0); i < M_; ++i)
+        {
+          TCoeff sum(0);
+
+          for (DenseIndex j(0); j < N_; ++j)
+          {
+            sum += A_(i, j) * extremePoint2D(j);
+          }
+
+          sum = b_(i) - sum;
+
+          plotData.linearProgramSolution.extremePoint(i) = sum;
+        }
+
+        for (DenseIndex j(M_); j < N; ++j)
+        {
+          plotData.linearProgramSolution.extremePoint(j) =
+            extremePoint2D(j - M_);
+        }
+
+        plotData.linearProgramSolution.extremeValue = extremeValue;
+
         LOG(
-          "Solution: X* == {}, F* == {}, U == {},"
-          " grad(F) == {}, [U] == {}, [U]* == {}, X == {}",
+          "Solution: x* ==\n{},\nF* == {}, U ==\n{},\n"
+          "grad(F) == {}, [U] ==\n{},\n[U]* ==\n{},\nx == {},\n"
+          "x* ==\n{},\nF* == {}",
           plotData.extremePoints,
           plotData.extremeValue,
           plotData.feasibleRegionExtremePoints,
           plotData.gradientVector,
           plotData.feasibleRegionBoundingBox,
           plotData.feasibleRegionBoundingBoxHeights,
-          plotData.variablesNames
+          plotData.decisionVariables,
+          plotData.linearProgramSolution.extremePoint,
+          plotData.linearProgramSolution.extremeValue
         );
 
         ret = plotData;

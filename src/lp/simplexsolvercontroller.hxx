@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#ifndef DANTZIGNUMERICSOLVERCONTROLLER_HXX
-#define DANTZIGNUMERICSOLVERCONTROLLER_HXX
+#ifndef SIMPLEXSOLVERCONTROLLER_HXX
+#define SIMPLEXSOLVERCONTROLLER_HXX
 
 
 #include <cstdint>
@@ -15,7 +15,7 @@
 #include "boost/optional.hpp"
 #include "eigen3/Eigen/Core"
 
-#include "dantzignumericsolver_fwd.hxx"
+#include "simplexsolver_fwd.hxx"
 #include "linearprogramsolution.hxx"
 #include "simplextableau_fwd.hxx"
 #include "solutionphase.hxx"
@@ -37,30 +37,27 @@ namespace LinearProgramming
   using std::out_of_range;
   using std::pair;
 
-//  template<class T>
-//  using shared_ptr = std::shared_ptr<T>;
-
 
   template<typename T = Real>
-  class DantzigNumericSolverController
+  class SimplexSolverController
   {
     public:
-      DantzigNumericSolverController() = default;
+      SimplexSolverController() = default;
 
 
-      DantzigNumericSolverController(DantzigNumericSolver<T>* const solver) :
-        solver_(make_shared<DantzigNumericSolver<T>>(solver))
+      SimplexSolverController(SimplexSolver<T>* const solver) :
+        solver_(make_shared<SimplexSolver<T>>(solver))
       { }
 
 
-      DantzigNumericSolverController(
-        const shared_ptr<DantzigNumericSolver<T>>& solver
+      SimplexSolverController(
+        const shared_ptr<SimplexSolver<T>>& solver
       ) :
         solver_(solver)
       { }
 
 
-      const shared_ptr<DantzigNumericSolver<T>>&
+      const shared_ptr<SimplexSolver<T>>&
       solver() const
       {
         return solver_;
@@ -68,7 +65,7 @@ namespace LinearProgramming
 
 
       void
-      setSolver(const shared_ptr<DantzigNumericSolver<T>>& solver)
+      setSolver(const shared_ptr<SimplexSolver<T>>& solver)
       {
         solver_ = solver;
         reset();
@@ -269,7 +266,7 @@ namespace LinearProgramming
 
 
     private:
-      shared_ptr<DantzigNumericSolver<T>> solver_;
+      shared_ptr<SimplexSolver<T>> solver_;
 
       list<SimplexTableau<T>> tableaus_ = list<SimplexTableau<T>>(0);
 
@@ -280,4 +277,4 @@ namespace LinearProgramming
 }
 
 
-#endif // DANTZIGNUMERICSOLVERCONTROLLER_HXX
+#endif // SIMPLEXSOLVERCONTROLLER_HXX

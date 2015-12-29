@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#ifndef TABLEMODELSTORAGE_HXX
-#define TABLEMODELSTORAGE_HXX
+#ifndef TABLEMODELCOLLECTION_HXX
+#define TABLEMODELCOLLECTION_HXX
 
 
 #include <QJsonObject>
@@ -23,13 +23,13 @@ namespace GUI
   using Utils::ResultType;
 
 
-  class TableModelStorage :
+  class TableModelCollection :
     public IJsonSerializable
   {
     public:
-      TableModelStorage();
+      TableModelCollection();
 
-      explicit TableModelStorage(
+      explicit TableModelCollection(
         const QVector<SimpleTableModel>& items, Field field = Field::Real
       );
 
@@ -39,7 +39,7 @@ namespace GUI
 
       const QVector<SimpleTableModel>& items();
 
-      const SimpleTableModel& itemAt(int idx) const;
+      const SimpleTableModel& at(int idx) const;
 
       Field field() const;
 
@@ -60,4 +60,4 @@ namespace GUI
 }
 
 
-#endif // TABLEMODELSTORAGE_HXX
+#endif // TABLEMODELCOLLECTION_HXX

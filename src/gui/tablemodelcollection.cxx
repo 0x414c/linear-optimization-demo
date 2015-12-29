@@ -1,4 +1,4 @@
-﻿#include "tablemodelstorage.hxx"
+﻿#include "tablemodelcollection.hxx"
 
 #include <QDebug>
 #include <QJsonArray>
@@ -20,11 +20,11 @@ namespace GUI
 }
 
 
-GUI::TableModelStorage::TableModelStorage()
+GUI::TableModelCollection::TableModelCollection()
 { }
 
 
-GUI::TableModelStorage::TableModelStorage(
+GUI::TableModelCollection::TableModelCollection(
   const QVector<SimpleTableModel>& items, Field field
 ) :
   items_(items),
@@ -33,49 +33,49 @@ GUI::TableModelStorage::TableModelStorage(
 
 
 GUI::SimpleTableModel&
-GUI::TableModelStorage::operator [](int idx)
+GUI::TableModelCollection::operator [](int idx)
 {
   return items_[idx];
 }
 
 
 int
-GUI::TableModelStorage::count() const
+GUI::TableModelCollection::count() const
 {
   return items_.count();
 }
 
 
 const QVector<GUI::SimpleTableModel>&
-GUI::TableModelStorage::items()
+GUI::TableModelCollection::items()
 {
   return items_;
 }
 
 
 const GUI::SimpleTableModel&
-GUI::TableModelStorage::itemAt(int idx) const
+GUI::TableModelCollection::at(int idx) const
 {
   return items_.at(idx);
 }
 
 
 NumericTypes::Field
-GUI::TableModelStorage::field() const
+GUI::TableModelCollection::field() const
 {
   return field_;
 }
 
 
 QString
-GUI::TableModelStorage::metadata() const
+GUI::TableModelCollection::metadata() const
 {
   return (fileMetadataHeader_ + QString("%1").arg(int(field_)));
 }
 
 
 Utils::ResultType
-GUI::TableModelStorage::read(const QJsonObject& jsonObject)
+GUI::TableModelCollection::read(const QJsonObject& jsonObject)
 {
   const QJsonValue metadataValue(jsonObject[QStringLiteral("metadata")]);
   if (metadataValue.type() != QJsonValue::Undefined)
@@ -159,7 +159,7 @@ GUI::TableModelStorage::read(const QJsonObject& jsonObject)
 
 
 Utils::ResultType
-GUI::TableModelStorage::write(QJsonObject& jsonObject) const
+GUI::TableModelCollection::write(QJsonObject& jsonObject) const
 {
   QJsonArray itemsArray;
   for (const SimpleTableModel& item : items_)

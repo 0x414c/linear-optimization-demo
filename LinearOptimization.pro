@@ -8,7 +8,7 @@ QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
-CONFIG += c++14 warn_on
+CONFIG += c++14 warn_off
 
 QMAKE_CXX = ccache g++
 
@@ -36,12 +36,12 @@ DEFINES += \
   LP_WITH_DEBUG_LOG \
   LP_WITH_BLAND_RULE
 #  LP_WITH_MULTIPRECISION
-#  LP_TEST_MODE \
+#  LP_TEST_MODE
 
 INCLUDEPATH += \
-#  $$PWD/lib/boost \
+  $$PWD/lib/boost \
   $$PWD/lib/cppformat \
-#  $$PWD/lib/eigen \
+  $$PWD/lib/eigen \
   $$PWD/lib/prettyprint \
   $$PWD/lib/qcustomplot
 
@@ -53,43 +53,30 @@ SOURCES += \
   src/gui/numericstyleditemdelegate.cxx \
   src/gui/numericvalidator.cxx \
   src/gui/simpletablemodel.cxx \
-  src/gui/tablemodelstorage.cxx \
+  src/gui/tablemodelcollection.cxx \
   src/gui/tablemodelutils.cxx \
-  src/lp/dantzignumericsolver.cxx \
-  src/lp/dantzignumericsolvercontroller.cxx \
-  src/lp/graphicalsolver2d.cxx \
-  src/lp/inumericsolver.cxx \
-  src/lp/linearfunction.cxx \
-  src/lp/linearprogramdata.cxx \
   src/lp/linearprogrammingutils.cxx \
-  src/lp/linearprogramsolution.cxx \
-  src/lp/plotdatareal2d.cxx \
   src/main.cxx \
   src/misc/boostqtinterop.cxx \
-  src/misc/dataconvertors.cxx \
   src/misc/ijsonserializable.cxx \
   src/misc/utils.cxx \
   src/test/test.cxx
 
 HEADERS += \
   lib/qcustomplot/qcustomplot/qcustomplot.h \
+  src/config.hxx \
   src/gui/mainwindow.hxx \
   src/gui/numericstyleditemdelegate.hxx \
   src/gui/numericstyleditemdelegate.txx \
   src/gui/numericvalidator.hxx \
   src/gui/simpletablemodel.hxx \
-  src/gui/tablemodelstorage.hxx \
+  src/gui/tablemodelcollection.hxx \
   src/gui/tablemodelutils.hxx \
   src/gui/tablemodelutils.txx \
-  src/lp/dantzignumericsolver.hxx \
-  src/lp/dantzignumericsolver.txx \
-  src/lp/dantzignumericsolver_fwd.hxx \
-  src/lp/dantzignumericsolvercontroller.hxx \
-  src/lp/dantzignumericsolvercontroller_fwd.hxx \
   src/lp/graphicalsolver2d.hxx \
   src/lp/graphicalsolver2d.txx \
-  src/lp/inumericsolver.hxx \
-  src/lp/inumericsolver.txx \
+  src/lp/isolver.hxx \
+  src/lp/isolver.txx \
   src/lp/linearfunction.hxx \
   src/lp/linearprogramdata.hxx \
   src/lp/linearprogramdata.txx \
@@ -98,7 +85,13 @@ HEADERS += \
   src/lp/linearprogramsolution.hxx \
   src/lp/linearprogramsolution.txx \
   src/lp/optimizationgoaltype.hxx \
-  src/lp/plotdatareal2d.hxx \
+  src/lp/plotdata2d.hxx \
+  src/lp/plotdata2d.txx \
+  src/lp/simplexsolver.hxx \
+  src/lp/simplexsolver.txx \
+  src/lp/simplexsolver_fwd.hxx \
+  src/lp/simplexsolvercontroller.hxx \
+  src/lp/simplexsolvercontroller_fwd.hxx \
   src/lp/simplextableau.hxx \
   src/lp/simplextableau.txx \
   src/lp/simplextableau_fwd.hxx \
@@ -116,8 +109,7 @@ HEADERS += \
   src/misc/eigenextensions.hxx \
   src/misc/ijsonserializable.hxx \
   src/misc/utils.hxx \
-  src/test/test.hxx \
-  src/config.hxx
+  src/test/test.hxx
 
 FORMS += forms/mainwindow.ui
 

@@ -1,6 +1,5 @@
 ﻿#include "linearprogrammingutils.hxx"
 
-
 #include <cmath>
 
 #include <list>
@@ -57,19 +56,33 @@ namespace LinearProgrammingUtils
 
   /**
    * @brief perp
+   * Returns vector perpendicular to `vec'.
    * @param point
    * @return
    */
   Matrix<Real, 2, 1>
-  perp(const Matrix<Real, 2, 1>& point)
+  perp(const Matrix<Real, 2, 1>& vec)
   {
     Matrix<Real, 2, 1> perp(2, 1);
 
     perp <<
-      point.y() * Real(-1),
-      point.x();
+      vec.y() * Real(-1),
+      vec.x();
 
     return perp;
+  }
+
+
+  /**
+   * @brief norm
+   * Returns vector `vec' as normalized.
+   * @param vec
+   * @return
+   */
+  Matrix<Real, 2, 1>
+  norm(const Matrix<Real, 2, 1>& vec)
+  {
+    return vec.normalized();
   }
 
 

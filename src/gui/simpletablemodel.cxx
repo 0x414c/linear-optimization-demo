@@ -700,7 +700,7 @@ GUI::SimpleTableModel::resize(
 
 
 QVariant
-GUI::SimpleTableModel::valueAt(
+GUI::SimpleTableModel::at(
   int row, int col, const QModelIndex &parent
 ) const
 {

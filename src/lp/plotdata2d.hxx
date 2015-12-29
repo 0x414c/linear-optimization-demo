@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#ifndef PLOTDATAREAL2D_HXX
-#define PLOTDATAREAL2D_HXX
+#ifndef PLOTDATA2D_HXX
+#define PLOTDATA2D_HXX
 
 
 #include <list>
@@ -10,43 +10,47 @@
 
 #include "eigen3/Eigen/Core"
 
+#include "linearprogramsolution.hxx"
 #include "../math/numerictypes.hxx"
 
 
 namespace LinearProgramming
 {
   using Eigen::DenseIndex;
-  using Eigen::Dynamic;
   using Eigen::Matrix;
   using NumericTypes::Real;
   using std::list;
   using std::vector;
 
 
-//  template<typename TCoeff = Real, DenseIndex TDim = 2>
-  struct PlotDataReal2D
+  template<typename TCoeff = Real/*, DenseIndex TDim = 2*/>
+  struct PlotData2D
   {
-    PlotDataReal2D() = default;
+    PlotData2D() = default;
 
-    PlotDataReal2D(
+    PlotData2D(
+      const LinearProgramSolution<TCoeff>& linearProgramSolution,
       const list<Matrix<Real, 2, 1>>& extremePoints,
       Real extremeValue,
       const list<Matrix<Real, 2, 1>>& feasibleRegionExtremePoints,
-      const Matrix<Real, 1, Dynamic>& gradientVector,
       const Matrix<Real, 2, 2>& feasibleRegionBoundingBox,
       const Matrix<Real, 2, 2>& feasibleRegionBoundingBoxHeights,
-      const vector<DenseIndex>& variablesNames
+      const Matrix<Real, 1, 2>& gradientVector,
+      const vector<DenseIndex>& decisionVariables
     );
-    PlotDataReal2D(
+    PlotData2D(
+      LinearProgramSolution<TCoeff>&& linearProgramSolution,
       list<Matrix<Real, 2, 1>>&& extremePoints,
       Real extremeValue,
       list<Matrix<Real, 2, 1>>&& feasibleRegionExtremePoints,
-      Matrix<Real, 1, Dynamic>&& gradientVector,
       Matrix<Real, 2, 2>&& feasibleRegionBoundingBox,
       Matrix<Real, 2, 2>&& feasibleRegionBoundingBoxHeights,
-      vector<DenseIndex>&& variablesNames
+      Matrix<Real, 1, 2>&& gradientVector,
+      vector<DenseIndex>&& decisionVariables
     );
 
+
+    LinearProgramSolution<TCoeff> linearProgramSolution;
 
     list<Matrix<Real, 2, 1>> extremePoints;
 
@@ -54,15 +58,18 @@ namespace LinearProgramming
 
     list<Matrix<Real, 2, 1>> feasibleRegionExtremePoints;
 
-    Matrix<Real, 1, Dynamic> gradientVector;
-
     Matrix<Real, 2, 2> feasibleRegionBoundingBox;
 
     Matrix<Real, 2, 2> feasibleRegionBoundingBoxHeights;
 
-    vector<DenseIndex> variablesNames;
+    Matrix<Real, 1, 2> gradientVector;
+
+    vector<DenseIndex> decisionVariables;
   };
 }
 
 
-#endif // PLOTDATAREAL2D_HXX
+#include "plotdata2d.txx"
+
+
+#endif // PLOTDATA2D_HXX

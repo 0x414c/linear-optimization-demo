@@ -34,7 +34,7 @@ namespace LinearProgramming
    * This class is using `Eigen' library for internal
    * representation of function coefficents vector `C'.
    * The grad(F) defines normal vector
-   *   n := (x1, ..., xN)
+   *   n == (x1, ..., xN)
    * to the hyperplane that is defined by equation
    *   F(x1, ..., xN) == 0.
    * This vector defines direction in which
@@ -124,8 +124,16 @@ namespace LinearProgramming
 
 
     private:
+      /**
+       * @brief coeffs_
+       * Row-vector `c'.
+       */
       Matrix<TCoeff, 1, TDim> coeffs_;
 
+      /**
+       * @brief constTerm_
+       * Constant term `d'.
+       */
       TCoeff constTerm_;
   };
 }

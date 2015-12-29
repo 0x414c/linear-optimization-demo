@@ -10,8 +10,8 @@
 
 #include "eigen3/Eigen/Core"
 
-#include "dantzignumericsolver_fwd.hxx"
-#include "dantzignumericsolvercontroller_fwd.hxx"
+#include "simplexsolver_fwd.hxx"
+#include "simplexsolvercontroller_fwd.hxx"
 #include "linearprogramdata.hxx"
 #include "optimizationgoaltype.hxx"
 #include "solutionphase.hxx"
@@ -36,9 +36,9 @@ namespace LinearProgramming
   class SimplexTableau
   {
     public:
-      friend DantzigNumericSolver<T>;
+      friend SimplexSolver<T>;
 
-      friend DantzigNumericSolverController<T>;
+      friend SimplexSolverController<T>;
 
 
       [[deprecated(

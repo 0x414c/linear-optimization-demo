@@ -21,7 +21,6 @@ namespace LinearProgrammingUtils
   using Eigen::Matrix;
   using NumericTypes::Real;
   using std::list;
-  using std::pair;
 
 
   template<typename T = Real>
@@ -37,13 +36,30 @@ namespace LinearProgrammingUtils
     const Matrix<T, 2, 2>& A, const Matrix<T, 2, 1>& b
   );
 
+  template<typename T>
+  struct RREF
+  {
+    RREF(const Matrix<T, Dynamic, Dynamic>& rref, DenseIndex rank) :
+      rref(rref), rank(rank)
+    { }
+
+    RREF(Matrix<T, Dynamic, Dynamic>&& rref, DenseIndex rank) :
+      rref(std::move(rref)), rank(rank)
+    { }
+
+
+    Matrix<T, Dynamic, Dynamic> rref;
+    DenseIndex rank;
+  };
+
   template<typename T = Real>
-  pair<Matrix<T, Dynamic, Dynamic>, DenseIndex>
-  reducedRowEchelonForm(const Matrix<T, Dynamic, Dynamic>& A);
+  RREF<T> reducedRowEchelonForm(const Matrix<T, Dynamic, Dynamic>& A);
 
   void sortPointsByPolarAngle(list<Matrix<Real, 2, 1>>& points);
 
-  Matrix<Real, 2, 1> perp(const Matrix<Real, 2, 1>& point);
+  Matrix<Real, 2, 1> perp(const Matrix<Real, 2, 1>& vec);
+
+  Matrix<Real, 2, 1> norm(const Matrix<Real, 2, 1>& vec);
 
   Real lerp(Real x1, Real y1, Real x2, Real y2, Real x0);
 

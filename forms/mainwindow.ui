@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1000</width>
-    <height>600</height>
+    <width>1028</width>
+    <height>572</height>
    </rect>
   </property>
   <property name="acceptDrops">
@@ -402,6 +402,9 @@
                  </item>
                  <item row="1" column="1">
                   <widget class="QPushButton" name="control_testPushButton">
+                   <property name="enabled">
+                    <bool>true</bool>
+                   </property>
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                      <horstretch>0</horstretch>
@@ -431,7 +434,7 @@
       </widget>
       <widget class="QTabWidget" name="detailsTabWidget">
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="graphicalMethodTab">
         <attribute name="icon">
@@ -640,7 +643,7 @@
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>420</width>
+                    <width>454</width>
                     <height>44</height>
                    </size>
                   </property>
@@ -764,7 +767,7 @@
                     <rect>
                      <x>290</x>
                      <y>10</y>
-                     <width>101</width>
+                     <width>131</width>
                      <height>24</height>
                     </rect>
                    </property>
@@ -775,13 +778,13 @@
                     </sizepolicy>
                    </property>
                    <property name="text">
-                    <string>Manual Pivoting</string>
+                    <string>Manual Pivot Selection</string>
                    </property>
                   </widget>
                   <widget class="QPushButton" name="simplex_pivotHintPushButton">
                    <property name="geometry">
                     <rect>
-                     <x>390</x>
+                     <x>420</x>
                      <y>10</y>
                      <width>24</width>
                      <height>24</height>
@@ -861,7 +864,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1000</width>
+     <width>1028</width>
      <height>21</height>
     </rect>
    </property>

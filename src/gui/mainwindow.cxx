@@ -43,14 +43,14 @@
 
 #include "numericstyleditemdelegate.hxx"
 #include "simpletablemodel.hxx"
-#include "tablemodelstorage.hxx"
+#include "tablemodelcollection.hxx"
 #include "tablemodelutils.hxx"
-#include "../lp/dantzignumericsolver.hxx"
-#include "../lp/dantzignumericsolvercontroller.hxx"
+#include "../lp/simplexsolver.hxx"
+#include "../lp/simplexsolvercontroller.hxx"
 #include "../lp/graphicalsolver2d.hxx"
 #include "../lp/linearprogrammingutils.hxx"
 #include "../lp/linearprogramsolution.hxx"
-#include "../lp/plotdatareal2d.hxx"
+#include "../lp/plotdata2d.hxx"
 #include "../lp/solutiontype.hxx"
 #include "../math/mathutils.hxx"
 #include "../misc/dataconvertors.hxx"
@@ -75,6 +75,7 @@ namespace GUI
   using LinearProgramming::SimplexTableau;
   using LinearProgrammingUtils::blerp;
   using LinearProgrammingUtils::perp;
+  using Utils::ResultType;
   using std::make_shared;
   using std::pair;
   using std::vector;
@@ -527,8 +528,9 @@ GUI::MainWindow::clearGraphicalSolutionView(QCustomPlot* const customPlot)
 }
 
 
+template<typename T>
 void
-GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
+GUI::MainWindow::refreshGraphicalSolutionView(const PlotData2D<T>& plotData) {
   QCustomPlot* const customPlot = ui->graphical_solutionPlotQCustomPlot;
 
   setupGraphicalSolutionView(customPlot);
@@ -610,18 +612,6 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
     }
   }
 
-//  {
-//    int xIdx, yIdx;
-//    for (size_t i(0); i < verticesCount; ++i)
-//    {
-//      const PointReal2D point(vertices[i]);
-//      colormap->data()->coordToCell(
-//        point.x, point.y, &xIdx, &yIdx
-//      );
-//      colormap->data()->setCell(xIdx, yIdx, point.second);
-//    }
-//  }
-
   //w/ a corresponding color scale
   QCPColorScale* const colorScale = new QCPColorScale(customPlot);
   colorScale->setType(QCPAxis::atRight);
@@ -631,7 +621,7 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   customPlot->plotLayout()->addElement(0, 1, colorScale);
 
   QCPColorGradient colorGradient;
-  colorGradient.setColorStops(ColorMap_PuCy);
+  colorGradient.setColorStops(ColorMap_PuBlGrYe);
   colorGradient.setLevelCount(ColorMapLevelsCount);
   colorGradient.setColorInterpolation(QCPColorGradient::ciHSV);
   colorMap->setGradient(colorGradient);
@@ -672,10 +662,10 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
 
   //Set axes names according to solution
   customPlot->xAxis->setLabel(
-    QString("x%1").arg(plotData.variablesNames.at(0))
+    QString("x%1").arg(plotData.decisionVariables.at(0))
   );
   customPlot->yAxis->setLabel(
-    QString("x%1").arg(plotData.variablesNames.at(1))
+    QString("x%1").arg(plotData.decisionVariables.at(1))
   );
 
   //Add feasible region `Q'
@@ -693,7 +683,7 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   feasibleRegionCurve->setPen(QPen(Qt::transparent));
   feasibleRegionCurve->setBrush(QBrush(QColor(31, 31, 31, 31)));
   feasibleRegionCurve->setSelectedPen(QPen(Qt::transparent));
-  feasibleRegionCurve->setSelectedBrush(QBrush(QColor(32, 32, 32, 63)));
+  feasibleRegionCurve->setSelectedBrush(QBrush(QColor(31, 31, 31, 95)));
   feasibleRegionCurve->setScatterStyle(
     QCPScatterStyle(QCPScatterStyle::ssCircle, QColor(255, 0, 0), 8)
   );
@@ -824,10 +814,10 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotDataReal2D& plotData) {
   objectiveValueText->setText(
     QString::fromStdString(
       format(
-        " F* = min{{F^}} =\n = F({}, {}) = {} ",
-        plotData.extremePoints.front().x(),
-        plotData.extremePoints.front().y(),
-        plotData.extremeValue
+        " x* = {}\nF* = min F^ = {} ",
+        plotData.linearProgramSolution.extremePoint.
+        transpose().format(Utils::RowVectorFormat),
+        plotData.linearProgramSolution.extremeValue
       )
     )
   );
@@ -946,11 +936,11 @@ GUI::MainWindow::refreshSimplexView()
   {
     case Field::Real:
       if (
-        !realNumericSolverController_.isEmpty() &&
-        realNumericSolverController_.stateChanged()
+        !realSimplexSolverController_.isEmpty() &&
+        realSimplexSolverController_.stateChanged()
       )
       {
-        const SimplexTableau<Real> tableau(realNumericSolverController_.current());
+        const SimplexTableau<Real> tableau(realSimplexSolverController_.current());
 
         simplexTableModels_[int(SimplexModel::Tableau)]->resize(
           tableau.rows(), tableau.cols()
@@ -1012,34 +1002,34 @@ GUI::MainWindow::refreshSimplexView()
       ui->simplex_simplexTableauTableView->selectionModel()->clearCurrentIndex();
 
       ui->simplex_stepBackPushButton->setEnabled(
-        realNumericSolverController_.hasPrevious()
+        realSimplexSolverController_.hasPrevious()
       );
 
       ui->simplex_stepForwardPushButton->setEnabled(
-        realNumericSolverController_.hasNext()
+        realSimplexSolverController_.hasNext()
       );
 
       ui->simplex_iterCountLcdNumber->display(
-        int(realNumericSolverController_.iterationsCount())
+        int(realSimplexSolverController_.iterationsCount())
       );
 
       ui->simplex_manualPivotCheckBox->setEnabled(
-        realNumericSolverController_.hasNext()
+        realSimplexSolverController_.hasNext()
       );
 
       ui->simplex_pivotHintPushButton->setEnabled(
-        realNumericSolverController_.hasNext()
+        realSimplexSolverController_.hasNext()
       );
       break;
 
     case Field::Rational:
       if (
-        !rationalNumericSolverController_.isEmpty() &&
-        rationalNumericSolverController_.stateChanged()
+        !rationalSimplexSolverController_.isEmpty() &&
+        rationalSimplexSolverController_.stateChanged()
       )
       {
         const SimplexTableau<Rational> tableau(
-          rationalNumericSolverController_.current()
+          rationalSimplexSolverController_.current()
         );
 
         simplexTableModels_[int(SimplexModel::Tableau)]->resize(
@@ -1102,23 +1092,23 @@ GUI::MainWindow::refreshSimplexView()
       ui->simplex_simplexTableauTableView->selectionModel()->clearCurrentIndex();
 
       ui->simplex_stepBackPushButton->setEnabled(
-        rationalNumericSolverController_.hasPrevious()
+        rationalSimplexSolverController_.hasPrevious()
       );
 
       ui->simplex_stepForwardPushButton->setEnabled(
-        rationalNumericSolverController_.hasNext()
+        rationalSimplexSolverController_.hasNext()
       );
 
       ui->simplex_iterCountLcdNumber->display(
-        int(rationalNumericSolverController_.iterationsCount())
+        int(rationalSimplexSolverController_.iterationsCount())
       );
 
       ui->simplex_manualPivotCheckBox->setEnabled(
-        rationalNumericSolverController_.hasNext()
+        rationalSimplexSolverController_.hasNext()
       );
 
       ui->simplex_pivotHintPushButton->setEnabled(
-        rationalNumericSolverController_.hasNext()
+        rationalSimplexSolverController_.hasNext()
       );
       break;
 
@@ -1189,7 +1179,7 @@ GUI::MainWindow::toggleTableViewsDelegates()
   {
     case Field::Real:
       qInfo() << "MainWindow::toggleTableViewsDelegates:"
-                 " switching to `Real'";
+                 " switching to `Field::Real'";
       ui->program_objFuncCoeffsTableView->setItemDelegate(
         realNumericDelegates_[int(ProgramModel::ObjFunc)]
       );
@@ -1203,7 +1193,7 @@ GUI::MainWindow::toggleTableViewsDelegates()
 
     case Field::Rational:
       qInfo() << "MainWindow::toggleTableViewsDelegates:"
-                  " switching to `Rational'";
+                  " switching to `Field::Rational'";
       ui->program_objFuncCoeffsTableView->setItemDelegate(
         rationalNumericDelegates_[int(ProgramModel::ObjFunc)]
       );
@@ -1217,7 +1207,7 @@ GUI::MainWindow::toggleTableViewsDelegates()
 
     default:
       qCritical() << "MainWindow::toggleTableViewsDelegates:"
-                     " unsupported value of `_currentField'";
+                     " unsupported value of `field_'";
       break;
   }
 }
@@ -1262,17 +1252,17 @@ GUI::MainWindow::setDirty(bool dirty)
 void
 GUI::MainWindow::setupNumericSolvers()
 {
-  realNumericSolver_ = make_shared<DantzigNumericSolver<Real>>();
-  rationalNumericSolver_ = make_shared<DantzigNumericSolver<Rational>>();
+  realSimplexSolver_ = make_shared<SimplexSolver<Real>>();
+  rationalSimplexSolver_ = make_shared<SimplexSolver<Rational>>();
 }
 
 
 void
 GUI::MainWindow::setupNumericSolversControllers()
 {
-  realNumericSolverController_ = DantzigNumericSolverController<Real>(realNumericSolver_);
-  rationalNumericSolverController_ =
-      DantzigNumericSolverController<Rational>(rationalNumericSolver_);
+  realSimplexSolverController_ = SimplexSolverController<Real>(realSimplexSolver_);
+  rationalSimplexSolverController_ =
+    SimplexSolverController<Rational>(rationalSimplexSolver_);
 }
 
 
@@ -1303,7 +1293,7 @@ void GUI::MainWindow::updateNumericSolversData()
           std::move(constrsCoeffs),
           std::move(constrsRHS)
         );
-        realNumericSolver_->setLinearProgramData(std::move(linearProgramData));
+        realSimplexSolver_->setLinearProgramData(std::move(linearProgramData));
 
         break;
       }
@@ -1331,7 +1321,7 @@ void GUI::MainWindow::updateNumericSolversData()
           std::move(constrsCoeffs),
           std::move(constrsRHS)
         );
-        rationalNumericSolver_->setLinearProgramData(linearProgramData);
+        rationalSimplexSolver_->setLinearProgramData(linearProgramData);
 
         break;
       }
@@ -1358,7 +1348,7 @@ GUI::MainWindow::solveSimplexHandler()
     case Field::Real:
       {
         const pair<SolutionType, optional<LinearProgramSolution<Real>>>
-        linearProgramSolution(realNumericSolver_->solve());
+        linearProgramSolution(realSimplexSolver_->solve());
 
         if (linearProgramSolution.second)
         {
@@ -1379,7 +1369,7 @@ GUI::MainWindow::solveSimplexHandler()
           );
 
           LOG(
-            "Solution: x* := {0}\nF* := {1}",
+            "Solution: x* == {0}\nF* == {1}",
             (*linearProgramSolution.second).extremePoint,
             (*linearProgramSolution.second).extremeValue
           );
@@ -1400,7 +1390,7 @@ GUI::MainWindow::solveSimplexHandler()
     case Field::Rational:
       {
         const pair<SolutionType, optional<LinearProgramSolution<Rational>>>
-        linearProgramSolution(rationalNumericSolver_->solve());
+        linearProgramSolution(rationalSimplexSolver_->solve());
 
         if (linearProgramSolution.second)
         {
@@ -1421,7 +1411,7 @@ GUI::MainWindow::solveSimplexHandler()
           );
 
           LOG(
-            "Solution: x* := {0}\nF* := {1}",
+            "Solution: x* == {0}\nF* == {1}",
             (*linearProgramSolution.second).extremePoint,
             (*linearProgramSolution.second).extremeValue
           );
@@ -1491,7 +1481,7 @@ GUI::MainWindow::solveGraphicalHandler()
           std::move(linearProgramData)
         );
 
-        pair<SolutionType, optional<PlotDataReal2D>> plotData2D(
+        pair<SolutionType, optional<PlotData2D<Real>>> plotData2D(
           graphicalSolver2D.solve()
         );
 
@@ -1545,7 +1535,7 @@ GUI::MainWindow::solveGraphicalHandler()
           std::move(linearProgramData)
         );
 
-        pair<SolutionType, optional<PlotDataReal2D>> plotData2D(
+        pair<SolutionType, optional<PlotData2D<Rational>>> plotData2D(
           graphicalSolver2D.solve()
         );
 
@@ -1755,22 +1745,21 @@ GUI::MainWindow::loadData(const QString& fileName)
       if (byteArray.count() > 0)
       {
         const QJsonDocument jsonDocument(QJsonDocument::fromJson(byteArray));
-        TableModelStorage tableModelStorage;
-        const ResultType res(
-          tableModelStorage.read(jsonDocument.object())
-        );
+        TableModelCollection tableModels;
+        const ResultType res(tableModels.read(jsonDocument.object()));
+
         file.flush();
         file.close();
 
         if (res == ResultType::Success)
         {
-          if (tableModelStorage.count() == ProgramModelsCount)
+          if (tableModels.count() == ProgramModelsCount)
           {
             for (int i(0); i < ProgramModelsCount; ++i)
             {
               //Transfer contents...
-              (*programTableModels_[i]) = std::move(tableModelStorage[i]);
-               //...and update ownerhsip
+              (*programTableModels_[i]) = std::move(tableModels[i]);
+              //...and update ownerhsip
               (*programTableModels_[i]).setParent(this);
             }
             assignTableModelsHeaders();
@@ -1783,7 +1772,7 @@ GUI::MainWindow::loadData(const QString& fileName)
               programTableModels_[int(ProgramModel::Constrs)]->columnCount()
             );
 
-            field_ = tableModelStorage.field();
+            field_ = tableModels.field();
             switch (field_)
             {
               case Field::Real:
@@ -1848,7 +1837,7 @@ GUI::MainWindow::saveData(const QString& fileName)
     {
       QJsonObject jsonObject;
       //TODO: ~? Use pointers here
-      TableModelStorage tableModelStorage(
+      TableModelCollection tableModels(
         QVector<SimpleTableModel>{
           (*programTableModels_[int(ProgramModel::ObjFunc)]),
           (*programTableModels_[int(ProgramModel::Constrs)]),
@@ -1856,7 +1845,7 @@ GUI::MainWindow::saveData(const QString& fileName)
         },
         field_
       );
-      const ResultType res(tableModelStorage.write(jsonObject));
+      const ResultType res(tableModels.write(jsonObject));
 
       if (res == ResultType::Success)
       {
@@ -2220,43 +2209,9 @@ void
 GUI::MainWindow::on_control_testPushButton_clicked()
 {
   {
-//    _loadData(QStringLiteral("data4.json"));
-//    loadData(QStringLiteral("data3+.json"));
-//    loadData(QStringLiteral("data5.json"));
-    loadData(QStringLiteral("data6.json"));
+    loadData(QStringLiteral("data7.json"));
 
     setDirty(false);
-  }
-
-  {
-//    real_t pi(3.141'592'653'589'793'238'46);
-//    real_t sq_2(1.414'213'562'373'095'048'80);
-//    real_t e(2.718'281'828'459'045'235'36);
-//    for (int exp(0); exp < 17; ++exp)
-//    {
-//      real_t tol(pow(.1, exp));
-//      auto rat_1 = MathUtils::rationalize<int32_t>(sq_2, tol);
-//      cerr << exp << "=>" << tol << "==>" << rat_1.first <<
-//           "/" << rat_1.second << ";\t\t" <<
-//              std::endl << std::flush;
-//    }
-  }
-
-  {
-//    Matrix<Real, Dynamic, Dynamic> m(
-//      TableModelUtils::getMatrix<Real>(_models[int(Model::Constrs)])
-//    );
-//    Matrix<Real, Dynamic, Dynamic> m(3, 4);
-//    m << 0, 2, -1, -4, 2, 3, -1, -11, -2, 0, -3, 22;
-//    m << 1, 2, -1, -4, 2, 3, -1, -11, -2, 0, -3, 22;
-//    Matrix<Real, 2, 2> m(2, 2);
-//    m << 3.7, -8.3, 2.3, -7.2;
-//    auto rref(reducedRowEchelonForm<Real>(m));
-//    LOG("M=\n{0}\nA=\n{1}\nrk(A)=\n{2}\n",
-//      m.format(MathematicaFormat),
-//      rref.first.format(MathematicaFormat),
-//      rref.second
-//    );
   }
 }
 
@@ -2272,14 +2227,14 @@ GUI::MainWindow::on_simplex_startPushButton_clicked()
   switch (field_)
   {
     case Field::Real:
-      realNumericSolverController_.reset();
-      realNumericSolverController_.start();
+      realSimplexSolverController_.reset();
+      realSimplexSolverController_.start();
       refreshSimplexView();
       break;
 
     case Field::Rational:
-      rationalNumericSolverController_.reset();
-      rationalNumericSolverController_.start();
+      rationalSimplexSolverController_.reset();
+      rationalSimplexSolverController_.start();
       refreshSimplexView();
       break;
 
@@ -2295,17 +2250,17 @@ GUI::MainWindow::on_simplex_stepBackPushButton_clicked()
   switch (field_)
   {
     case Field::Real:
-      if (realNumericSolverController_.hasPrevious())
+      if (realSimplexSolverController_.hasPrevious())
       {
-        realNumericSolverController_.previous();
+        realSimplexSolverController_.previous();
       }
       refreshSimplexView();
       break;
 
     case Field::Rational:
-      if (rationalNumericSolverController_.hasPrevious())
+      if (rationalSimplexSolverController_.hasPrevious())
       {
-        rationalNumericSolverController_.previous();
+        rationalSimplexSolverController_.previous();
       }
       refreshSimplexView();
       break;
@@ -2336,17 +2291,17 @@ GUI::MainWindow::on_simplex_stepForwardPushButton_clicked()
   switch (field_)
   {
     case Field::Real:
-      if (realNumericSolverController_.hasNext())
+      if (realSimplexSolverController_.hasNext())
       {
-        realNumericSolverController_.next(pivotIdx);
+        realSimplexSolverController_.next(pivotIdx);
       }
       refreshSimplexView();
       break;
 
     case Field::Rational:
-      if (rationalNumericSolverController_.hasNext())
+      if (rationalSimplexSolverController_.hasNext())
       {
-        rationalNumericSolverController_.next(pivotIdx);
+        rationalSimplexSolverController_.next(pivotIdx);
       }
       refreshSimplexView();
       break;
@@ -2374,10 +2329,10 @@ GUI::MainWindow::on_simplex_pivotHintPushButton_clicked()
   switch (field_)
   {
     case Field::Real:
-      if (!realNumericSolverController_.isEmpty())
+      if (!realSimplexSolverController_.isEmpty())
       {
         const pair<SolutionType, MaybeIndex2D> pivot(
-          realNumericSolverController_.pivot()
+          realSimplexSolverController_.pivot()
         );
 
         if (pivot.second)
@@ -2408,10 +2363,10 @@ GUI::MainWindow::on_simplex_pivotHintPushButton_clicked()
       break;
 
     case Field::Rational:
-      if (!rationalNumericSolverController_.isEmpty())
+      if (!rationalSimplexSolverController_.isEmpty())
       {
         const pair<SolutionType, MaybeIndex2D> pivot(
-          rationalNumericSolverController_.pivot()
+          rationalSimplexSolverController_.pivot()
         );
 
         if (pivot.second)
@@ -2454,7 +2409,7 @@ GUI::MainWindow::on_action_Open_triggered()
   const QString filename(
     QFileDialog::getOpenFileName(
       this,
-      QStringLiteral("Open Linear Program..."),
+      QStringLiteral("Load Linear Program..."),
       QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) +
         "/linearProgram.json",
       QStringLiteral("JSON file (*.json);;Plain text document (*.txt)"),
@@ -2591,7 +2546,7 @@ GUI::MainWindow::on_action_About_triggered()
     this,
     QStringLiteral("About Application..."),
     QStringLiteral(
-      "<h3><b>Linear Optimization v. 0.0.1.</b></h3>"
+      "<h3><b>Linear Programming v. 0.0.1.</b></h3>"
       "<br><br>"
       "This application demonstrates some methods of linear programs solving."
       "<br><br>"
@@ -2601,7 +2556,7 @@ GUI::MainWindow::on_action_About_triggered()
       "<li><a href=\"http://eigen.tuxfamily.org\">Eigen (v. 3.2.7)</a></li>"
       "<li><a href=\"http://www.qcustomplot.com\">"
       "QCustomPlot (v. 1.3.1)</a></li>"
-      "<li><a href=\"http://www.boost.org\">Boost (v. 1.59.0)</a></li>"
+      "<li><a href=\"http://www.boost.org\">Boost (v. 1.60.0)</a></li>"
       "<li><a href=\"http://cppformat.github.io\">"
       "C++ Format (v. 1.1.0)</a></li>"
       "<li><a href=\"http://louisdx.github.io/cxx-prettyprint\">"

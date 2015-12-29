@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#ifndef DANTZIGNUMERICSOLVER_HXX
-#define DANTZIGNUMERICSOLVER_HXX
+#ifndef SIMPLEXSOLVER_HXX
+#define SIMPLEXSOLVER_HXX
 
 
 #include <cstdint>
@@ -13,8 +13,8 @@
 #include "boost/optional.hpp"
 #include "eigen3/Eigen/Core"
 
-#include "dantzignumericsolvercontroller_fwd.hxx"
-#include "inumericsolver.hxx"
+#include "simplexsolvercontroller_fwd.hxx"
+#include "isolver.hxx"
 #include "linearprogramdata.hxx"
 #include "simplextableau_fwd.hxx"
 #include "solutiontype.hxx"
@@ -38,19 +38,19 @@ namespace LinearProgramming
 
 
   template<typename T = Real>
-  class DantzigNumericSolver :
-    public INumericSolver<LinearProgramSolution<T>>
+  class SimplexSolver :
+    public ISolver<LinearProgramSolution<T>>
   {
     public:
-      friend DantzigNumericSolverController<T>;
+      friend SimplexSolverController<T>;
 
 
-      DantzigNumericSolver() = default;
+      SimplexSolver() = default;
 
-      explicit DantzigNumericSolver(
+      explicit SimplexSolver(
         const LinearProgramData<T>& linearProgramData
       );
-      explicit DantzigNumericSolver(LinearProgramData<T>&& linearProgramData);
+      explicit SimplexSolver(LinearProgramData<T>&& linearProgramData);
 
       const LinearProgramData<T>& linearProgramData() const;
 
@@ -88,7 +88,7 @@ namespace LinearProgramming
         const SimplexTableau<T>& tableau, DenseIndex pivotColIdx
       ) const;
 
-      void pivotize(
+      void transformTableau(
         SimplexTableau<T>& tableau, DenseIndex rowIdx, DenseIndex colIdx
       );
 
@@ -99,7 +99,7 @@ namespace LinearProgramming
 }
 
 
-#include "dantzignumericsolver.txx"
+#include "simplexsolver.txx"
 
 
-#endif // DANTZIGNUMERICSOLVER_HXX
+#endif // SIMPLEXSOLVER_HXX

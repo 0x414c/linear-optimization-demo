@@ -8,9 +8,9 @@
 
 #include "boost/optional.hpp"
 
-#include "inumericsolver.hxx"
+#include "isolver.hxx"
 #include "linearprogramdata.hxx"
-#include "plotdatareal2d.hxx"
+#include "plotdata2d.hxx"
 #include "solutiontype.hxx"
 #include "../math/numerictypes.hxx"
 
@@ -22,24 +22,25 @@ namespace LinearProgramming
   using std::pair;
 
 
-  template<typename T = Real>
+  //TODO: ~! Three-dimensional case
+  template<typename TCoeff = Real/*, DenseIndex TDim = 2*/>
   class GraphicalSolver2D :
-    public INumericSolver<PlotDataReal2D>
+    public ISolver<PlotData2D<TCoeff>>
   {
     public:
       GraphicalSolver2D() = default;
 
-      explicit GraphicalSolver2D(const LinearProgramData<T>& other);
-      explicit GraphicalSolver2D(LinearProgramData<T>&& other);
+      explicit GraphicalSolver2D(const LinearProgramData<TCoeff>& other);
+      explicit GraphicalSolver2D(LinearProgramData<TCoeff>&& other);
 
-      void setLinearProgramData(const LinearProgramData<T>& other);
-      void setLinearProgramData(LinearProgramData<T>&& other);
+      void setLinearProgramData(const LinearProgramData<TCoeff>& other);
+      void setLinearProgramData(LinearProgramData<TCoeff>&& other);
 
-      virtual pair<SolutionType, optional<PlotDataReal2D>> solve() override;
+      virtual pair<SolutionType, optional<PlotData2D<TCoeff>>> solve() override;
 
 
     private:
-      LinearProgramData<T> linearProgramData_;
+      LinearProgramData<TCoeff> linearProgramData_;
   };
 }
 

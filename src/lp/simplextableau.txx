@@ -342,7 +342,7 @@ namespace LinearProgramming
   {
     switch (goalType) {
       case OptimizationGoalType::Minimize:
-        return entries_(entries_.rows() - 1, entries_.cols() - 1) * T(-1);
+        return (entries_(entries_.rows() - 1, entries_.cols() - 1) * T(-1));
 
       case OptimizationGoalType::Maximize:
         return entries_(entries_.rows() - 1, entries_.cols() - 1);
@@ -446,7 +446,7 @@ namespace LinearProgramming
     {
       //Each `P[j]' is the negative sum of the column `α.col[j]' above it
       phase1Tableau.entries_(phase1Tableau.entries_.rows() - 1, j) =
-      phase1Tableau.entries_.col(j).head(basicVarsCount).sum() * T(-1);
+        phase1Tableau.entries_.col(j).head(basicVarsCount).sum() * T(-1);
     }
 
     return phase1Tableau;
@@ -519,23 +519,6 @@ namespace LinearProgramming
       }
     );
 
-//    phase2Tableau._freeVars = vector<DenseIndex>(0);
-//    phase2Tableau._freeVars.reserve(
-//      phase1FreeVarsCount - phase2BasicVarsCount
-//    );
-//    for (DenseIndex j(0); j < phase1Tableau._entries.cols() - 1; ++j)
-//    {
-//      if (
-//        isEqualToZero<T>(
-//          phase1Tableau._entries(phase1Tableau._entries.rows() - 1, j)
-//        )
-//      )
-//      {
-//        phase2Tableau._freeVars.emplace_back(phase1Tableau._freeVars[j]);
-//      }
-//    }
-//    phase2FreeVarsCount = phase2Tableau._freeVars.size();
-
     //Fill the coeffs matrix `α' using the Phase-1 tableau
     phase2Tableau.entries_ = Matrix<T, Dynamic, Dynamic>(
       phase2BasicVarsCount + 1, phase2FreeVarsCount + 1
@@ -555,7 +538,7 @@ namespace LinearProgramming
           for (DenseIndex i(0); i < phase2Tableau.entries_.rows() - 1; ++i)
           {
             phase2Tableau.entries_(i, colIdx) =
-            phase1Tableau.entries_(i, j);
+              phase1Tableau.entries_(i, j);
           }
           ++colIdx;
         }
@@ -571,7 +554,7 @@ namespace LinearProgramming
     for (DenseIndex i(0); i < phase1Tableau.entries_.rows() - 1; ++i)
     {
       phase2Tableau.entries_(i, phase2Tableau.entries_.cols() - 1) =
-      phase1Tableau.entries_(i, phase1Tableau.entries_.cols() - 1);
+        phase1Tableau.entries_(i, phase1Tableau.entries_.cols() - 1);
     }
 
     //Fill the objective function coeffs `P[j]' (row at the bottom)

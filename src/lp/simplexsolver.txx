@@ -144,7 +144,7 @@ namespace LinearProgramming
   template<typename T>
   /**
    * @brief SimplexSolver<T>::solve
-   * Finds the extreme (minimum) value `w*' and
+   * Finds the extreme (minimum) value `F*' and
    * the extreme point `x*' of the given objective linear
    * function w(x) == (c, x) within the given constraints
    * defined by the following system of linear equations
@@ -160,7 +160,7 @@ namespace LinearProgramming
    * using the two-phase Simplex method.
    * @return `LinearProgramSolution' instance
    * w/ the row-vector of length `N' for function extreme point `x*'
-   * and the extreme (minimal) value `w*'.
+   * and the extreme (minimal) value `F*'.
    */
   pair<SolutionType, optional<LinearProgramSolution<T>>>
   SimplexSolver<T>::solve()
@@ -204,7 +204,7 @@ namespace LinearProgramming
 
     if (phase1SolutionType == SolutionType::Optimal)
     {
-      //Recheck Phase-1 solution (~w* == 0) and try to solve the Phase-2
+      //Recheck Phase-1 solution (~F* == 0) and try to solve the Phase-2
       const SolutionType phase1SolutionType(
         checkPhase1Solution(phase1Tableau)
       );
@@ -733,21 +733,21 @@ namespace LinearProgramming
   ) const
   {
     const T objFuncValue(tableau.extremeValue());
-     //If (~w* == 0) -- The end of the Phase-1
+     //If (~F* == 0) -- The end of the Phase-1
     if (isEqualToZero<T>(objFuncValue))
     {
       return SolutionType::Optimal;
     }
     else
     {
-       //If (~w* > 0) -- Inconsistent (infeasible) program
+       //If (~F* > 0) -- Inconsistent (infeasible) program
       if (isGreaterThanZero<T>(objFuncValue))
       {
         return SolutionType::Infeasible;
       }
       else
       {
-         //If (~w* < 0) -- Oops... smth went wrong...
+         //If (~F* < 0) -- Oops... smth went wrong...
         if (isLessThanZero<T>(objFuncValue))
         {
           return SolutionType::Unknown;

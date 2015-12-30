@@ -335,7 +335,7 @@ namespace LinearProgramming
   template<typename T>
   /**
    * @brief SimplexTableau<T>::extremeValue
-   * @return the current value `w*' of the objective function `w'.
+   * @return the current value `F*' of the objective function `F'.
    */
   T
   SimplexTableau<T>::extremeValue(OptimizationGoalType goalType) const
@@ -373,7 +373,7 @@ namespace LinearProgramming
    *   `t' is the current iteration index,
    *   `~x[i]' is the basic (and it is the artificial) variable,
    *   `x[j]' is the free (and it is the decision) variable,
-   *   `-P[0]' is the current value of the objective function (aka `w*'),
+   *   `-P[0]' is the current value of the objective function (aka `F*'),
    *   `P[i]' is the `i'-th objective function coefficient (aka `c[i]'),
    *   `α' is the `M' × `N' constraints coefficients matrix,
    *   `α[i, j]' is the particular coefficient of `α',

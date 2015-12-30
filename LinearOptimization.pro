@@ -8,7 +8,7 @@ QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
-CONFIG += c++14 warn_off
+CONFIG += c++14 warn_on
 
 QMAKE_CXX = ccache g++
 

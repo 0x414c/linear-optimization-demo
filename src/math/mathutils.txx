@@ -27,9 +27,9 @@ namespace MathUtils
   using NumericTypes::Real;
   using std::fabs;
   using std::floor;
+  using std::make_pair;
   using std::max;
   using std::pair;
-  using std::make_pair;
 
 
   template<typename R, typename T/*, typename*/>

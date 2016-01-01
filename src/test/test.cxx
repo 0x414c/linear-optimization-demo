@@ -128,7 +128,7 @@ namespace Test
         4,
         1;
 
-//      testReal(c, A, b);
+      testReal(c, A, b);
     }
 
     //Example 2.2 - (3/2, 0, 0, 1) -> -18

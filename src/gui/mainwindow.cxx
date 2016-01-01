@@ -121,7 +121,7 @@ GUI::MainWindow::~MainWindow()
   delete ui;
 }
 
-#pragma endregion
+#pragma endregion // ctors/dtors
 
 
 #pragma region event handlers
@@ -255,7 +255,7 @@ GUI::MainWindow::dropEvent(QDropEvent* ev)
   }
 }
 
-#pragma endregion
+#pragma endregion // event handlers
 
 
 #pragma region private methods
@@ -1764,14 +1764,17 @@ GUI::MainWindow::loadData(const QString& fileName)
             }
             assignTableModelsHeaders();
 
-            ui->program_constrsSpinBox->setValue(
-              programTableModels_[int(ProgramModel::Constrs)]->rowCount()
-            );
-
+            //Update `N'
             ui->program_varsSpinBox->setValue(
               programTableModels_[int(ProgramModel::Constrs)]->columnCount()
             );
 
+            //Update `M'
+            ui->program_constrsSpinBox->setValue(
+              programTableModels_[int(ProgramModel::Constrs)]->rowCount()
+            );
+
+            //Update `field_'
             field_ = tableModels.field();
             switch (field_)
             {
@@ -1784,7 +1787,7 @@ GUI::MainWindow::loadData(const QString& fileName)
                 break;
 
               default:
-                qWarning() << "MainWindow::loadData: unknown value of `Field'";
+                qWarning() << "MainWindow::loadData: unknown value of `field_'";
                 return ResultType::Fail;
             }
 
@@ -1910,7 +1913,7 @@ GUI::MainWindow::saveSettings()
   settings.endGroup();
 }
 
-#pragma endregion
+#pragma endregion // private methods
 
 
 #pragma region public slots
@@ -2548,7 +2551,8 @@ GUI::MainWindow::on_action_About_triggered()
     QStringLiteral(
       "<h3><b>Linear Programming v. 0.0.1.</b></h3>"
       "<br><br>"
-      "This application demonstrates some methods of linear programs solving."
+      "This application demonstrates some methods for solving some types of"
+      " linear optimization problems."
       "<br><br>"
       "This software uses:"
       "<ul>"
@@ -2598,4 +2602,4 @@ GUI::MainWindow::on_action_About_Qt_triggered()
   QApplication::aboutQt();
 }
 
-#pragma endregion
+#pragma endregion // public slots

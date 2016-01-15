@@ -1277,11 +1277,13 @@ void GUI::MainWindow::updateNumericSolversData()
             programTableModels_[int(ProgramModel::ObjFunc)]
           )
         );
+
         Matrix<Real, Dynamic, Dynamic> constrsCoeffs(
           TableModelUtils::makeMatrix<Real>(
             programTableModels_[int(ProgramModel::Constrs)]
           )
         );
+
         Matrix<Real, Dynamic, 1> constrsRHS(
           TableModelUtils::makeColumnVector<Real>(
             programTableModels_[int(ProgramModel::RHS)]
@@ -1293,6 +1295,7 @@ void GUI::MainWindow::updateNumericSolversData()
           std::move(constrsCoeffs),
           std::move(constrsRHS)
         );
+
         realSimplexSolver_->setLinearProgramData(std::move(linearProgramData));
 
         break;
@@ -1305,11 +1308,13 @@ void GUI::MainWindow::updateNumericSolversData()
             programTableModels_[int(ProgramModel::ObjFunc)]
           )
         );
+
         Matrix<Rational, Dynamic, Dynamic> constrsCoeffs(
           TableModelUtils::makeMatrix<Rational>(
             programTableModels_[int(ProgramModel::Constrs)]
           )
         );
+
         Matrix<Rational, Dynamic, 1> constrsRHS(
           TableModelUtils::makeColumnVector<Rational>(
             programTableModels_[int(ProgramModel::RHS)]
@@ -1321,6 +1326,7 @@ void GUI::MainWindow::updateNumericSolversData()
           std::move(constrsCoeffs),
           std::move(constrsRHS)
         );
+
         rationalSimplexSolver_->setLinearProgramData(linearProgramData);
 
         break;
@@ -2222,7 +2228,9 @@ GUI::MainWindow::on_control_testPushButton_clicked()
 void
 GUI::MainWindow::on_simplex_startPushButton_clicked()
 {
-  updateNumericSolversData();
+  //NOTE: `Start' button is only accessible by clicking `Solve' button so
+  //we don't need to force updating of program data
+//  updateNumericSolversData();
 
   enableCurrentSolutionSimplexView();
   enableStepByStepSimplexView();

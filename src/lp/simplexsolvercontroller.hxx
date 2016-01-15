@@ -146,7 +146,7 @@ namespace LinearProgramming
                 {
                   case SolutionPhase::One:
                     {
-                      if (iterationsCount() > 0)
+                      if (iterationsCount() > 0) //TODO: !
                       {
                         ++solver_->iterCount_;
                         tableaus_.push_back(

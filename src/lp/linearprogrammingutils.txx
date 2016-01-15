@@ -63,63 +63,145 @@ namespace LinearProgrammingUtils
   }
 
 
-  template<typename T>
-  /**
-   * @brief findIntersection
-   * Finds intersection point `x' of two lines
-   * given as the following matrix equation
-   *   Ax == b.
-   * The formula is
-   *   x := {{(A11*b0 - A01*b1) / (-A01*A10 + A00*A11)},
-   *         {(A10*b0 - A00*b1) / ( A01*A10 - A00*A11)}}.
-   * NOTE: This function handles only two-dimensional case.
-   * @param coeffs 1 × 2 matrix `A'
-   * @param RHS N × 1 matrix `b'
-   * @return (optional) intersection point `x' as 2 × 1 column-vector.
-   */
-  optional<Matrix<T, 2, 1>>
-  findIntersection(const Matrix<T, 2, 2>& A, const Matrix<T, 2, 1>& b)
+  template<typename TCoeff>
+  struct findIntersectionImpl_<TCoeff, 2>
   {
-    Matrix<T, 2, 1> sol(2, 1);
-    optional<Matrix<T, 2, 1>> ret;
-
-    const T q((-A(0, 1) * A(1, 0) + A(0, 0) * A(1, 1))),
-            s((A(0, 1) * A(1, 0) - A(0, 0) * A(1, 1)));
-
-    if (!isEqualToZero<T>(q) && !isEqualToZero<T>(s))
+    /**
+     * @brief findIntersection
+     * Finds intersection point `x' of two lines
+     * given as the following matrix equation
+     *   Ax == b.
+     * The formula is
+     *   x := {
+     *         {(A11*b0 - A01*b1) / (-A01*A10 + A00*A11)},
+     *         {(A10*b0 - A00*b1) / ( A01*A10 - A00*A11)}
+     *        }.
+     * NOTE: This function handles only two-dimensional case.
+     * @param coeffs 2 × 1 matrix `A'
+     * @param RHS 2 × 1 matrix `b'
+     * @return (optional) intersection point `x' as 2 × 1 column-vector.
+     */
+    static optional<Matrix<TCoeff, 2, 1>>
+    findIntersection(
+      const Matrix<TCoeff, 2, 2>& A, const Matrix<TCoeff, 2, 1>& b
+    )
     {
-      const T p((A(1, 1) * b(0) - A(0, 1) * b(1))),
-              r((A(1, 0) * b(0) - A(0, 0) * b(1)));
+      Matrix<TCoeff, 2, 1> sol(2, 1);
+      optional<Matrix<TCoeff, 2, 1>> ret;
 
-      sol <<
-        p / q, //!
-        r / s;
+      const TCoeff q(-A(0, 1) * A(1, 0) + A(0, 0) * A(1, 1)),
+                   s( A(0, 1) * A(1, 0) - A(0, 0) * A(1, 1));
 
-      ret = sol;
+      if (!isEqualToZero<TCoeff>(q) && !isEqualToZero<TCoeff>(s))
+      {
+        const TCoeff p(A(1, 1) * b(0) - A(0, 1) * b(1)),
+                     r(A(1, 0) * b(0) - A(0, 0) * b(1));
+
+        sol <<
+          p / q, //!
+          r / s;
+
+        ret = sol;
+      }
+
+      return ret;
     }
+  };
 
-    return ret;
-  }
+
+  template<typename TCoeff>
+  struct findIntersectionImpl_<TCoeff, 3>
+  {
+    /**
+     * @brief findIntersection
+     * Finds intersection point `x' of three lines
+     * given as the following matrix equation
+     *   Ax == b.
+     * The formula is
+     *   x := {
+     *         {(A12*A21*b0  - A11*A22*b0  - A02*A21*b1 +
+     *           A01*A22*b1  + A02*A11*b2  - A01*A12*b2) /
+     *          (A02*A11*A20 - A01*A12*A20 - A02*A10*A21 +
+     *           A00*A12*A21 + A01*A10*A22 - A00*A11*A22)},
+     *         {(-A12*A20*b0  + A10*A22*b0  + A02*A20*b1 -
+     *            A00*A22*b1  - A02*A10*b2  + A00*A12*b2) /
+     *          (A02*A11*A20 - A01*A12*A20 - A02*A10*A21 +
+     *           A00*A12*A21 + A01*A10*A22 - A00*A11*A22)},
+     *         {(A11*A20*b0  - A10*A21*b0  - A01*A20*b1 +
+     *           A00*A21*b1  + A01*A10*b2  - A00*A11*b2) /
+     *          (A02*A11*A20 - A01*A12*A20 - A02*A10*A21 +
+     *           A00*A12*A21 + A01*A10*A22 - A00*A11*A22)}
+     *        }.
+     * NOTE: This function handles only three-dimensional case.
+     * @param coeffs 3 × 3 matrix `A'
+     * @param RHS 3 × 1 matrix `b'
+     * @return (optional) intersection point `x' as N × 1 column-vector.
+     */
+    static optional<Matrix<TCoeff, 3, 1>>
+    findIntersection(
+      const Matrix<TCoeff, 3, 3>& A, const Matrix<TCoeff, 3, 1>& b
+    )
+    {
+      Matrix<TCoeff, 3, 1> sol(3, 1);
+      optional<Matrix<TCoeff, 3, 1>> ret;
+
+      const TCoeff q(A(0, 2) * A(1, 1) * A(2, 0) - A(0, 1) * A(1, 2) * A(2, 0) -
+                     A(0, 2) * A(1, 0) * A(2, 1) + A(0, 0) * A(1, 2) * A(2, 1) +
+                     A(0, 1) * A(1, 0) * A(2, 2) - A(0, 0) * A(1, 1) * A(2, 2)),
+                   s(A(0, 2) * A(1, 1) * A(2, 0) - A(0, 1) * A(1, 2) * A(2, 0) -
+                     A(0, 2) * A(1, 0) * A(2, 1) + A(0, 0) * A(1, 2) * A(2, 1) +
+                     A(0, 1) * A(1, 0) * A(2, 2) - A(0, 0) * A(1, 1) * A(2, 2)),
+                   u(A(0, 2) * A(1, 1) * A(2, 0) - A(0, 1) * A(1, 2) * A(2, 0) -
+                     A(0, 2) * A(1, 0) * A(2, 1) + A(0, 0) * A(1, 2) * A(2, 1) +
+                     A(0, 1) * A(1, 0) * A(2, 2) - A(0, 0) * A(1, 1) * A(2, 2));
+
+      if (
+        !isEqualToZero<TCoeff>(q) &&
+        !isEqualToZero<TCoeff>(s) &&
+        !isEqualToZero<TCoeff>(u)
+      )
+      {
+        const TCoeff p(A(1, 2) * A(2, 1) * b(0)  - A(1, 1) * A(2, 2) * b(0) -
+                       A(0, 2) * A(2, 1) * b(1)  + A(0, 1) * A(2, 2) * b(1) +
+                       A(0, 2) * A(1, 1) * b(2)  - A(0, 1) * A(1, 2) * b(2)),
+                     r(-A(1, 2) * A(2, 0) * b(0)  + A(1, 0) * A(2, 2) * b(0) +
+                        A(0, 2) * A(2, 0) * b(1)  - A(0, 0) * A(2, 2) * b(1) -
+                        A(0, 2) * A(1, 0) * b(2)  + A(0, 0) * A(1, 2) * b(2)),
+                     t(A(1, 1) * A(2, 0) * b(0)  - A(1, 0) * A(2, 1) * b(0) -
+                       A(0, 1) * A(2, 0) * b(1)  + A(0, 0) * A(2, 1) * b(1) +
+                       A(0, 1) * A(1, 0) * b(2)  - A(0, 0) * A(1, 1) * b(2));
+
+        sol <<
+          p / q, //!
+          r / s,
+          t / u;
+
+        ret = sol;
+      }
+
+      return ret;
+    }
+  };
 
 
   template<typename T>
   /**
    * @brief rowReducedEchelonForm
    * Algorithm: Transforming a matrix to row canonical/reduced
-   * row echelon form (RREF).
-   * INPUT: n × m matrix A.
-   * OUTPUT: n × m matrix A' in reduced row echelon form.
+   * row echelon form aka RREF.
+   * INPUT: M × N matrix `A'.
+   * OUTPUT: M × N matrix `A^' in reduced row echelon form.
    * 1. Set j ← 1.
-   * 2. For each row i from 1 to n do
-   *  a. While column j has all zero elements, set j ← j + 1.
-   *     If j > m return A'.
-   *  b. If element a[i, j] is zero, then interchange row i
-   *     with a row x > i that has a[x, j] ≠ 0.
-   *  c. Divide each element of row i by a[i, j],
-   *     thus making the pivot a[i, j] equal to one.
-   *  d. For each row k from 1 to n, with k ≠ i, subtract row i
-   *     multiplied by a[k, j] from row k.
-   * 3. Return transformed matrix A'.
+   * 2. For each row `i' from 1 to `M' do
+   *  a. While column `j' has all zero elements, set j ← j + 1.
+   *     If (j > N) return `A^'.
+   *  b. If element A^[i, j] is zero, then interchange row `i'
+   *     with a row (x > i) that has A^[x, j] ≠ 0.
+   *  c. Divide each element of row `i' by A^[i, j],
+   *     thus making the pivot a[i, j] equal to 1.
+   *  d. For each row `k' from 1 to `M', with (k ≠ i), subtract row `i'
+   *     multiplied by A^[k, j] from row `k'.
+   * 3. Return transformed matrix `A^'.
    * There are many, many variants of the above algorithm.
    * For example, in step 2a you could always select the largest
    * element of  the column as the pivot to help reduce rounding errors,
@@ -129,55 +211,56 @@ namespace LinearProgrammingUtils
    *  `http://www.millersville.edu/~bikenaga/linear-algebra/row-reduction/
    *   row-reduction.html'.
    * @param matrix Matrix A to reduce.
-   * @return Row-reduced echelon form of A' along w/ rank of A'.
+   * @return Struct containing row-reduced echelon form `A^'
+   *         of matrix `A' along w/ rank of `A'.
    */
   RREF<T>
   reducedRowEchelonForm(const Matrix<T, Dynamic, Dynamic>& A)
   {
-    const DenseIndex n(A.rows());
-    const DenseIndex m(A.cols());
+    const DenseIndex M(A.rows());
+    const DenseIndex N(A.cols());
     DenseIndex rank(0);
 
-    Matrix<T, Dynamic, Dynamic> rref(n, m);
-    rref << A;
+    Matrix<T, Dynamic, Dynamic> A_(M, N);
+    A_ << A;
 
     DenseIndex i(0), j(0);
-    //1. Deal with each row i from 1 to n in turn, ...
+    //1. Deal with each row `i' from 1 to `M' in turn, ...
     while (true)
     {
       //If we have reached the end
-      if (i >= n || j >= m)
+      if (i >= M || j >= N)
       {
-        return RREF<T>(std::move(rref), rank);
+        return RREF<T>(std::move(A_), rank);
       }
       else
       {
         //3. Interchange rows, if necessary, so that the
-        //pivot element A(i, j) is nonzero.
+        //pivot element A^(i, j) is nonzero.
         DenseIndex x(i);
         DenseIndex xMax(i);
         T maxValue(0);
         bool isColNonZero(false);
-        //... and work across the columns j from 1 to m
+        //... and work across the columns `j' from 1 to `N'
         //skipping any column of all zero entries.
         while (true)
         {
-          if (isEqualToZero<T>(rref(x, j)))
+          if (isEqualToZero<T>(A_(x, j)))
           {
             ++x;
           }
           else
           {
-            if (absoluteValue<T>(rref(x, j)) > absoluteValue<T>(maxValue))
+            if (absoluteValue<T>(A_(x, j)) > absoluteValue<T>(maxValue))
             {
               xMax = x;
-              maxValue = rref(x, j);
+              maxValue = A_(x, j);
             }
             isColNonZero = true;
             ++x;
           }
 
-          if (x >= n)
+          if (x >= M)
           {
             if (isColNonZero)
             {
@@ -188,9 +271,9 @@ namespace LinearProgrammingUtils
             else
             {
               ++j;
-              if (j >= m)
+              if (j >= N)
               {
-                return RREF<T>(std::move(rref), rank);
+                return RREF<T>(std::move(A_), rank);
               }
               else
               {
@@ -207,54 +290,39 @@ namespace LinearProgrammingUtils
 
         if (x > i)
         {
-          rref.row(x).swap(rref.row(i));
+          A_.row(x).swap(A_.row(i));
         }
 
         //4. Make the pivot equal to 1 by dividing each element
         //in the pivot row by the value of the pivot.
-        const T pivot(rref(i, j));
-
-//        LOG("A.row({0}) / pivot <=> [{1}] / {2}", i, A.row(i), pivot);
+        const T pivot(A_(i, j));
 
         if (!isEqual<T>(pivot, T(1)))
         {
-          rref.row(i) /= pivot; //!
+          A_.row(i) /= pivot; //!
         }
-
-//        LOG("A.row({0}) = [{1}]", i, A.row(i));
 
         //5. Make all elements above and below the pivot equal to 0 by
         //subtracting a suitable multiple of the pivot row from each other row.
-        const Matrix<T, 1, Dynamic> pivotRow(rref.row(i));
+        const Matrix<T, 1, Dynamic> pivotRow(A_.row(i));
         for (DenseIndex k(0); k < i; ++k)
         {
-          const T factor(rref(k, j));
+          const T factor(A_(k, j));
 
-//          LOG("A.row({0}) - factor * pivotRow <=> [{1}] - ({2} * [{3}])",
-//              k, A.row(k), factor, pivotRow);
-
-          rref.row(k) -= factor * pivotRow;
-
-//          LOG("A.row({0}) = [{1}]", k, A.row(k));
+          A_.row(k) -= factor * pivotRow;
         }
-        for (DenseIndex k(i + 1); k < n; ++k)
+
+        for (DenseIndex k(i + 1); k < M; ++k)
         {
-          const T factor(rref(k, j));
+          const T factor(A_(k, j));
 
-//          LOG("A.row({0}) - factor * pivotRow <=> [{1}] - ({2} * [{3}])",
-//              k, A.row(k), factor, pivotRow);
-
-          rref.row(k) -= factor * pivotRow;
-
-//          LOG("A.row({0}) = [{1}]", k, A.row(k));
+          A_.row(k) -= factor * pivotRow;
         }
-
-//        LOG("A = \n{0}", A.format(MathematicaFormat));
 
         //Jump to the next column
         ++j;
       }
-      //Increase rank (we now have 1 as the leading element in the current row)
+      //Increase rank (now we have `1' as the leading element in the current row)
       ++rank;
 
       //Jump to the next row

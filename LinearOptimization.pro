@@ -8,29 +8,32 @@ QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
+CONFIG += c++14 warn_on
+
+QMAKE_CXX = ccache g++
+
 CONFIG(release, debug|release) {
-  message("Building `release' target" )
+  message("Building `release' target")
+  QMAKE_CXXFLAGS_RELEASE += -O3 -mtune=generic
 }
 
 CONFIG(debug, debug|release) {
   message("Building `debug' target")
+  QMAKE_CXXFLAGS_DEBUG += -O0 -march=native
 }
-
-CONFIG += c++14 warn_on
-
-QMAKE_CXX = ccache g++
 
 equals(QT_ARCH, x86_64) {
   message("Building for `x86_64' target")
   QMAKE_CXXFLAGS += -m64 -mno-fp-ret-in-387
 } else {
-  message("Building for `i386' target")
-  QMAKE_CXXFLAGS += -m32
+  equals(QT_ARCH, i386) {
+    message("Building for `i386' target")
+    QMAKE_CXXFLAGS += -m32
+  }
 }
 
 QMAKE_CXXFLAGS += \
-  -O0 \
-  -march=native -msse -msse2 -msse3 -mfpmath=sse \
+  -msse -msse2 -mfpmath=sse \
   -mieee-fp -mno-fancy-math-387 -malign-double \
   -ffp-contract=off -ffloat-store -frounding-math -fsignaling-nans
 
@@ -60,7 +63,7 @@ win32 {
 #NOTE: This quickly resolves many problems when targeting `i386' arch,
 #but can (and will) lead to the performance degradation. For the reference see:
 #`http://eigen.tuxfamily.org/dox-devel/group__TopicUnalignedArrayAssert.html'
-contains(QT_ARCH, i386) {
+equals(QT_ARCH, i386) {
 #  DEFINES += EIGEN_DONT_ALIGN_STATICALLY
   DEFINES += EIGEN_DONT_VECTORIZE EIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT
 }

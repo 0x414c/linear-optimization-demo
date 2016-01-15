@@ -460,6 +460,7 @@ namespace LinearProgramming
    * by dropping all the columns corresponding to the basic artificial
    * variables that was forced out of the basis at the Phase-1 of
    * the Simplex algorithm.
+   * TODO: ! Add support for degenerate cases.
    * @param linearProgramData
    * @param phase1Tableau
    * @return

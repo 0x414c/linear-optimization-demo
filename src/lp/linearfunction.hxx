@@ -24,7 +24,7 @@ namespace LinearProgramming
    * @brief The `LinearFunction' templated class
    * represents linear functions on a field w/ elements of type `T':
    *   F(x1, x2, ..., xN) ==
-   *   c1 * x1 + c2 * X2 + ... + cN*xN + d ==
+   *   c1 * x1 + c2 * x2 + ... + cN*xN + d ==
    *   (c, x) + d,
    * where:
    *   `x' is the column-vector (x1, ..., xN),

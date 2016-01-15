@@ -10,6 +10,7 @@
 #include <list>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include <QApplication>
@@ -24,6 +25,7 @@ namespace Utils
   using fmt::print;
   using std::cerr;
   using std::copy;
+  using std::false_type;
   using std::list;
   using std::ostream_iterator;
   using std::ostringstream;
@@ -31,14 +33,16 @@ namespace Utils
   using std::vector;
 
 
-  template<typename T1, typename... TN>
+  template<typename...>
   /**
    * @brief The AlwaysFalse struct
+   * Acts as a guard for templates which used to prevent
+   * arbitrary template instantiations allowing defined
+   * specializations only.
    */
-  struct AlwaysFalse
-  {
-    enum : bool { value = false };
-  };
+  struct AlwaysFalse :
+    false_type
+  { };
 
 
   /**

@@ -60,15 +60,16 @@ namespace Eigen
 
 
     static inline NumericTypes::BoostRational
-    highest() {
-      return (std::numeric_limits<NumericTypes::BoostRational>::max)();
+    highest()
+    {
+      return std::numeric_limits<NumericTypes::BoostRational>::max();
     }
 
 
     static inline NumericTypes::BoostRational
     lowest()
     {
-      return (std::numeric_limits<NumericTypes::BoostRational>::min)();
+      return std::numeric_limits<NumericTypes::BoostRational>::min();
     }
   };
 #else

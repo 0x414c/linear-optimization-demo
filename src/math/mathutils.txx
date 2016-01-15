@@ -75,7 +75,7 @@ namespace MathUtils
         R a0(r0_integerPart); //See eq. (5)
 
         //If we got "almost integer" `x', we should return 〈a_0; 1〉
-        //(or the loop will stuck at division by 0.)
+        //(or the loop will stuck at division by 0. later)
         if (isEqual<T>(r0, T(a0)))
         {
           return make_pair(a0, R(1));
@@ -150,7 +150,7 @@ namespace MathUtils
   inline Real
   absoluteValue(Real x)
   {
-    return Real(fabs(double(x)));
+    return Real(fabs(x));
   }
 
 
@@ -282,7 +282,6 @@ namespace MathUtils
   }
 
 
-#ifdef LP_WITH_MULTIPRECISION
   template<>
   /**
    * @brief isEqualToZero
@@ -290,23 +289,10 @@ namespace MathUtils
    * @return `true' if (x == 0), `false' otherwise.
    */
   inline bool
-  isEqualToZero(NumericTypes::BoostRational x)
+  isEqualToZero(Rational x)
   {
-    return (numerator(x) == NumericTypes::BoostInteger(0));
+    return (x == Rational(0));
   }
-#else
-  template<>
-  /**
-   * @brief isEqualToZero
-   * @param x
-   * @return `true' if (x == 0), `false' otherwise.
-   */
-  inline bool
-  isEqualToZero(NumericTypes::BoostRational x)
-  {
-    return (x.numerator() == NumericTypes::BuiltinInteger(0));
-  }
-#endif // LP_WITH_MULTIPRECISION
 
 
   template<>

@@ -54,7 +54,7 @@ namespace LinearProgramming
   using Utils::makeString;
 
 
-  template<typename TCoeff>
+  template<typename TCoeff/*, DenseIndex TDim = 2*/>
   GraphicalSolver2D<TCoeff>::GraphicalSolver2D(
     const LinearProgramData<TCoeff>& linearProgramData
   ) :
@@ -62,7 +62,7 @@ namespace LinearProgramming
   { }
 
 
-  template<typename TCoeff>
+  template<typename TCoeff/*, DenseIndex TDim = 2*/>
   GraphicalSolver2D<TCoeff>::GraphicalSolver2D(
     LinearProgramData<TCoeff>&& linearProgramData
   ) :
@@ -70,7 +70,7 @@ namespace LinearProgramming
   { }
 
 
-  template<typename TCoeff>
+  template<typename TCoeff/*, DenseIndex TDim = 2*/>
   void
   GraphicalSolver2D<TCoeff>::setLinearProgramData(
     const LinearProgramData<TCoeff>& linearProgramData
@@ -80,7 +80,7 @@ namespace LinearProgramming
   }
 
 
-  template<typename TCoeff>
+  template<typename TCoeff/*, DenseIndex TDim = 2*/>
   void
   GraphicalSolver2D<TCoeff>::setLinearProgramData(
     LinearProgramData<TCoeff>&& linearProgramData
@@ -93,9 +93,10 @@ namespace LinearProgramming
   /**
    * @brief GraphicalSolver2D::solve
    * Naïve algorithm for solving two-dimensional linear programs.
+   * TODO: Handle three-dimensional case (use `TDim' parameter)
    * @return
    */
-  template<typename TCoeff>
+  template<typename TCoeff/*, DenseIndex TDim = 2*/>
   pair<SolutionType, optional<PlotData2D<TCoeff>>>
   GraphicalSolver2D<TCoeff>::solve()
   {
@@ -273,7 +274,11 @@ namespace LinearProgramming
 
         //Obtain basic solution `y': solve matrix equation {C * y == d}
         //& check solution correctness
-        const optional<Matrix<TCoeff, 2, 1>> y(findIntersection<TCoeff>(C, d));
+        const optional<Matrix<TCoeff, 2, 1>> y(
+//          findIntersection<TCoeff/*, TDim*/>(C, d) //TODO: ~!
+          findIntersection<TCoeff, 2>(C, d)
+        );
+
         if (y)
         {
           const Matrix<TCoeff, 2, 1> y_(*y);

@@ -11,6 +11,7 @@
 #include "eigen3/Eigen/Core"
 
 #include "../math/numerictypes.hxx"
+#include "../misc/utils.hxx"
 
 
 namespace LinearProgrammingUtils
@@ -21,6 +22,7 @@ namespace LinearProgrammingUtils
   using Eigen::Matrix;
   using NumericTypes::Real;
   using std::list;
+  using Utils::AlwaysFalse;
 
 
   template<typename T = Real>
@@ -30,11 +32,33 @@ namespace LinearProgrammingUtils
     const Matrix<T, Dynamic, 1>& b
   );
 
+
   //TODO: ~ Move all the following functions to the `MathUtils' namespace
-  template<typename T = Real>
-  optional<Matrix<T, 2, 1>> findIntersection(
-    const Matrix<T, 2, 2>& A, const Matrix<T, 2, 1>& b
-  );
+  template<typename TCoeff = Real, DenseIndex TDim = 2>
+  struct findIntersectionImpl_
+  {
+    static optional<Matrix<TCoeff, TDim, 1>>
+    findIntersection(
+      const Matrix<TCoeff, TDim, TDim>& A, const Matrix<TCoeff, TDim, 1>& b
+    )
+    {
+      static_assert(
+        AlwaysFalse<TCoeff>::value,
+        "LinearProgrammingUtils::findIntersection<TCoeff, TDim>:"
+        " You can only use one of the specified specializations!"
+      );
+    }
+  };
+
+
+  template<typename TCoeff = Real, DenseIndex TDim = 2>
+  optional<Matrix<TCoeff, TDim, 1>> findIntersection(
+    const Matrix<TCoeff, TDim, TDim>& A, const Matrix<TCoeff, TDim, 1>& b
+  )
+  {
+    return findIntersectionImpl_<TCoeff, TDim>::findIntersection(A, b);
+  }
+
 
   template<typename T>
   struct RREF
@@ -51,6 +75,7 @@ namespace LinearProgrammingUtils
     Matrix<T, Dynamic, Dynamic> rref;
     DenseIndex rank;
   };
+
 
   template<typename T = Real>
   RREF<T> reducedRowEchelonForm(const Matrix<T, Dynamic, Dynamic>& A);

@@ -22,7 +22,6 @@ namespace LinearProgramming
   using std::pair;
 
 
-  //TODO: ~! Three-dimensional case
   template<typename TCoeff = Real/*, DenseIndex TDim = 2*/>
   class GraphicalSolver2D :
     public ISolver<PlotData2D<TCoeff>>

@@ -40,6 +40,7 @@ namespace LinearProgramming
   using MathUtils::isEqualToZero;
   using MathUtils::isGreaterThanOrEqualToZero;
   using MathUtils::isGreaterThanZero;
+  using MathUtils::isLessThan;
   using MathUtils::isLessThanZero;
   using NumericTypes::Rational;
   using NumericTypes::Real;
@@ -139,14 +140,12 @@ namespace LinearProgramming
   }
 
 
-  //TODO: new EqualityConstraint class: Coeffs, Restriction
-  //TODO: add Constant term to LinearFunction class
   template<typename T>
   /**
    * @brief SimplexSolver<T>::solve
    * Finds the extreme (minimum) value `F*' and
    * the extreme point `x*' of the given objective linear
-   * function w(x) == (c, x) within the given constraints
+   * function F(x) == (c, x) within the given constraints
    * defined by the following system of linear equations
    * in matrix form:
    *   αx = β,
@@ -201,6 +200,12 @@ namespace LinearProgramming
       makeString(phase1Tableau.basicVars()),
       makeString(phase1Tableau.freeVars())
     );
+
+    //TODO: !
+    if (iterCount_ == 0)
+    {
+      return make_pair(SolutionType::Unknown, ret);
+    }
 
     if (phase1SolutionType == SolutionType::Optimal)
     {
@@ -454,10 +459,10 @@ namespace LinearProgramming
    *  `http://web.stanford.edu/class/msande310/blandrule.pdf'.
    * @param tableau
    * @return (optional)
-   * argmin{P[s]} for all `s' where (P[s] < 0) (Dantzig's original pivot
+   *  argmin{P[s]} for all `s' where (P[s] < 0) (Dantzig's original pivot
    * selection rule)
    *   or
-   * min{s} for all `s' where (P[s] < 0) (Bland's pivot selection rule that
+   *  min{s} for all `s' where (P[s] < 0) (Bland's pivot selection rule that
    * prevents cycling).
    */
   MaybeIndex1D
@@ -534,9 +539,9 @@ namespace LinearProgramming
    * @param tableau
    * @param pivotColIdx
    * @return (optional)
-   * `k' for min{β[k] / α[k, s]} if (∃s: α[k, s] > 0)
+   *  `k' for min{β[k] / α[k, s]} if (∃s: α[k, s] > 0)
    * or
-   * .
+   *  min{k} for min{β[k] / α[k, s]} if (∃s: α[k, s] > 0)
    */
   MaybeIndex1D
   SimplexSolver<T>::computePivotRowIdx(
@@ -579,7 +584,7 @@ namespace LinearProgramming
         }
         else
         {
-          if (currRatio < minRatio)
+          if (isLessThan<T>(currRatio, minRatio))
           {
             minRatioRowsIndices.clear();
             minRatioRowsIndices.push_back(rowIdx);
@@ -588,7 +593,7 @@ namespace LinearProgramming
         }
 #else
         //Update w/ new found minimum
-        if (currRatio < minRatio)
+        if (isLessThan<T>(currRatio, minRatio))
         {
           minRatio = currRatio;
           minRatioRowIdx = rowIdx;

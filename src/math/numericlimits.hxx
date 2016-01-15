@@ -9,6 +9,8 @@
 
 
 //TODO: ~? Convert to struct w/ static members
+//TODO: ~? Remove this and use `std::numeric_limits' directly
+//TODO: ~? Check stdlib support for `boost::rational'
 namespace NumericLimits
 {
   using NumericTypes::Real;

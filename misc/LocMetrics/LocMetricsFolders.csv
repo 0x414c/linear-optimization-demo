@@ -1,0 +1,8 @@
+Folder,Files,LOC,SLOC-P,SLOC-L,MVG,BLOC,C&SLOC,CLOC,CWORD,HCLOC,HCWORD
+Total,58,11149,7867,3185,720,2155,118,1127,5415,0,0
+C:\Users\Alex\Dropbox\Development\Qt\LinearOptimization\src,58,11149,7867,3185,720,2155,118,1127,5415,0,0
+C:\Users\Alex\Dropbox\Development\Qt\LinearOptimization\src\gui,14,4989,3983,1675,396,890,18,116,462,0,0
+C:\Users\Alex\Dropbox\Development\Qt\LinearOptimization\src\lp,25,3916,2445,971,223,785,55,686,3740,0,0
+C:\Users\Alex\Dropbox\Development\Qt\LinearOptimization\src\math,5,742,451,158,45,149,23,142,600,0,0
+C:\Users\Alex\Dropbox\Development\Qt\LinearOptimization\src\misc,10,1003,628,230,45,226,17,149,464,0,0
+C:\Users\Alex\Dropbox\Development\Qt\LinearOptimization\src\test,2,316,228,102,10,65,1,23,80,0,0

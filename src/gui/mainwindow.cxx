@@ -22,6 +22,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QItemSelectionModel>
+#include <QLocale>
 #include <QList>
 #include <QMessageBox>
 #include <QMimeData>

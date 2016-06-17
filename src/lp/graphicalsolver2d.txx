@@ -254,6 +254,7 @@ namespace LinearProgramming
     vector<uint16_t> intersectionCounters(M_ + 2, 0);
 
     //For each constraint equation
+    //TODO: ~! Use `std::next_permutation'
     for (DenseIndex r(0); r < (M_ + 2) - 1; ++r)
     {
       //For each other constraint equation
@@ -272,7 +273,7 @@ namespace LinearProgramming
 
 //        LOG("r == {}, s == {}\nC ==\n{},\nd ==\n{}", r, s, C, d);
 
-        //Obtain basic solution `y': solve matrix equation {C * y == d}
+        //Obtain basic solution `y': solve matrix equation {Cy == d}
         //& check solution correctness
         const optional<Matrix<TCoeff, 2, 1>> y(
 //          findIntersection<TCoeff/*, TDim*/>(C, d) //TODO: ~!

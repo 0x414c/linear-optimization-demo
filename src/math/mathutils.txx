@@ -40,17 +40,18 @@ namespace MathUtils
    * Maximal Denominator) by using Continued Fractions method.
    * For the reference see:
    *   `http://mathworld.wolfram.com/ContinuedFraction.html'.
+   * TODO: check if `R' and `T' are integer types and break compilation if they aren't.
    * @param x Number to approximate.
    * @param tolerance Tolerance value (default is `1E-16').
    * @param maxIterations Maximum iterations count allowed.
    * @param maxDenominator Maximum denominator value.
-   * @return Pair 〈p; q〉 where (x ≈ p/q) ∧ (q < maxDenominator).
+   * @return Pair 〈p; q〉 where (p/q ≈ x) ∧ (q < maxDenominator).
    */
   pair<R, R>
-  rationalize(T x, T tolerance, uint16_t maxIterations, R maxDenominator)
+  rationalize(T x, T tolerance, uint16_t maxIterations, R maxDenominator) //TODO: Swap `maxIterations' w/ `maxDenominator'.
   {
     T r0(x); //See eq. (8)
-    T r0_integerPart(floor(r0));
+    T r0_integerPart(floor(r0)); //TODO: use `trunc' instead of `floor'.
 
     //Check for overflow (assuming that `T' is larger than `R')
     if (r0_integerPart > T(NumericLimits::max<R>()))
@@ -88,20 +89,23 @@ namespace MathUtils
                            //(we will "shift" and reuse the coeffs rather
                            //than storing they all)
 
-          uint16_t iterCount(0);
+          uint16_t iterCount(0); //TODO: 0 ?
           while (true)
           {
             T rn(T(1) / T(r0 - T(a0))); //See eq. (9)
-            R an(floor(rn)); //See eq. (10)
+            R an(floor(rn)); //See eq. (10) //TODO: use `trunc' instead of `floor'.
             pn = an * p1 + p0; //See eq. (27), (28)
             qn = an * q1 + q0;
 
             //Look at the n-th convergent `cn'
             const T cn(T(pn) / T(qn));
+
+            ++iterCount;
+
             if (
-              ++iterCount <= maxIterations &&
-              !isEqual<T>(x, cn) &&
-              qn < maxDenominator
+              iterCount <= maxIterations && //TODO: <= ?
+              qn < maxDenominator &&
+              !isEqual<T>(x, cn)              
             )
             {
               //Now "shift" all the coeffs to the left
@@ -118,7 +122,7 @@ namespace MathUtils
 
           if (iterCount > maxIterations)
           {
-            qWarning() << "MathUtils::rationalize<R>:"
+            qWarning() << "MathUtils::rationalize<R, T>:"
                           " iterations limit `maxIterations' exceeded:"
                           " `iterCount' ==" << iterCount << ">" <<
                           maxIterations << "; `tolerance' ==" << tolerance;
@@ -172,7 +176,7 @@ namespace MathUtils
    * @brief isEqual
    * @param x
    * @param y
-   * @return `true' if (x ~= y), `false' otherwise.
+   * @return `true' if (x ≊ y), `false' otherwise.
    */
   inline bool
   isEqual(Real x, Real y)
@@ -213,7 +217,7 @@ namespace MathUtils
     return (
       (x - y) <
       (-Epsilon) * max<Real>(
-        {Real(1), absoluteValue<Real>(y), absoluteValue<Real>(y)}
+        {Real(1), absoluteValue<Real>(x), absoluteValue<Real>(y)}
       )
     );
   }
@@ -238,7 +242,7 @@ namespace MathUtils
    * @brief isGreaterThan
    * @param x
    * @param y
-   * @return `true' if (x ≲ y), `false' otherwise.
+   * @return `true' if (x ≳ y), `false' otherwise.
    */
   inline bool
   isGreaterThan(Real x, Real y)
@@ -246,7 +250,7 @@ namespace MathUtils
     return (
       (x - y) >
       Epsilon * max<Real>(
-        {Real(1), absoluteValue<Real>(y), absoluteValue<Real>(y)}
+        {Real(1), absoluteValue<Real>(x), absoluteValue<Real>(y)}
       )
     );
   }
@@ -257,7 +261,7 @@ namespace MathUtils
    * @brief isGreaterThan
    * @param x
    * @param y
-   * @return `true' if (x < y), `false' otherwise.
+   * @return `true' if (x > y), `false' otherwise.
    */
   inline bool
   isGreaterThan(Rational x, Rational y)

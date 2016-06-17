@@ -81,6 +81,7 @@ namespace LinearProgramming
 
 
 //      typename Matrix<T, TDim, 1>::CoeffReturnType
+// TODO: template<typename MatrixType> MatrixType::RealScalar
       const TCoeff&
       coeffAt(DenseIndex coeffIdx) const
       {

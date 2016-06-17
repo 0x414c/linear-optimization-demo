@@ -8,6 +8,7 @@
 #include <utility>
 
 #include <QColor>
+#include <QLocale>
 #include <QMap>
 #include <QString>
 
@@ -24,6 +25,12 @@ namespace Config
     const QString AppDomain = "www.0x414c.tk";
     const QString AppDisplayName = AppName;
     const QString AppDescription = "Linear Programming Demonstrational Tool";
+
+    //NOTE: Identifier format is: [language[_territory][.codeset][@modifier]]
+    constexpr const char* const LocaleIdentifier = "en_US.UTF-8";
+    const QLocale Locale(LocaleIdentifier);
+
+    constexpr bool DesktopSettingsAware = true;
   }
 
 
@@ -121,12 +128,13 @@ namespace Config
   {
 #ifdef LP_WITH_MULTIPRECISION
     const NumericTypes::BoostReal Epsilon = 1E-8; //TODO: ~
+    const NumericTypes::BoostInteger DefaultRationalizeDemoninator = 10;
 #else
     constexpr NumericTypes::BuiltinReal Epsilon = 1E-8;
+    constexpr NumericTypes::BuiltinInteger DefaultRationalizeDemoninator = 10;
 #endif // LP_WITH_MULTIPRECISION
 
     constexpr uint16_t MaxRationalizeIterations = 22;
-    const NumericTypes::Integer DefaultRationalizeDemoninator = 10;
   }
 
 

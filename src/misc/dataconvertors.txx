@@ -32,6 +32,7 @@
 namespace DataConvertors
 {
   using namespace Config::MathUtils;
+  using Config::AppGlobal::Locale;
   using fmt::format;
   using MathUtils::rationalize;
   using NumericTypes::Rational;
@@ -254,9 +255,7 @@ namespace DataConvertors
   numericCast<BuiltinReal>(const QString& from)
   {
     bool isOk(false);
-    const QLocale cLocale(QLocale::C);
-
-    const BuiltinReal value(cLocale.toDouble(from, &isOk));
+    const BuiltinReal value(Locale.toDouble(from, &isOk));
     if (!isOk) {
       qCritical() << "DataConvertors::numericCast<Real>:"
                      " could not convert" << from;
@@ -275,9 +274,7 @@ namespace DataConvertors
   numericCast<BuiltinInteger>(const QString& from)
   {
     bool isOk(false);
-    const QLocale cLocale(QLocale::C);
-
-    const BuiltinInteger value(cLocale.toLongLong(from, &isOk));
+    const BuiltinInteger value(Locale.toLongLong(from, &isOk));
     if (!isOk) {
       qCritical() << "DataConvertors::numericCast<Integer>:"
                      " could not convert" << from;

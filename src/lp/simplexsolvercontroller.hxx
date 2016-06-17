@@ -25,8 +25,8 @@
 
 namespace LinearProgramming
 {
-  using boost::optional;
   using namespace Config::LinearProgramming;
+  using boost::optional;  
   using Eigen::DenseIndex;
   using Eigen::Dynamic;
   using Eigen::Matrix;
@@ -34,7 +34,7 @@ namespace LinearProgramming
   using std::list;
   using std::make_shared;
   using std::shared_ptr;
-  using std::out_of_range;
+  using std::out_of_range; // using std::length_error;
   using std::pair;
 
 

@@ -21,6 +21,7 @@ namespace GUI
   using Utils::ResultType;
 
 
+  //TODO: ~ Rename to `TextTableModel'
   class SimpleTableModel :
     public QAbstractTableModel,
     public IJsonSerializable

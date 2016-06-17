@@ -13,6 +13,7 @@ namespace LinearProgrammingUtils
 {
   using Eigen::Matrix;
   using NumericTypes::Real;
+  using std::atan2;
   using std::list;
 
 
@@ -35,7 +36,7 @@ namespace LinearProgrammingUtils
       centroid.y() += (*it).y();
     }
 
-     //Find a center point
+    //Find a center point
     centroid.x() /= points.size();
     centroid.y() /= points.size();
 

@@ -70,15 +70,15 @@ namespace LinearProgrammingUtils
      * @brief findIntersection
      * Finds intersection point `x' of two lines
      * given as the following matrix equation
-     *   Ax == b.
+     *   {Ax == b}.
      * The formula is
-     *   x := {
+     *   x == {
      *         {(A11*b0 - A01*b1) / (-A01*A10 + A00*A11)},
      *         {(A10*b0 - A00*b1) / ( A01*A10 - A00*A11)}
      *        }.
      * NOTE: This function handles only two-dimensional case.
-     * @param coeffs 2 × 1 matrix `A'
-     * @param RHS 2 × 1 matrix `b'
+     * @param coeffs 2 × 2 coefficients matrix `A'
+     * @param RHS 2 × 1 RHS matrix `b' as column-vector
      * @return (optional) intersection point `x' as 2 × 1 column-vector.
      */
     static optional<Matrix<TCoeff, 2, 1>>
@@ -116,15 +116,15 @@ namespace LinearProgrammingUtils
      * @brief findIntersection
      * Finds intersection point `x' of three lines
      * given as the following matrix equation
-     *   Ax == b.
+     *   {Ax == b}.
      * The formula is
-     *   x := {
+     *   x == {
      *         {(A12*A21*b0  - A11*A22*b0  - A02*A21*b1 +
      *           A01*A22*b1  + A02*A11*b2  - A01*A12*b2) /
      *          (A02*A11*A20 - A01*A12*A20 - A02*A10*A21 +
      *           A00*A12*A21 + A01*A10*A22 - A00*A11*A22)},
-     *         {(-A12*A20*b0  + A10*A22*b0  + A02*A20*b1 -
-     *            A00*A22*b1  - A02*A10*b2  + A00*A12*b2) /
+     *         {(-A12*A20*b0 + A10*A22*b0  + A02*A20*b1 -
+     *            A00*A22*b1 - A02*A10*b2  + A00*A12*b2) /
      *          (A02*A11*A20 - A01*A12*A20 - A02*A10*A21 +
      *           A00*A12*A21 + A01*A10*A22 - A00*A11*A22)},
      *         {(A11*A20*b0  - A10*A21*b0  - A01*A20*b1 +
@@ -133,9 +133,9 @@ namespace LinearProgrammingUtils
      *           A00*A12*A21 + A01*A10*A22 - A00*A11*A22)}
      *        }.
      * NOTE: This function handles only three-dimensional case.
-     * @param coeffs 3 × 3 matrix `A'
-     * @param RHS 3 × 1 matrix `b'
-     * @return (optional) intersection point `x' as N × 1 column-vector.
+     * @param coeffs 3 × 3 coefficients matrix `A'
+     * @param RHS 3 × 1 RHS matrix `b' as column-vector
+     * @return (optional) intersection point `x' as 3 × 1 column-vector.
      */
     static optional<Matrix<TCoeff, 3, 1>>
     findIntersection(
@@ -204,13 +204,13 @@ namespace LinearProgrammingUtils
    * 3. Return transformed matrix `A^'.
    * There are many, many variants of the above algorithm.
    * For example, in step 2a you could always select the largest
-   * element of  the column as the pivot to help reduce rounding errors,
+   * element of the column as the pivot to help reduce rounding errors,
    * and you could combine steps 2c and 2d.
    * For the reference see:
    *  `http://www.di-mgt.com.au/matrixtransform.html';
    *  `http://www.millersville.edu/~bikenaga/linear-algebra/row-reduction/
    *   row-reduction.html'.
-   * @param matrix Matrix A to reduce.
+   * @param matrix Matrix `A' to reduce.
    * @return Struct containing row-reduced echelon form `A^'
    *         of matrix `A' along w/ rank of `A'.
    */
@@ -229,7 +229,7 @@ namespace LinearProgrammingUtils
     while (true)
     {
       //If we have reached the end
-      if (i >= M || j >= N)
+      if (i >= M || j >= N) // TODO: (i == M || j == N)
       {
         return RREF<T>(std::move(A_), rank);
       }

@@ -4,16 +4,18 @@
 #include <clocale>
 
 #include <QApplication>
+#include <QLocale>
 #include <QScopedPointer>
 
 #include "gui/mainwindow.hxx"
 #include "misc/utils.hxx"
+#include "config.hxx"
 #endif // LP_TEST_MODE
 
 
 /**
  * @brief main
- * The main entry point of the program.
+ * The entry point of the program.
  * @param argc Command-line arguments count.
  * @param argv Command-line arguments values.
  * @return Exit code.
@@ -24,8 +26,11 @@ main(int argc, char** argv)
 #ifdef LP_TEST_MODE
   Test::run();
 #else
-  setlocale(LC_ALL, "C");
-  QApplication::setDesktopSettingsAware(false);
+  using namespace Config::AppGlobal;
+
+  std::setlocale(LC_ALL, LocaleIdentifier);
+  QLocale::setDefault(Locale);
+  QApplication::setDesktopSettingsAware(DesktopSettingsAware);
 
   const QScopedPointer<QApplication> application(
     Utils::makeApplication(argc, argv)

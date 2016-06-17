@@ -76,8 +76,8 @@ namespace GUI
       void on_graphical_solutionPlotQCustomPlot_mouseMove(QMouseEvent* ev);
 
       void on_anyProgramModel_dataChanged(
-        const QModelIndex & topLeft, const QModelIndex & bottomRight,
-        const QVector<int> & roles = QVector<int> ()
+        const QModelIndex& topLeft, const QModelIndex& bottomRight,
+        const QVector<int>& roles = QVector<int> ()
       );
       void on_anyProgramModel_dimensionsChanged(
         const QModelIndex& parent, int start, int end

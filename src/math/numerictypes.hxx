@@ -66,7 +66,7 @@ namespace NumericTypes
   using BuiltinReal = double;
   using Real = BuiltinReal;
 
-  using BuiltinInteger = signed long long int;
+  using BuiltinInteger = long long;
   using Integer = BuiltinInteger;
 
   using BoostRational = boost::rational<Integer>;

@@ -8,7 +8,7 @@
 #include <QStringList>
 #include <QTableWidget>
 
-#include "simpletablemodel.hxx"
+#include "stringtablemodel.hxx"
 #include "../math/numerictypes.hxx"
 #include "../misc/utils.hxx"
 
@@ -25,14 +25,14 @@ GUI::TableModelCollection::TableModelCollection()
 
 
 GUI::TableModelCollection::TableModelCollection(
-  const QVector<SimpleTableModel>& items, Field field
+  const QVector<StringTableModel>& items, Field field
 ) :
   items_(items),
   field_(field)
 { }
 
 
-GUI::SimpleTableModel&
+GUI::StringTableModel&
 GUI::TableModelCollection::operator [](int idx)
 {
   return items_[idx];
@@ -46,14 +46,14 @@ GUI::TableModelCollection::count() const
 }
 
 
-const QVector<GUI::SimpleTableModel>&
+const QVector<GUI::StringTableModel>&
 GUI::TableModelCollection::items()
 {
   return items_;
 }
 
 
-const GUI::SimpleTableModel&
+const GUI::StringTableModel&
 GUI::TableModelCollection::at(int idx) const
 {
   return items_.at(idx);
@@ -99,7 +99,7 @@ GUI::TableModelCollection::read(const QJsonObject& jsonObject)
             if (itemValue.type() != QJsonValue::Undefined)
             {
               const QJsonObject itemObject(itemValue.toObject());
-              SimpleTableModel item;
+              StringTableModel item;
               const ResultType res(item.read(itemObject));
               if (res == ResultType::Success)
               {
@@ -162,7 +162,7 @@ Utils::ResultType
 GUI::TableModelCollection::write(QJsonObject& jsonObject) const
 {
   QJsonArray itemsArray;
-  for (const SimpleTableModel& item : items_)
+  for (const StringTableModel& item : items_)
   {
     QJsonObject itemObject;
     const ResultType res(item.write(itemObject));

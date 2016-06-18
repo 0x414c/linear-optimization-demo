@@ -43,7 +43,7 @@
 #include "qcustomplot/qcustomplot.h"
 
 #include "numericstyleditemdelegate.hxx"
-#include "simpletablemodel.hxx"
+#include "stringtablemodel.hxx"
 #include "tablemodelcollection.hxx"
 #include "tablemodelutils.hxx"
 #include "../lp/simplexsolver.hxx"
@@ -57,6 +57,7 @@
 #include "../misc/dataconvertors.hxx"
 #include "../misc/utils.hxx"
 #include "../config.hxx"
+#include "../globaldefinitions.hxx"
 
 
 namespace GUI
@@ -149,7 +150,7 @@ GUI::MainWindow::closeEvent(QCloseEvent* ev)
 
     switch (res) {
       case QMessageBox::Save:
-        emit on_action_Save_as_triggered();
+        Q_EMIT on_action_Save_as_triggered();
 
         if (!isWindowModified())
         {
@@ -236,7 +237,7 @@ GUI::MainWindow::dropEvent(QDropEvent* ev)
           (suffix.compare(QStringLiteral("txt"), Qt::CaseInsensitive) == 0)
         )
         {
-          openFileHandler(fileInfo.filePath());
+          openFile(fileInfo.filePath());
           ev->acceptProposedAction();
         }
         else
@@ -355,12 +356,12 @@ GUI::MainWindow::setupProgramView()
   realNumericDelegates_ =
     QVector<NumericStyledItemDelegate<Real>*>(ProgramModelsCount);
 
-  programTableModels_ = QVector<SimpleTableModel*>(ProgramModelsCount);
+  programTableModels_ = QVector<StringTableModel*>(ProgramModelsCount);
   for (int i(0); i < ProgramModelsCount; ++i)
   {
     realNumericDelegates_[i] = new NumericStyledItemDelegate<Real>(this);
     rationalNumericDelegates_[i] = new NumericStyledItemDelegate<Rational>(this);
-    programTableModels_[i] = new SimpleTableModel(this);
+    programTableModels_[i] = new StringTableModel(this);
   }
 
   programTableModels_[int(ProgramModel::ObjFunc)]->insertRow(0);
@@ -861,10 +862,10 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotData2D<T>& plotData) {
 void
 GUI::MainWindow::setupSimplexView()
 {
-  simplexTableModels_ = QVector<SimpleTableModel*>(SimplexModelsCount);
+  simplexTableModels_ = QVector<StringTableModel*>(SimplexModelsCount);
   for (int i(0); i < SimplexModelsCount; ++i)
   {
-    simplexTableModels_[i] = new SimpleTableModel(this);
+    simplexTableModels_[i] = new StringTableModel(this);
   }
 
   simplexTableModels_[int(SimplexModel::Solution)]->insertRow(0);
@@ -1340,7 +1341,7 @@ void GUI::MainWindow::updateNumericSolversData()
 
 
 void
-GUI::MainWindow::solveSimplexHandler()
+GUI::MainWindow::solveSimplex()
 {
   updateNumericSolversData();
 
@@ -1449,7 +1450,7 @@ GUI::MainWindow::solveSimplexHandler()
 
 
 void
-GUI::MainWindow::solveGraphicalHandler()
+GUI::MainWindow::solveGraphical()
 {
   ui->detailsTabWidget->setCurrentIndex(int(DetailsView::Graphical));
   ui->graphicalMethodTab->setEnabled(true);
@@ -1670,9 +1671,9 @@ GUI::MainWindow::pivotingErrorHandler(
 
 
 void
-GUI::MainWindow::openFileHandler(const QString& filename)
+GUI::MainWindow::openFile(const QString& filename)
 {
-  const ResultType result(loadData(filename));
+  const ResultType result(loadDataFromFile(filename));
   switch (result)
   {
     case ResultType::Success:
@@ -1703,9 +1704,9 @@ GUI::MainWindow::openFileHandler(const QString& filename)
 
 
 void
-GUI::MainWindow::saveFileHandler(const QString& filename)
+GUI::MainWindow::saveFile(const QString& filename)
 {
-  const ResultType result(saveData(filename));
+  const ResultType result(saveDataToFile(filename));
   switch (result)
   {
     case ResultType::Success:
@@ -1734,15 +1735,15 @@ GUI::MainWindow::saveFileHandler(const QString& filename)
 
 
 Utils::ResultType
-GUI::MainWindow::loadData(const QString& fileName)
+GUI::MainWindow::loadDataFromFile(const QString& filename)
 {
-  if (!fileName.isEmpty())
+  if (!filename.isEmpty())
   {
-    QFile file(fileName);
+    QFile file(filename);
     if (!file.open(QIODevice::ReadOnly))
     {
-      qWarning() << "MainWindow::loadData:"
-                    " couldn't open file at path" << fileName;
+      qWarning() << "MainWindow::loadDataFromFile:"
+                    " couldn't open file at path" << filename;
 
       return ResultType::Nothing;
     }
@@ -1831,15 +1832,15 @@ GUI::MainWindow::loadData(const QString& fileName)
 
 
 Utils::ResultType
-GUI::MainWindow::saveData(const QString& fileName)
+GUI::MainWindow::saveDataToFile(const QString& filename)
 {
-  if (!fileName.isEmpty())
+  if (!filename.isEmpty())
   {
-    QFile file(fileName);
+    QFile file(filename);
     if (!file.open(QIODevice::WriteOnly))
     {
-      qWarning() << "MainWindow::saveData: couldn't save file"
-                    " at path" << fileName;
+      qWarning() << "MainWindow::saveDataToFile: couldn't open file"
+                    " at path" << filename;
 
       return ResultType::Nothing;
     }
@@ -1848,7 +1849,7 @@ GUI::MainWindow::saveData(const QString& fileName)
       QJsonObject jsonObject;
       //TODO: ~? Use pointers here
       TableModelCollection tableModels(
-        QVector<SimpleTableModel>{
+        QVector<StringTableModel>{
           (*programTableModels_[int(ProgramModel::ObjFunc)]),
           (*programTableModels_[int(ProgramModel::Constrs)]),
           (*programTableModels_[int(ProgramModel::RHS)])
@@ -2196,14 +2197,14 @@ GUI::MainWindow::on_program_rationalRadioButton_toggled(bool checked)
 void
 GUI::MainWindow::on_control_solveSimplexPushButton_clicked()
 {
-  solveSimplexHandler();
+  solveSimplex();
 }
 
 
 void
 GUI::MainWindow::on_control_solveGraphicalPushButton_clicked()
 {
-  solveGraphicalHandler();
+  solveGraphical();
 }
 
 
@@ -2219,7 +2220,7 @@ void
 GUI::MainWindow::on_control_testPushButton_clicked()
 {
   {
-    loadData(QStringLiteral("data7.json"));
+    loadDataFromFile(QStringLiteral("data7.json"));
 
     setDirty(false);
   }
@@ -2421,7 +2422,7 @@ GUI::MainWindow::on_action_Open_triggered()
   const QString filename(
     QFileDialog::getOpenFileName(
       this,
-      QStringLiteral("Load Linear Program..."),
+      QStringLiteral("Open Linear Program..."),
       QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) +
         "/linearProgram.json",
       QStringLiteral("JSON file (*.json);;Plain text document (*.txt)"),
@@ -2430,7 +2431,10 @@ GUI::MainWindow::on_action_Open_triggered()
     )
   );
 
-  openFileHandler(filename);
+  if (!filename.isEmpty())
+  {
+    openFile(filename);
+  }
 }
 
 
@@ -2440,7 +2444,7 @@ GUI::MainWindow::on_action_Save_as_triggered()
   const QString filename(
     QFileDialog::getSaveFileName(
       this,
-      QStringLiteral("Save Linear Program As..."),
+      QStringLiteral("Save Linear Program As"),
       QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) +
         QString("/linearProgram@%1.json").arg(
           QDateTime::currentDateTime().toString(QStringLiteral("dMMMyy_h-m-s"))
@@ -2451,7 +2455,10 @@ GUI::MainWindow::on_action_Save_as_triggered()
     )
   );
 
-  saveFileHandler(filename);
+  if (!filename.isEmpty())
+  {
+    saveFile(filename);
+  }
 }
 
 
@@ -2533,14 +2540,14 @@ GUI::MainWindow::on_action_Zoom_reset_triggered()
 void
 GUI::MainWindow::on_action_Solve_triggered()
 {
-  solveSimplexHandler();
+  solveSimplex();
 }
 
 
 void
 GUI::MainWindow::on_action_Plot_triggered()
 {
-  solveGraphicalHandler();
+  solveGraphical();
 }
 
 
@@ -2551,55 +2558,74 @@ GUI::MainWindow::on_action_How_to_triggered()
 }
 
 
+/**
+ * @brief GUI::MainWindow::on_action_About_triggered
+ * NOTE: See
+ *   http://www.gnome.org
+ *   http://wiki.gnome.org/Design
+ *   http://git.gnome.org/browse/adwaita-icon-theme
+ *   http://ftp.gnome.org/pub/gnome/sources/adwaita-icon-theme/3.16
+ *   http://github.com/GNOME/adwaita-icon-theme'
+ */
 void
 GUI::MainWindow::on_action_About_triggered()
 {
   QMessageBox::about(
     this,
-    QStringLiteral("About Application..."),
+    QStringLiteral("About Application"),
     QStringLiteral(
-      "<h3><b>Linear Programming v. 0.0.1.</b></h3>"
-      "<br><br>"
-      "This application demonstrates some methods for solving some types of"
-      " linear optimization problems."
-      "<br><br>"
+      "<h3><b>Linear Programming ver. "
+      LP_APP_VERSION
+      "</b></h3>"
+      "Application demonstrating some methods of solving some types of "
+      "linear optimization problems."
+      "<hr>"
       "This software uses:"
       "<ul>"
-      "<li><a href=\"http://www.qt.io\">Qt (v. 5.5.1)</a></li>"
-      "<li><a href=\"http://eigen.tuxfamily.org\">Eigen (v. 3.2.7)</a></li>"
+      "<li><a href=\"http://www.qt.io\">Qt (ver. "
+      LP_QT_VERSION
+      ")</a></li>"
+      "<li><a href=\"http://eigen.tuxfamily.org\">Eigen (ver. "
+      LP_EIGEN_VERSION
+      ")</a></li>"
       "<li><a href=\"http://www.qcustomplot.com\">"
-      "QCustomPlot (v. 1.3.1)</a></li>"
-      "<li><a href=\"http://www.boost.org\">Boost (v. 1.60.0)</a></li>"
+      "QCustomPlot (ver. "
+      LP_QCUSTOMPLOT_VERSION
+      ")</a></li>"
+      "<li><a href=\"http://www.boost.org\">Boost (ver. "
+      LP_BOOST_VERSION
+      ")</a></li>"
       "<li><a href=\"http://cppformat.github.io\">"
-      "C++ Format (v. 1.1.0)</a></li>"
+      "C++ Format (ver. "
+      LP_CPPFORMAT_VERSION
+      ")</a></li>"
       "<li><a href=\"http://louisdx.github.io/cxx-prettyprint\">"
-      "cxx-prettyprint (v. master-334db03)</a></li>"
+      "cxx-prettyprint (ver. "
+      LP_CXXPRETTYPRINT_VERSION
+      ")</a></li>"
       "<li><a href=\"http://git.gnome.org/browse/adwaita-icon-theme\">"
-      "Adwaita Icon Theme (v. 3.16.2.1)</a>"
-      " by the <a href=\"http://www.gnome.org\">GNOME Project</a></li>"
-      //http://www.gnome.org
-      //http://wiki.gnome.org/Design
-      //http://git.gnome.org/browse/adwaita-icon-theme
-      //http://ftp.gnome.org/pub/gnome/sources/adwaita-icon-theme/3.16
-      //http://github.com/GNOME/adwaita-icon-theme'
+      "Adwaita Icon Theme (ver. "
+      LP_ADWAITA_VERSION
+      ")</a> "
+      "by the <a href=\"http://www.gnome.org\">GNOME Project</a></li>"
       "</ul>"
-      "<br><br>"
+      "<hr>"
       "Copyright (C) 2015  Alexey Gorishny"
-      "<br>"
-      "This program is free software: you can redistribute it and/or modify"
-      " it under the terms of the GNU General Public License as published by"
-      " the Free Software Foundation, either version 3 of the License, or"
-      " (at your option) any later version."
-      "<br>"
-      "This program is distributed in the hope that it will be useful,"
-      " but WITHOUT ANY WARRANTY; without even the implied warranty of"
-      " MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the"
-      " GNU General Public License for more details."
-      "<br>"
-      "You should have received a copy of the GNU General Public License"
-      " along with this program.  If not, see"
-      " <a href=\"http://www.gnu.org/licenses\">Licenses"
-      " - GNU Project - Free Software Foundation</a>."
+      "<br><br>"
+      "This program is free software: you can redistribute it and/or modify "
+      "it under the terms of the GNU General Public License as published by "
+      "the Free Software Foundation, either version 3 of the License, or "
+      "(at your option) any later version."
+      "<br><br>"
+      "This program is distributed in the hope that it will be useful, "
+      "but WITHOUT ANY WARRANTY; without even the implied warranty of "
+      "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the "
+      "GNU General Public License for more details."
+      "<br><br>"
+      "You should have received a copy of the GNU General Public License "
+      "along with this program.  If not, see "
+      "<a href=\"https://www.gnu.org/licenses\">"
+      "Licenses - GNU Project - Free Software Foundation</a>."
     )
   );
 }

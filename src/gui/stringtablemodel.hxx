@@ -21,8 +21,7 @@ namespace GUI
   using Utils::ResultType;
 
 
-  //TODO: ~ Rename to `TextTableModel'
-  class SimpleTableModel :
+  class StringTableModel :
     public QAbstractTableModel,
     public IJsonSerializable
   {
@@ -30,15 +29,15 @@ namespace GUI
 
 
     public:
-      explicit SimpleTableModel(QObject* parent = 0);
+      explicit StringTableModel(QObject* parent = 0);
 
-      SimpleTableModel(int rows, int cols, QObject* parent = 0);
+      StringTableModel(int rows, int cols, QObject* parent = 0);
 
-      SimpleTableModel(const SimpleTableModel& tableModel);
-      SimpleTableModel(SimpleTableModel&& tableModel);
+      StringTableModel(const StringTableModel& tableModel);
+      StringTableModel(StringTableModel&& tableModel);
 
-      const SimpleTableModel& operator =(const SimpleTableModel& other);
-      const SimpleTableModel& operator =(SimpleTableModel&& other);
+      const StringTableModel& operator =(const StringTableModel& other);
+      const StringTableModel& operator =(StringTableModel&& other);
 
       virtual int rowCount(
         const QModelIndex& parent = QModelIndex()

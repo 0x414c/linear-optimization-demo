@@ -44,8 +44,8 @@ namespace LinearProgrammingUtils
     {
       static_assert(
         AlwaysFalse<TCoeff>::value,
-        "LinearProgrammingUtils::findIntersection<TCoeff, TDim>:"
-        " You can only use one of the specified specializations!"
+        "LinearProgrammingUtils::findIntersection<TCoeff, TDim>: "
+        "You can only use one of the specified template specializations!"
       );
     }
   };

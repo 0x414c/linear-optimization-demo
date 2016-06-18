@@ -9,14 +9,14 @@
 #include <QString>
 #include <QVariant>
 
-#include "simpletablemodel.hxx"
+#include "stringtablemodel.hxx"
 #include "../config.hxx"
 
 
 namespace TableModelUtils
 {
   using namespace Config::TableModelUtils;
-  using GUI::SimpleTableModel;
+  using GUI::StringTableModel;
   using std::function;
   using std::invalid_argument;
   using std::minstd_rand;
@@ -24,7 +24,7 @@ namespace TableModelUtils
 
 
   bool
-  fill(SimpleTableModel* const tableModel, FillMethod fillMethod)
+  fill(StringTableModel* const tableModel, FillMethod fillMethod)
   throw(invalid_argument)
   {
     if (tableModel == nullptr)
@@ -32,8 +32,8 @@ namespace TableModelUtils
       throw invalid_argument("`tableModel' == `nullptr'");
     }
 
-    minstd_rand rnd(Seed);
-    uniform_real_distribution<double> dist(DistMin, DistMax);
+    minstd_rand rnd(RandSeed);
+    uniform_real_distribution<double> dist(RandDistMin, RandDistMax);
     int startIdx(0);
     tableModel->clear();
     for (int row(0); row < tableModel->rowCount(); ++row)
@@ -70,7 +70,7 @@ namespace TableModelUtils
 
 
   bool
-  fill(SimpleTableModel* const tableModel, const QString& value)
+  fill(StringTableModel* const tableModel, const QString& value)
   throw(invalid_argument)
   {
     if (tableModel == nullptr)
@@ -93,7 +93,7 @@ namespace TableModelUtils
 
   bool
   fill(
-    SimpleTableModel* const tableModel,
+    StringTableModel* const tableModel,
     const function<QVariant(const QVariant&)>& callback
   ) throw(invalid_argument)
   {

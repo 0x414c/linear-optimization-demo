@@ -53,13 +53,10 @@ namespace Config
     const QString DefaultDocumentTitle = "Untitled";
 
     constexpr qreal SelectedPenWidth = 2.5;
-
     constexpr int FontSize = 9;
 
     constexpr int ColorMapResolution = 40;
-
     constexpr int ColorMapLevelsCount = 80;
-
     constexpr uint8_t ColorMapAlpha = 95;
 
     //NOTE: Generated w/ `http://tristen.ca/hcl-picker'
@@ -117,8 +114,8 @@ namespace Config
 
   namespace LinearProgramming
   {
-    //NOTE: Increase this if you want to solve larger-scaled programs.
-    //NOTE: The average number of iterations is 2M + N.
+    //NOTE: Increase this if you want to solve large-scale programs
+    //NOTE: The average number of iterations is 2M + N
     //NOTE: The maximal number of iterations is Binomial[N + M, N]
     constexpr uint32_t MaxSimplexIterations = 601080390;
   }
@@ -127,22 +124,24 @@ namespace Config
   namespace MathUtils
   {
 #ifdef LP_WITH_MULTIPRECISION
-    const NumericTypes::BoostReal Epsilon = 1E-8; //TODO: ~
-    const NumericTypes::BoostInteger DefaultRationalizeDemoninator = 10;
+    const NumericTypes::BoostReal Epsilon = 1E-8; //TODO: Decrease
+
+    const NumericTypes::BoostInteger MaxRationalizeDenominator = 100;
 #else
     constexpr NumericTypes::BuiltinReal Epsilon = 1E-8;
-    constexpr NumericTypes::BuiltinInteger DefaultRationalizeDemoninator = 10;
+
+    constexpr NumericTypes::BuiltinInteger MaxRationalizeDenominator = 100;
 #endif // LP_WITH_MULTIPRECISION
 
-    constexpr uint16_t MaxRationalizeIterations = 22;
+    constexpr uint16_t MaxRationalizeIterations = 25;
   }
 
 
   namespace TableModelUtils
   {
-    constexpr int Seed = 1337;
-    constexpr double DistMin = -10.;
-    constexpr double DistMax = 10.;
+    constexpr int RandSeed = 1337;
+    constexpr double RandDistMin = -10.;
+    constexpr double RandDistMax = 10.;
   }
 }
 

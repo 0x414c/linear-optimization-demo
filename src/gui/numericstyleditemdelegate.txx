@@ -44,8 +44,8 @@ namespace GUI
   {
     static_assert(
       AlwaysFalse<T>::value,
-      "NumericStyledItemDelegate<T>:"
-      " You can only use one of the specified specializations!"
+      "NumericStyledItemDelegate<T>: "
+      "You can only use one of the specified template specializations!"
     );
 
     return nullptr;

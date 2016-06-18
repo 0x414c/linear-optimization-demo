@@ -12,7 +12,7 @@
 #include <QTableWidget>
 #include <QVariant>
 
-#include "simpletablemodel.hxx"
+#include "stringtablemodel.hxx"
 #include "../misc/dataconvertors.hxx"
 #include "../math/numerictypes.hxx"
 
@@ -20,7 +20,7 @@
 namespace TableModelUtils
 {
   using DataConvertors::numericCast;
-  using GUI::SimpleTableModel;
+  using GUI::StringTableModel;
   using NumericTypes::Rational;
   using NumericTypes::Real;
   using std::invalid_argument;
@@ -28,7 +28,7 @@ namespace TableModelUtils
 
   template<>
   inline bool
-  convert<Real, Rational>(SimpleTableModel* const tableModel)
+  convert<Real, Rational>(StringTableModel* const tableModel)
   throw(invalid_argument)
   {
     if (tableModel == nullptr)
@@ -56,7 +56,7 @@ namespace TableModelUtils
 
   template<>
   inline bool
-  convert<Rational, Real>(SimpleTableModel* const tableModel)
+  convert<Rational, Real>(StringTableModel* const tableModel)
   throw(invalid_argument)
   {
     if (tableModel == nullptr)

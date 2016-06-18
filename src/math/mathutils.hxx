@@ -4,7 +4,6 @@
 #define MATHUTILS_HXX
 
 
-#include <type_traits>
 #include <utility>
 
 #include "numericlimits.hxx"
@@ -19,20 +18,16 @@ namespace MathUtils
   using NumericTypes::Integer;
   using NumericTypes::Rational;
   using NumericTypes::Real;
-  using std::enable_if;
-  using std::is_integral;
   using std::pair;
   using Utils::AlwaysFalse;
 
 
-  template<
-    typename R, typename T = Real/*, typename = enable_if<is_integral<R>::value>*/
-  >
+  template<typename R = Integer, typename T = Real>
   pair<R, R>
   rationalize(
     T x, T tolerance = Epsilon,
-    uint16_t maxIterations = MaxRationalizeIterations,
-    R maxDenominator = NumericLimits::max<R>()
+    R maxDenominator = NumericLimits::max<R>(),
+    uint16_t maxIterations = MaxRationalizeIterations
   );
 
 
@@ -42,23 +37,37 @@ namespace MathUtils
   {
     static_assert(
       AlwaysFalse<T>::value,
-      "MathUtils::absoluteValue<T>:"
-      " You can only use one of the specified specializations!"
+      "MathUtils::absoluteValue<T>: "
+      "You can only use one of the specified template specializations!"
     );
 
     return T(0);
   }
 
 
-  //TODO: ~? Replace all the `is*' funcs w/ single comparison func
+  //TODO: ~? Replace all the `is*' funcs w/ single comparison func.
+  template<typename T = Real>
+  bool
+  isEqual(T x, T y, T tolerance)
+  {
+    static_assert(
+      AlwaysFalse<T>::value,
+      "MathUtils::isEqual<T>: "
+      "You can only use one of the specified template specializations!"
+    );
+
+    return false;
+  }
+
+
   template<typename T = Real>
   bool
   isEqual(T x, T y)
   {
     static_assert(
       AlwaysFalse<T>::value,
-      "MathUtils::isEqual<T>:"
-      " You can only use one of the specified specializations!"
+      "MathUtils::isEqual<T>: "
+      "You can only use one of the specified template specializations!"
     );
 
     return false;
@@ -71,8 +80,8 @@ namespace MathUtils
   {
     static_assert(
       AlwaysFalse<T>::value,
-      "MathUtils::isLessThan<T>:"
-      " You can only use one of the specified specializations!"
+      "MathUtils::isLessThan<T>: "
+      "You can only use one of the specified template specializations!"
     );
 
     return false;
@@ -85,8 +94,8 @@ namespace MathUtils
   {
     static_assert(
       AlwaysFalse<T>::value,
-      "MathUtils::isGreaterThan<T>:"
-      " You can only use one of the specified specializations!"
+      "MathUtils::isGreaterThan<T>: "
+      "You can only use one of the specified template specializations!"
     );
 
     return false;
@@ -99,8 +108,8 @@ namespace MathUtils
   {
     static_assert(
       AlwaysFalse<T>::value,
-      "MathUtils::isEqualToZero<T>:"
-      " You can only use one of the specified specializations!"
+      "MathUtils::isEqualToZero<T>: "
+      "You can only use one of the specified template specializations!"
     );
 
     return false;
@@ -113,8 +122,8 @@ namespace MathUtils
   {
     static_assert(
       AlwaysFalse<T>::value,
-      "MathUtils::isGreaterThanZero<T>:"
-      " You can only use one of the specified specializations!"
+      "MathUtils::isGreaterThanZero<T>: "
+      "You can only use one of the specified template specializations!"
     );
 
     return false;
@@ -127,8 +136,8 @@ namespace MathUtils
   {
     static_assert(
       AlwaysFalse<T>::value,
-      "MathUtils::isLessThanZero<T>:"
-      " You can only use one of the specified specializations!"
+      "MathUtils::isLessThanZero<T>: "
+      "You can only use one of the specified template specializations!"
     );
 
     return false;
@@ -141,8 +150,8 @@ namespace MathUtils
   {
     static_assert(
       AlwaysFalse<T>::value,
-      "MathUtils::isGreaterThanOrEqualToZero<T>:"
-      " You can only use one of the specified specializations!"
+      "MathUtils::isGreaterThanOrEqualToZero<T>: "
+      "You can only use one of the specified template specializations!"
     );
 
     return false;

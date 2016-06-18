@@ -22,7 +22,7 @@
 #include "qcustomplot/qcustomplot.h"
 
 #include "numericstyleditemdelegate.hxx"
-#include "simpletablemodel.hxx"
+#include "stringtablemodel.hxx"
 #include "../lp/simplexsolver.hxx"
 #include "../lp/simplexsolvercontroller.hxx"
 #include "../lp/plotdata2d.hxx"
@@ -69,7 +69,7 @@ namespace GUI
       virtual void dropEvent(QDropEvent* ev) override;
 
 
-    private slots:
+    private Q_SLOTS:
       void on_graphical_solutionPlotQCustomPlot_selectionChangedByUser();
       void on_graphical_solutionPlotQCustomPlot_mousePress(QMouseEvent* ev);
       void on_graphical_solutionPlotQCustomPlot_mouseWheel(QWheelEvent* ev);
@@ -145,8 +145,8 @@ namespace GUI
 
       bool isLoaded_ = false;
 
-      QVector<SimpleTableModel*> programTableModels_;
-      QVector<SimpleTableModel*> simplexTableModels_;
+      QVector<StringTableModel*> programTableModels_;
+      QVector<StringTableModel*> simplexTableModels_;
 
       QVector<NumericStyledItemDelegate<Real>*> realNumericDelegates_;
       QVector<NumericStyledItemDelegate<Rational>*> rationalNumericDelegates_;
@@ -193,17 +193,17 @@ namespace GUI
       void setupNumericSolversControllers();
       void updateNumericSolversData();
 
-      void solveSimplexHandler();
-      void solveGraphicalHandler();
+      void solveSimplex();
+      void solveGraphical();
 
       void solutionErrorHandler(const QString& description, SolutionType type);
       void pivotingErrorHandler(const QString& description, SolutionType type);
 
-      void openFileHandler(const QString& filename);
-      void saveFileHandler(const QString& filename);
+      void openFile(const QString& filename);
+      void saveFile(const QString& filename);
 
-      ResultType loadData(const QString& fileName);
-      ResultType saveData(const QString& fileName);
+      ResultType loadDataFromFile(const QString& fileName);
+      ResultType saveDataToFile(const QString& fileName);
 
       void loadSettings();
       void saveSettings();

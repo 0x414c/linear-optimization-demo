@@ -22,8 +22,8 @@ namespace NumericLimits
   {
     static_assert(
       Utils::AlwaysFalse<T>::value,
-      "NumericLimits::max<T>:"
-      " You can only use one of the specified specializations!"
+      "NumericLimits::max<T>: "
+      "You can only use one of the specified template specializations!"
     );
 
     return T(0);
@@ -36,8 +36,8 @@ namespace NumericLimits
   {
     static_assert(
       Utils::AlwaysFalse<T>::value,
-      "NumericLimits::min<T>:"
-      " You can only use one of the specified specializations!"
+      "NumericLimits::min<T>: "
+      "You can only use one of the specified template specializations!"
     );
 
     return T(0);

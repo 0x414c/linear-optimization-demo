@@ -1228,9 +1228,9 @@ void MainWindow::setupAdvancedAxesDemo(QCustomPlot *customPlot)
   subRectRight->setMarginGroup(QCP::msRight, marginGroup);
   wideAxisRect->setMarginGroup(QCP::msLeft | QCP::msRight, marginGroup);
   // move newly created axes on "axes" layer and grids on "grid" layer:
-  foreach (QCPAxisRect *rect, customPlot->axisRects())
+  Q_FOREACH (QCPAxisRect *rect, customPlot->axisRects())
   {
-    foreach (QCPAxis *axis, rect->axes())
+    Q_FOREACH (QCPAxis *axis, rect->axes())
     {
       axis->setLayer("axes");
       axis->grid()->setLayer("grid");

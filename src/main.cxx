@@ -1,6 +1,6 @@
 ﻿#ifdef LP_TEST_MODE
 #include "test/test.hxx"
-#else
+#else // LP_TEST_MODE
 #include <clocale>
 
 #include <QApplication>
@@ -24,7 +24,8 @@ int
 main(int argc, char** argv)
 {
 #ifdef LP_TEST_MODE
-  Test::run();
+//  Test::testSolvers();
+  Test::testUtilities();
 #else
   using namespace Config::AppGlobal;
 

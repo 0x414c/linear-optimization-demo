@@ -11,6 +11,7 @@
 #include <QDebug>
 
 #include <algorithm>
+#include <type_traits>
 #include <utility>
 
 #include "mathutils.hxx"
@@ -26,93 +27,120 @@ namespace MathUtils
   using NumericTypes::Rational;
   using NumericTypes::Real;
   using std::fabs;
-  using std::floor;
+  using std::is_integral;
+  using std::is_floating_point;
   using std::make_pair;
   using std::max;
   using std::pair;
+  using std::trunc;
 
 
-  template<typename R, typename T/*, typename*/>
+  template<typename R, typename T>
   /**
    * @brief MathUtils::rationalize
    * Finds the "best" rational approximation of the given real number `x'
-   * that satisfies given constraints (Relative Error (Tolerance) and
-   * Maximal Denominator) by using Continued Fractions method.
+   * that satisfies given constraints (relative error (tolerance),
+   * maximal denominator and convergents (iterations) count)
+   * by using Continued Fractions method.
    * For the reference see:
    *   `http://mathworld.wolfram.com/ContinuedFraction.html'.
-   * TODO: check if `R' and `T' are integer types and break compilation if they aren't.
+   * The absolute error value will be: |p./q - x|.
+   * TODO: check if `R' is integer type and break compilation if it isn't.
    * @param x Number to approximate.
-   * @param tolerance Tolerance value (default is `1E-16').
-   * @param maxIterations Maximum iterations count allowed.
+   * @param tolerance Tolerance value (default is `Config::MathUtils::Epsilon').
    * @param maxDenominator Maximum denominator value.
-   * @return Pair 〈p; q〉 where (p/q ≈ x) ∧ (q < maxDenominator).
+   * @param maxIterations Maximum iterations (convergents) count allowed.
+   * @return Pair of integers 〈p; q〉 where (p./q ≈ x) ∧ (q <= maxDenominator).
    */
   pair<R, R>
-  rationalize(T x, T tolerance, uint16_t maxIterations, R maxDenominator) //TODO: Swap `maxIterations' w/ `maxDenominator'.
+  rationalize(T x, T tolerance, R maxDenominator, uint16_t maxIterations)
   {
-    T r0(x); //See eq. (8)
-    T r0_integerPart(floor(r0)); //TODO: use `trunc' instead of `floor'.
+    static_assert(
+      is_integral<R>::value,
+      "MathUtils::rationalize<R, T>: R should be integral type."
+    );
 
-    //Check for overflow (assuming that `T' is larger than `R')
+    static_assert(
+      is_floating_point<T>::value,
+      "MathUtils::rationalize<R, T>: T should be floating-point type."
+    );
+
+
+    T r0(x); //See eq. (8): r[0] := x
+    const T r0_integerPart(trunc(r0));
+
+    //Check for overflow (assuming that values range of `T' is larger than `R')
     if (r0_integerPart > T(NumericLimits::max<R>()))
     {
-      qWarning() << "MathUtils::rationalize<R>:"
+      qWarning() << "MathUtils::rationalize<R, T>:"
                     " overflow at the upper bound of `R'";
 
-      return make_pair(NumericLimits::max<R>(), 1);
+      return make_pair(NumericLimits::max<R>(), R(1));
     }
     else
     {
       if (r0_integerPart < T(NumericLimits::min<R>()))
       {
-        qWarning() << "MathUtils::rationalize<R>:"
+        qWarning() << "MathUtils::rationalize<R, T>:"
                       " overflow at the lower bound of `R'";
 
-        return make_pair(NumericLimits::min<R>(), 1);
+        return make_pair(NumericLimits::min<R>(), R(1));
       }
       else
       {
         //Now we can safely cast ⌊r0⌋ from `T' to `R'
-        R a0(r0_integerPart); //See eq. (5)
+        R a0(r0_integerPart); //See eq. (5): a[0] := ⌊x⌋
 
-        //If we got "almost integer" `x', we should return 〈a_0; 1〉
+        //If we got "almost integer" `x' or one of the trivial cases,
+        //we should return 〈a0; 1〉
         //(or the loop will stuck at division by 0. later)
-        if (isEqual<T>(r0, T(a0)))
+        if (
+          isEqual<T>(T(a0), x, tolerance) ||
+          maxDenominator == R(1) ||
+          maxIterations == uint16_t(1)
+        )
         {
           return make_pair(a0, R(1));
         }
         else
         {
-          R p0(1),  q0(0); //See eq. (25), (26)
-          R p1(a0), q1(1); //we use only p[0] and p[1] as starting coeffs
-          R pn(0),  qn(1); //p[n] (where n==2) will be the scratch place
-                           //(we will "shift" and reuse the coeffs rather
-                           //than storing they all)
+          uint16_t iterCount(1);
 
-          uint16_t iterCount(0); //TODO: 0 ?
+          R p0(1),  q0(0); //See eq. (25): p[-1] := 1,    q[-1] := 0
+          R p1(a0), q1(1); //See eq. (26): p[ 0] := a[0], q[ 0] := 1
+          R pn(0),  qn(1); //See eq. (24): p[-2] := 0,    q[-2] := 1
+          //We use only {p, q}[0] and {p, q}[1] as starting coeffs;
+          //p[n] (where n==2) will be the scratch place
+          //(we will "shift" and reuse the coeffs rather than storing they all)
+
           while (true)
           {
-            T rn(T(1) / T(r0 - T(a0))); //See eq. (9)
-            R an(floor(rn)); //See eq. (10) //TODO: use `trunc' instead of `floor'.
-            pn = an * p1 + p0; //See eq. (27), (28)
-            qn = an * q1 + q0;
-
-            //Look at the n-th convergent `cn'
-            const T cn(T(pn) / T(qn));
-
             ++iterCount;
 
+            const T rn(T(1) / (r0 - T(a0))); //See eq. (9): r[n] := 1 ./ (r[n-1] - a[n-1])
+            const R an(trunc(rn)); //See eq. (10): a[n] := ⌊r[n]⌋
+
+            pn = an * p1 + p0; //See eq. (27): p[n] == a[n] * p[n-1] + p[n-2]
+            qn = an * q1 + q0; //See eq. (28): q[n] == a[n] * q[n-1] + q[n-2]
+
+            //Look at the n-th convergent (see eq. (11)): c[n] := p[n] ./ q[n]
+            const T cn(T(pn) / T(qn));
+
             if (
-              iterCount <= maxIterations && //TODO: <= ?
+              !isEqual<T>(cn, x, tolerance) &&
               qn < maxDenominator &&
-              !isEqual<T>(x, cn)              
+              iterCount < maxIterations
             )
             {
               //Now "shift" all the coeffs to the left
-              p0 = p1; q0 = q1;
-              p1 = pn; q1 = qn;
-              a0 = an;
+              p0 = p1;
+              q0 = q1;
+
+              p1 = pn;
+              q1 = qn;
+
               r0 = rn;
+              a0 = an;
             }
             else
             {
@@ -168,6 +196,41 @@ namespace MathUtils
   absoluteValue(Rational x)
   {
     return ((x < Rational(0)) ? -x : x);
+  }
+
+
+  template<>
+  /**
+   * @brief isEqual
+   * @param x
+   * @param y
+   * @param tolerance
+   * @return `true' if (x ≊ y), `false' otherwise.
+   */
+  inline bool
+  isEqual(Real x, Real y, Real tolerance)
+  {
+    return (
+      absoluteValue<Real>(x - y) <=
+      tolerance * max<Real>(
+        {Real(1), absoluteValue<Real>(x), absoluteValue<Real>(y)}
+      )
+    );
+  }
+
+
+  template<>
+  /**
+   * @brief isEqual
+   * @param x
+   * @param y
+   * @param tolerance
+   * @return `true' if (x == y), `false' otherwise.
+   */
+  inline bool
+  isEqual(Rational x, Rational y, Rational tolerance)
+  {
+    return (absoluteValue(x - y) <= tolerance);
   }
 
 

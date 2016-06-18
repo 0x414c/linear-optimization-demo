@@ -13,7 +13,7 @@
 
 #include "eigen3/Eigen/Core"
 
-#include "simpletablemodel.hxx"
+#include "stringtablemodel.hxx"
 #include "../lp/simplextableau.hxx"
 #include "../math/mathutils.hxx"
 #include "../math/numerictypes.hxx"
@@ -26,7 +26,7 @@ namespace TableModelUtils
   using Eigen::DenseIndex;
   using Eigen::Dynamic;
   using Eigen::Matrix;
-  using GUI::SimpleTableModel;
+  using GUI::StringTableModel;
   using LinearProgramming::SimplexTableau;
   using NumericTypes::Rational;
   using NumericTypes::Real;
@@ -44,14 +44,14 @@ namespace TableModelUtils
 
 
   //TODO: ~? Make these functions members of the `SimpleTableModel' class
-  bool fill(SimpleTableModel* const tableModel, FillMethod fillMethod)
+  bool fill(StringTableModel* const tableModel, FillMethod fillMethod)
   throw(invalid_argument);
 
-  bool fill(SimpleTableModel* const tableModel, const QString& value)
+  bool fill(StringTableModel* const tableModel, const QString& value)
   throw(invalid_argument);
 
   bool fill(
-    SimpleTableModel* const tableModel,
+    StringTableModel* const tableModel,
     const function<QVariant(const QVariant&)>& callback
   ) throw(invalid_argument);
 
@@ -59,7 +59,7 @@ namespace TableModelUtils
   template<typename T = Real>
   bool
   fill(
-    SimpleTableModel* const tableModel,
+    StringTableModel* const tableModel,
     const Matrix<T, Dynamic, Dynamic>& matrix
   ) throw(invalid_argument)
   {
@@ -96,7 +96,7 @@ namespace TableModelUtils
   template<typename T = Real>
   bool
   fill(
-    SimpleTableModel* const tableModel,
+    StringTableModel* const tableModel,
     const SimplexTableau<T>& tableau
   ) throw(invalid_argument)
   {
@@ -154,12 +154,12 @@ namespace TableModelUtils
 
   template<typename R, typename T>
   bool
-  convert(SimpleTableModel* const tableModel) throw(invalid_argument)
+  convert(StringTableModel* const tableModel) throw(invalid_argument)
   {
     static_assert(
       AlwaysFalse<R, T>::value,
-      "TableModelUtils::convert<R, T>:"
-      " You can only use one of the specified specializations!"
+      "TableModelUtils::convert<R, T>: "
+      "You can only use one of the specified template specializations!"
     );
 
     return false;
@@ -169,7 +169,7 @@ namespace TableModelUtils
   template<typename T = Real>
   bool
   setFlags(
-    SimpleTableModel* const tableModel,
+    StringTableModel* const tableModel,
     const Matrix<T, Dynamic, Dynamic>& matrix,
     const function<bool(const T&)>& callback,
     Qt::ItemFlags flags) throw(invalid_argument)
@@ -218,7 +218,7 @@ namespace TableModelUtils
 
   template<typename T = Real>
   Matrix<T, Dynamic, 1>
-  makeColumnVector(SimpleTableModel* const tableModel) throw(invalid_argument)
+  makeColumnVector(StringTableModel* const tableModel) throw(invalid_argument)
   {
     if (tableModel == nullptr)
     {
@@ -248,7 +248,7 @@ namespace TableModelUtils
 
   template<typename T = Real>
   Matrix<T, 1, Dynamic>
-  makeRowVector(SimpleTableModel* const tableModel) throw(invalid_argument)
+  makeRowVector(StringTableModel* const tableModel) throw(invalid_argument)
   {
     if (tableModel == nullptr)
     {
@@ -278,7 +278,7 @@ namespace TableModelUtils
 
   template<typename T = Real>
   Matrix<T, Dynamic, Dynamic>
-  makeMatrix(SimpleTableModel* const tableModel) throw(invalid_argument)
+  makeMatrix(StringTableModel* const tableModel) throw(invalid_argument)
   {
     if (tableModel == nullptr)
     {

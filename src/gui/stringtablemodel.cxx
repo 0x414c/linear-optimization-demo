@@ -1,4 +1,4 @@
-﻿#include "simpletablemodel.hxx"
+﻿#include "stringtablemodel.hxx"
 
 #include <utility>
 
@@ -18,12 +18,12 @@
 #include "../misc/utils.hxx"
 
 
-GUI::SimpleTableModel::SimpleTableModel(QObject* parent) :
+GUI::StringTableModel::StringTableModel(QObject* parent) :
   QAbstractTableModel(parent)
 { }
 
 
-GUI::SimpleTableModel::SimpleTableModel(int rows, int cols, QObject* parent) :
+GUI::StringTableModel::StringTableModel(int rows, int cols, QObject* parent) :
   QAbstractTableModel(parent),
   rows_(rows),
   cols_(cols),
@@ -36,7 +36,7 @@ GUI::SimpleTableModel::SimpleTableModel(int rows, int cols, QObject* parent) :
 }
 
 
-GUI::SimpleTableModel::SimpleTableModel(const SimpleTableModel& other) :
+GUI::StringTableModel::StringTableModel(const StringTableModel& other) :
   QAbstractTableModel(other.parent()),
   rows_(other.rows_),
   cols_(other.cols_),
@@ -51,7 +51,7 @@ GUI::SimpleTableModel::SimpleTableModel(const SimpleTableModel& other) :
 { }
 
 
-GUI::SimpleTableModel::SimpleTableModel(SimpleTableModel&& other) :
+GUI::StringTableModel::StringTableModel(StringTableModel&& other) :
   QAbstractTableModel(other.parent()),
   rows_(other.rows_),
   cols_(other.cols_),
@@ -66,8 +66,8 @@ GUI::SimpleTableModel::SimpleTableModel(SimpleTableModel&& other) :
 { }
 
 
-const GUI::SimpleTableModel&
-GUI::SimpleTableModel::operator =(const SimpleTableModel& other)
+const GUI::StringTableModel&
+GUI::StringTableModel::operator =(const StringTableModel& other)
 {
   if (this != &other)
   {
@@ -90,8 +90,8 @@ GUI::SimpleTableModel::operator =(const SimpleTableModel& other)
 }
 
 
-const GUI::SimpleTableModel&
-GUI::SimpleTableModel::operator =(SimpleTableModel&& other)
+const GUI::StringTableModel&
+GUI::StringTableModel::operator =(StringTableModel&& other)
 {
   if (this != &other)
   {
@@ -117,7 +117,7 @@ GUI::SimpleTableModel::operator =(SimpleTableModel&& other)
 //NOTE: When implementing a table based model, `rowCount' should
 //return `0' when the `parent' is valid.
 int
-GUI::SimpleTableModel::rowCount(const QModelIndex& parent) const
+GUI::StringTableModel::rowCount(const QModelIndex& parent) const
 {
   if (!parent.isValid())
   {
@@ -131,7 +131,7 @@ GUI::SimpleTableModel::rowCount(const QModelIndex& parent) const
 
 
 int
-GUI::SimpleTableModel::columnCount(const QModelIndex& parent) const
+GUI::StringTableModel::columnCount(const QModelIndex& parent) const
 {
   if (!parent.isValid())
   {
@@ -145,7 +145,7 @@ GUI::SimpleTableModel::columnCount(const QModelIndex& parent) const
 
 
 QVariant
-GUI::SimpleTableModel::data(const QModelIndex& index, int role) const
+GUI::StringTableModel::data(const QModelIndex& index, int role) const
 {
   if (!index.isValid())
   {
@@ -177,7 +177,7 @@ GUI::SimpleTableModel::data(const QModelIndex& index, int role) const
 
 
 bool
-GUI::SimpleTableModel::setData(
+GUI::StringTableModel::setData(
   const QModelIndex& index, const QVariant& value, int role
 )
 {
@@ -194,7 +194,7 @@ GUI::SimpleTableModel::setData(
         {
           values_[index.row()][index.column()] = value.toString();
            //TODO: ~? Do we need to add `DisplayRole' too?
-          emit dataChanged(index, index, QVector<int>{role});
+          Q_EMIT dataChanged(index, index, QVector<int>{role});
 
           return true;
         }
@@ -211,7 +211,7 @@ GUI::SimpleTableModel::setData(
 
 
 QVariant
-GUI::SimpleTableModel::headerData(
+GUI::StringTableModel::headerData(
   int section, Qt::Orientation orientation, int role
 ) const
 {
@@ -270,7 +270,7 @@ GUI::SimpleTableModel::headerData(
 
 
 bool
-GUI::SimpleTableModel::setHeaderData(
+GUI::StringTableModel::setHeaderData(
   int section, Qt::Orientation orientation, const QVariant& value, int role
 )
 {
@@ -286,7 +286,7 @@ GUI::SimpleTableModel::setHeaderData(
             horizontalHeaderData_.resize(cols_);
             horizontalHeaderData_[section] = value.toString();
             haveCustomHorizontalHeaderData_ = true;
-            emit headerDataChanged(orientation, oldLength, cols_ - 1);
+            Q_EMIT headerDataChanged(orientation, oldLength, cols_ - 1);
 
             return true;
           }
@@ -298,7 +298,7 @@ GUI::SimpleTableModel::setHeaderData(
             verticalHeaderData_.resize(rows_);
             verticalHeaderData_[section] = value.toString();
             haveCustomVerticalHeaderData_ = true;
-            emit headerDataChanged(orientation, oldLength, rows_ - 1);
+            Q_EMIT headerDataChanged(orientation, oldLength, rows_ - 1);
 
             return true;
           }
@@ -314,7 +314,7 @@ GUI::SimpleTableModel::setHeaderData(
 
 
 Qt::ItemFlags
-GUI::SimpleTableModel::flags(const QModelIndex& index) const
+GUI::StringTableModel::flags(const QModelIndex& index) const
 {
   if (!index.isValid())
   {
@@ -355,7 +355,7 @@ GUI::SimpleTableModel::flags(const QModelIndex& index) const
 
 
 bool
-GUI::SimpleTableModel::setFlags(const QModelIndex& index, Qt::ItemFlags flags)
+GUI::StringTableModel::setFlags(const QModelIndex& index, Qt::ItemFlags flags)
 {
   if (!index.isValid())
   {
@@ -378,7 +378,7 @@ GUI::SimpleTableModel::setFlags(const QModelIndex& index, Qt::ItemFlags flags)
 
 
 bool
-GUI::SimpleTableModel::insertRows(
+GUI::StringTableModel::insertRows(
   int row, int count, const QModelIndex& parent
 )
 {
@@ -420,7 +420,7 @@ GUI::SimpleTableModel::insertRows(
 
 
 bool
-GUI::SimpleTableModel::removeRows(
+GUI::StringTableModel::removeRows(
   int row, int count, const QModelIndex& parent
 )
 {
@@ -458,7 +458,7 @@ GUI::SimpleTableModel::removeRows(
 
 
 bool
-GUI::SimpleTableModel::insertColumns(
+GUI::StringTableModel::insertColumns(
   int col, int count, const QModelIndex& parent
 )
 {
@@ -500,7 +500,7 @@ GUI::SimpleTableModel::insertColumns(
 
 
 bool
-GUI::SimpleTableModel::removeColumns(
+GUI::StringTableModel::removeColumns(
   int col, int count, const QModelIndex& parent
 )
 {
@@ -544,7 +544,7 @@ GUI::SimpleTableModel::removeColumns(
 
 
 bool
-GUI::SimpleTableModel::clear(const QModelIndex& parent)
+GUI::StringTableModel::clear(const QModelIndex& parent)
 {
   if (!parent.isValid())
   {
@@ -569,7 +569,7 @@ GUI::SimpleTableModel::clear(const QModelIndex& parent)
 
 
 bool
-GUI::SimpleTableModel::clear(const QVariant& value, const QModelIndex& parent)
+GUI::StringTableModel::clear(const QVariant& value, const QModelIndex& parent)
 {
   if (!parent.isValid())
   {
@@ -594,7 +594,7 @@ GUI::SimpleTableModel::clear(const QVariant& value, const QModelIndex& parent)
 
 
 bool
-GUI::SimpleTableModel::clear(
+GUI::StringTableModel::clear(
   int rowFirst, int colFirst, int rowLast, int colLast,
   const QVariant& value, const QModelIndex& parent
 )
@@ -614,7 +614,7 @@ GUI::SimpleTableModel::clear(
         }
       }
 
-      emit dataChanged(
+      Q_EMIT dataChanged(
         QAbstractTableModel::index(rowFirst, colFirst, parent),
         QAbstractTableModel::index(rowLast, colLast, parent),
         QVector<int>{Qt::DisplayRole, Qt::EditRole}
@@ -646,7 +646,7 @@ GUI::SimpleTableModel::clear(
 
 
 bool
-GUI::SimpleTableModel::resize(
+GUI::StringTableModel::resize(
   int newRows, int newCols, const QModelIndex& parent
 )
 {
@@ -700,7 +700,7 @@ GUI::SimpleTableModel::resize(
 
 
 QVariant
-GUI::SimpleTableModel::at(
+GUI::StringTableModel::at(
   int row, int col, const QModelIndex &parent
 ) const
 {
@@ -723,14 +723,14 @@ GUI::SimpleTableModel::at(
 
 
 bool
-GUI::SimpleTableModel::editable() const
+GUI::StringTableModel::editable() const
 {
   return isEditable_;
 }
 
 
 bool
-GUI::SimpleTableModel::setEditable(bool isEditable)
+GUI::StringTableModel::setEditable(bool isEditable)
 {
   if (isEditable_ != isEditable)
   {
@@ -748,14 +748,14 @@ GUI::SimpleTableModel::setEditable(bool isEditable)
 
 
 bool
-GUI::SimpleTableModel::selectable() const
+GUI::StringTableModel::selectable() const
 {
   return isSelectable_;
 }
 
 
 bool
-GUI::SimpleTableModel::setSelectable(bool isSelectable)
+GUI::StringTableModel::setSelectable(bool isSelectable)
 {
   if (isSelectable_ != isSelectable)
   {
@@ -773,7 +773,7 @@ GUI::SimpleTableModel::setSelectable(bool isSelectable)
 
 
 Utils::ResultType
-GUI::SimpleTableModel::read(const QJsonObject& jsonObject)
+GUI::StringTableModel::read(const QJsonObject& jsonObject)
 {
   const QJsonValue rowsValue(jsonObject[QStringLiteral("rows")]);
   if (rowsValue.type() != QJsonValue::Undefined)
@@ -855,7 +855,7 @@ GUI::SimpleTableModel::read(const QJsonObject& jsonObject)
 
 
 Utils::ResultType
-GUI::SimpleTableModel::write(QJsonObject& jsonObject) const
+GUI::StringTableModel::write(QJsonObject& jsonObject) const
 {
   QJsonArray valuesArray;
   for (const QVector<QString>& row : values_)
@@ -875,7 +875,7 @@ GUI::SimpleTableModel::write(QJsonObject& jsonObject) const
 
 
 bool
-GUI::SimpleTableModel::_clearFlags(const QModelIndex& parent)
+GUI::StringTableModel::_clearFlags(const QModelIndex& parent)
 {
   if (!parent.isValid())
   {
@@ -900,7 +900,7 @@ GUI::SimpleTableModel::_clearFlags(const QModelIndex& parent)
 
 
 bool
-GUI::SimpleTableModel::_resetFlags(const QModelIndex& parent)
+GUI::StringTableModel::_resetFlags(const QModelIndex& parent)
 {
   if (!parent.isValid())
   {

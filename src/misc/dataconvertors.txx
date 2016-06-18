@@ -204,7 +204,8 @@ namespace DataConvertors
     const pair<BuiltinInteger, BuiltinInteger> rationalized =
       rationalize<BuiltinInteger, BuiltinReal>(
         from, Epsilon,
-        MaxRationalizeIterations, DefaultRationalizeDemoninator
+        MaxRationalizeDenominator,
+        MaxRationalizeIterations
       );
 
     return BoostRational(rationalized.first, rationalized.second);

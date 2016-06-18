@@ -110,7 +110,7 @@ namespace Test
 
 
   void
-  run()
+  testSolvers()
   {
     //Example 5
     {
@@ -268,6 +268,187 @@ namespace Test
         10;
 
 //      testReal(c, A, b);
+    }
+  }
+
+
+  void
+  testUtilities()
+  {
+    const uint16_t maxIterations(25);
+//    const Integer maxDenominator(1000000000);
+    const Integer maxDenominator(1000000);
+    const Real tolerance(1E-16);
+    const Real Pi(3.141592653589793238462643383279502884);
+
+    {
+      const Real x(0.3);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(0.33);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(0.333);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(0.3333);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(0.33333);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(0.333333);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(0.3333333);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(0.33333333);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(0.333333333);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(0.3333333333);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(0.33333333333);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(0.333333333333);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(0.3333333333333);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(0.33333333333333);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(0.333333333333333);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(0.3333333333333333);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+    }
+
+    {
+      const Real x(Pi);
+      const auto rat (
+        MathUtils::rationalize<Integer, Real>(
+          x, tolerance, maxDenominator, maxIterations
+        )
+      );
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
     }
   }
 }

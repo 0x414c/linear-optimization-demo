@@ -9,7 +9,7 @@
 #include <QTableWidget>
 #include <QVector>
 
-#include "simpletablemodel.hxx"
+#include "stringtablemodel.hxx"
 #include "../math/numerictypes.hxx"
 #include "../misc/ijsonserializable.hxx"
 #include "../misc/utils.hxx"
@@ -30,16 +30,16 @@ namespace GUI
       TableModelCollection();
 
       explicit TableModelCollection(
-        const QVector<SimpleTableModel>& items, Field field = Field::Real
+        const QVector<StringTableModel>& items, Field field = Field::Real
       );
 
-      SimpleTableModel& operator [](int idx);
+      StringTableModel& operator [](int idx);
 
       int count() const;
 
-      const QVector<SimpleTableModel>& items();
+      const QVector<StringTableModel>& items();
 
-      const SimpleTableModel& at(int idx) const;
+      const StringTableModel& at(int idx) const;
 
       Field field() const;
 
@@ -53,7 +53,7 @@ namespace GUI
     private:
       const QString fileMetadataHeader_ = QStringLiteral("1;");
 
-      QVector<SimpleTableModel> items_ = QVector<SimpleTableModel>(0);
+      QVector<StringTableModel> items_ = QVector<StringTableModel>(0);
 
       Field field_ = Field::Real;
   };

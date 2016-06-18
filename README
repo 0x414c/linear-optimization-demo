@@ -36,7 +36,7 @@
 
 Code style rules (For Qt Creator use `../misc/CodeStyle.xml'):
 1. Headers inclusion order:
-   "This class header" (optional)
+   "This class/module header" (optional)
    <C stdlib headers>
    <C++ stdlib headers>
    <Qt headers>

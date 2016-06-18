@@ -21,8 +21,8 @@ namespace DataConvertors
   {
     static_assert(
       AlwaysFalse<R>::value,
-      "DataConvertors::numericCast<R>:"
-      " You can only use one of the specified specializations!"
+      "DataConvertors::numericCast<R>: "
+      "You can only use one of the specified template specializations!"
     );
 
     return R(0);
@@ -34,8 +34,8 @@ namespace DataConvertors
   {
     static_assert(
       AlwaysFalse<R, T>::value,
-      "DataConvertors::numericCast<R, T>:"
-      " You can only use one of the specified specializations!"
+      "DataConvertors::numericCast<R, T>: "
+      "You can only use one of the specified template specializations!"
     );
 
     return R(0);

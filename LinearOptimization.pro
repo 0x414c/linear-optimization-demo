@@ -8,7 +8,7 @@ QT += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
-CONFIG += c++14 warn_on
+CONFIG += c++14 warn_on no_keywords
 
 QMAKE_CXX = ccache g++
 
@@ -74,7 +74,8 @@ DEFINES += \
   LP_WITH_DEBUG_LOG \
   LP_WITH_BLAND_RULE
 #  LP_WITH_MULTIPRECISION #TODO: ~! Not yet implemented
-#  LP_TEST_MODE
+
+DEFINES += LP_TEST_MODE
 
 INCLUDEPATH += \
   $$PWD/lib/boost \
@@ -95,7 +96,7 @@ SOURCES += \
   src/gui/mainwindow.cxx \
   src/gui/numericstyleditemdelegate.cxx \
   src/gui/numericvalidator.cxx \
-  src/gui/simpletablemodel.cxx \
+  src/gui/stringtablemodel.cxx \
   src/gui/tablemodelcollection.cxx \
   src/gui/tablemodelutils.cxx \
   src/lp/linearprogrammingutils.cxx \
@@ -112,7 +113,7 @@ HEADERS += \
   src/gui/numericstyleditemdelegate.hxx \
   src/gui/numericstyleditemdelegate.txx \
   src/gui/numericvalidator.hxx \
-  src/gui/simpletablemodel.hxx \
+  src/gui/stringtablemodel.hxx \
   src/gui/tablemodelcollection.hxx \
   src/gui/tablemodelutils.hxx \
   src/gui/tablemodelutils.txx \
@@ -152,7 +153,8 @@ HEADERS += \
   src/misc/eigenextensions.hxx \
   src/misc/ijsonserializable.hxx \
   src/misc/utils.hxx \
-  src/test/test.hxx
+  src/test/test.hxx \
+  src/globaldefinitions.hxx
 
 FORMS += forms/mainwindow.ui
 

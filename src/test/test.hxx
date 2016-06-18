@@ -34,7 +34,9 @@ namespace Test
     Rational F_ = 0
   ) throw(logic_error);
 
-  void run();
+  void testSolvers();
+
+  void testUtilities();
 }
 
 

@@ -44,7 +44,7 @@ namespace LinearProgramming
   using MathUtils::isLessThan;
   using LinearProgrammingUtils::sortPointsByPolarAngle;
   using LinearProgrammingUtils::computeBoundingBox;
-  using NumericTypes::Real;
+  using NumericTypes::real_t;
   using std::all_of;
   using std::transform;
   using std::make_pair;
@@ -358,12 +358,12 @@ namespace LinearProgramming
       {
         PlotData2D<TCoeff> plotData(
           LinearProgramSolution<TCoeff>(),
-          list<Matrix<Real, 2, 1>>(),
-          Real(0),
-          list<Matrix<Real, 2, 1>>(),
-          Matrix<Real, 2, 2>(2, 2),
-          Matrix<Real, 2, 2>(2, 2),
-          Matrix<Real, 1, 2>(1, 2),
+          list<Matrix<real_t, 2, 1>>(),
+          real_t(0),
+          list<Matrix<real_t, 2, 1>>(),
+          Matrix<real_t, 2, 2>(2, 2),
+          Matrix<real_t, 2, 2>(2, 2),
+          Matrix<real_t, 1, 2>(1, 2),
           vector<DenseIndex>(N_)
         );
 
@@ -375,17 +375,17 @@ namespace LinearProgramming
           plotData.extremePoints.begin(),
           [](const Matrix<TCoeff, 2, 1>& point)
           {
-            Matrix<Real, 2, 1> realPoint(2, 1);
+            Matrix<real_t, 2, 1> realPoint(2, 1);
 
             realPoint <<
-              numericCast<Real, TCoeff>(point.x()),
-              numericCast<Real, TCoeff>(point.y());
+              numericCast<real_t, TCoeff>(point.x()),
+              numericCast<real_t, TCoeff>(point.y());
 
             return realPoint;
           }
         );
 
-        plotData.extremeValue = numericCast<Real, TCoeff>(extremeValue);
+        plotData.extremeValue = numericCast<real_t, TCoeff>(extremeValue);
 
         plotData.feasibleRegionExtremePoints.resize(
           feasibleRegionExtremePoints.size()
@@ -397,11 +397,11 @@ namespace LinearProgramming
           plotData.feasibleRegionExtremePoints.begin(),
           [](const Matrix<TCoeff, 2, 1>& point)
           {
-            Matrix<Real, 2, 1> realPoint(2, 1);
+            Matrix<real_t, 2, 1> realPoint(2, 1);
 
             realPoint <<
-              numericCast<Real, TCoeff>(point.x()),
-              numericCast<Real, TCoeff>(point.y());
+              numericCast<real_t, TCoeff>(point.x()),
+              numericCast<real_t, TCoeff>(point.y());
 
             return realPoint;
           }
@@ -415,16 +415,16 @@ namespace LinearProgramming
         );
 
         plotData.feasibleRegionBoundingBox <<
-          numericCast<Real, TCoeff>(boundingBox(0, 0)),
-          numericCast<Real, TCoeff>(boundingBox(0, 1)),
-          numericCast<Real, TCoeff>(boundingBox(1, 0)),
-          numericCast<Real, TCoeff>(boundingBox(1, 1));
+          numericCast<real_t, TCoeff>(boundingBox(0, 0)),
+          numericCast<real_t, TCoeff>(boundingBox(0, 1)),
+          numericCast<real_t, TCoeff>(boundingBox(1, 0)),
+          numericCast<real_t, TCoeff>(boundingBox(1, 1));
 
         plotData.feasibleRegionBoundingBoxHeights <<
-          numericCast<Real, TCoeff>(F_(boundingBox.row(1).transpose())),
-          numericCast<Real, TCoeff>(F_(boundingBox.col(1))),
-          numericCast<Real, TCoeff>(F_(boundingBox.col(0))),
-          numericCast<Real, TCoeff>(
+          numericCast<real_t, TCoeff>(F_(boundingBox.row(1).transpose())),
+          numericCast<real_t, TCoeff>(F_(boundingBox.col(1))),
+          numericCast<real_t, TCoeff>(F_(boundingBox.col(0))),
+          numericCast<real_t, TCoeff>(
             F_(boundingBox.row(0).transpose().reverse())
           );
 
@@ -432,7 +432,7 @@ namespace LinearProgramming
 
         for (DenseIndex i(0); i < 2; ++i)
         {
-          plotData.gradientVector(i) = numericCast<Real, TCoeff>(F_.coeffAt(i));
+          plotData.gradientVector(i) = numericCast<real_t, TCoeff>(F_.coeffAt(i));
         }
 
         for (DenseIndex j(0); j < N_; ++j)

@@ -11,10 +11,10 @@
 
 namespace BoostQtInterop
 {
-  QDebug operator <<(QDebug debug, const NumericTypes::BoostRational& x);
+  QDebug operator <<(QDebug debug, const NumericTypes::boost_rational_t& x);
 
 #ifdef LP_WITH_MULTIPRECISION
-  QDebug operator <<(QDebug debug, const NumericTypes::BoostReal& x);
+  QDebug operator <<(QDebug debug, const NumericTypes::boost_real_t& x);
 #endif // LP_WITH_MULTIPRECISION
 }
 

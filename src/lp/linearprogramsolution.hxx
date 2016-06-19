@@ -13,10 +13,10 @@ namespace LinearProgramming
 {
   using Eigen::Dynamic;
   using Eigen::Matrix;
-  using NumericTypes::Real;
+  using NumericTypes::real_t;
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   /**
    * @brief The LinearProgramSolution struct
    */

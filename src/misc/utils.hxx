@@ -15,9 +15,10 @@
 
 #include <QApplication>
 
+#include "cxx-prettyprint/prettyprint.hpp"
 #include "eigen3/Eigen/Core"
-#include "cppformat/format.h"
-#include "prettyprint/prettyprint.hpp"
+#include "fmt/format.h"
+#include "fmt/ostream.h"
 
 
 namespace Utils
@@ -151,8 +152,8 @@ namespace Utils
   /**
    * @brief printDebugLog
    * TODO: ~? Use `Q_FUNC_INFO' or
-   *   `BOOST_CURRENT_FUNCTION' (<boost/current_function.hpp>).
-   * TODO: ~? Use `std::clog'.
+   *   `BOOST_CURRENT_FUNCTION' (<boost/current_function.hpp>)
+   * TODO: ~? Use `std::clog'
    * @param func
    * @param file
    * @param line
@@ -179,7 +180,7 @@ do \
   Utils::printDebugLog(__FUNCTION__, __FILE__, __LINE__, fmt, ##__VA_ARGS__); \
 } \
 while (false)
-#else
+#else // LP_WITH_DEBUG_LOG
 #define LOG(fmt,...) do { } while (false)
 #endif // LP_WITH_DEBUG_LOG
 

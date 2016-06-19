@@ -15,14 +15,42 @@
 namespace MathUtils
 {
   using namespace Config::MathUtils;
-  using NumericTypes::Integer;
-  using NumericTypes::Rational;
-  using NumericTypes::Real;
+  using NumericTypes::integer_t;
+  using NumericTypes::rational_t;
+  using NumericTypes::real_t;
   using std::pair;
   using Utils::AlwaysFalse;
 
 
-  template<typename R = Integer, typename T = Real>
+  template<typename R = integer_t, typename T = real_t>
+  R
+  integerPart(T x)
+  {
+    static_assert(
+      AlwaysFalse<T>::value,
+      "MathUtils::integerPart<R, T>: "
+      "You can only use one of the specified template specializations!"
+    );
+
+    return R(0);
+  }
+
+
+  template<typename T = real_t>
+  bool
+  isFinite(T x)
+  {
+    static_assert(
+      AlwaysFalse<T>::value,
+      "MathUtils::isFinite<T>: "
+      "You can only use one of the specified template specializations!"
+    );
+
+    return false;
+  }
+
+
+  template<typename R = integer_t, typename T = real_t>
   pair<R, R>
   rationalize(
     T x, T tolerance = Epsilon,
@@ -31,7 +59,7 @@ namespace MathUtils
   );
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   T
   absoluteValue(T x)
   {
@@ -46,7 +74,7 @@ namespace MathUtils
 
 
   //TODO: ~? Replace all the `is*' funcs w/ single comparison func.
-  template<typename T = Real>
+  template<typename T = real_t>
   bool
   isEqual(T x, T y, T tolerance)
   {
@@ -60,7 +88,7 @@ namespace MathUtils
   }
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   bool
   isEqual(T x, T y)
   {
@@ -74,7 +102,7 @@ namespace MathUtils
   }
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   bool
   isLessThan(T x, T y)
   {
@@ -88,7 +116,7 @@ namespace MathUtils
   }
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   bool
   isGreaterThan(T x, T y)
   {
@@ -102,7 +130,7 @@ namespace MathUtils
   }
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   bool
   isEqualToZero(T x)
   {
@@ -116,7 +144,7 @@ namespace MathUtils
   }
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   bool
   isGreaterThanZero(T x)
   {
@@ -130,7 +158,7 @@ namespace MathUtils
   }
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   bool
   isLessThanZero(T x)
   {
@@ -144,7 +172,7 @@ namespace MathUtils
   }
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   bool
   isGreaterThanOrEqualToZero(T x)
   {

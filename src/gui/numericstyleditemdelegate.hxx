@@ -17,7 +17,7 @@
 
 namespace GUI
 {
-  using NumericTypes::Real;
+  using NumericTypes::real_t;
 
 
   //HACK: This shim only makes `moc' happy about templated classes.
@@ -32,7 +32,7 @@ namespace GUI
   };
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   class NumericStyledItemDelegate :
     public StyledItemDelegate
   {

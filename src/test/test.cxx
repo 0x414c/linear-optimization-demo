@@ -8,6 +8,7 @@
 
 #include "../lp/simplexsolver.hxx"
 #include "../lp/linearprogramdata.hxx"
+#include "../lp/linearprogrammingutils.hxx"
 #include "../lp/linearprogramsolution.hxx"
 #include "../lp/solutiontype.hxx"
 #include "../math/mathutils.hxx"
@@ -20,6 +21,7 @@ namespace Test
   using namespace boost;
   using namespace Eigen;
   using namespace LinearProgramming;
+  using namespace LinearProgrammingUtils;
   using namespace NumericTypes;
   using namespace MathUtils;
   using namespace std;
@@ -27,19 +29,19 @@ namespace Test
 
   void
   testReal(
-    const Matrix<Real, 1, Dynamic>& c,
-    const Matrix<Real, Dynamic, Dynamic>& A,
-    const Matrix<Real, Dynamic, 1>& b,
-    Real F_
+    const Matrix<real_t, 1, Dynamic>& c,
+    const Matrix<real_t, Dynamic, Dynamic>& A,
+    const Matrix<real_t, Dynamic, 1>& b,
+    real_t F_
   ) throw(logic_error)
   {
-    const LinearProgramData<Real> lpData(c, A, b);
+    const LinearProgramData<real_t> lpData(c, A, b);
 
-    SimplexSolver<Real> solver;
+    SimplexSolver<real_t> solver;
 
     solver.setLinearProgramData(lpData);
 
-    const pair<SolutionType, optional<LinearProgramSolution<Real>>>
+    const pair<SolutionType, optional<LinearProgramSolution<real_t>>>
     sol(solver.solve());
 
     switch (sol.first) {
@@ -49,7 +51,7 @@ namespace Test
           (*sol.second).extremePoint,
           (*sol.second).extremeValue
         );
-//        if (!isEqual<Real>((*sol.second).extremeValue, F_))
+//        if (!isEqual<real_t>((*sol.second).extremeValue, F_))
 //        {
 //          throw logic_error("Test::testReal: assertion failed.");
 //        }
@@ -69,19 +71,19 @@ namespace Test
 
   void
   testRational(
-    const Matrix<Rational, 1, Dynamic>& c,
-    const Matrix<Rational, Dynamic, Dynamic>& A,
-    const Matrix<Rational, Dynamic, 1>& b,
-    Rational F_
+    const Matrix<rational_t, 1, Dynamic>& c,
+    const Matrix<rational_t, Dynamic, Dynamic>& A,
+    const Matrix<rational_t, Dynamic, 1>& b,
+    rational_t F_
   ) throw(logic_error)
   {
-    const LinearProgramData<Rational> lpData(c, A, b);
+    const LinearProgramData<rational_t> lpData(c, A, b);
 
-    SimplexSolver<Rational> solver;
+    SimplexSolver<rational_t> solver;
 
     solver.setLinearProgramData(lpData);
 
-    const pair<SolutionType, optional<LinearProgramSolution<Rational>>>
+    const pair<SolutionType, optional<LinearProgramSolution<rational_t>>>
     sol(solver.solve());
 
     switch (sol.first) {
@@ -91,7 +93,7 @@ namespace Test
           (*sol.second).extremePoint,
           (*sol.second).extremeValue
         );
-//        if (!isEqual<Rational>((*sol.second).extremeValue, F_))
+//        if (!isEqual<rational_t>((*sol.second).extremeValue, F_))
 //        {
 //          throw logic_error("Test::testRational: assertion failed.");
 //        }
@@ -114,16 +116,16 @@ namespace Test
   {
     //Example 5
     {
-      Matrix<Real, 1, Dynamic> c(1, 4);
+      Matrix<real_t, 1, Dynamic> c(1, 4);
       c <<
         -2, -1, -3, -1;
 
-      Matrix<Real, Dynamic, Dynamic> A(2, 4);
+      Matrix<real_t, Dynamic, Dynamic> A(2, 4);
       A <<
         1, 2, 5, -1,
         1, -1, -1, 2;
 
-      Matrix<Real, Dynamic, 1> b(2, 1);
+      Matrix<real_t, Dynamic, 1> b(2, 1);
       b <<
         4,
         1;
@@ -133,20 +135,20 @@ namespace Test
 
     //Example 2.2 - (3/2, 0, 0, 1) -> -18
     {
-      Matrix<Rational, 1, Dynamic> c(1, 4);
+      Matrix<rational_t, 1, Dynamic> c(1, 4);
       c <<
         -10, 5, 7, -3;
 
-      Matrix<Rational, Dynamic, Dynamic> A(3, 4);
+      Matrix<rational_t, Dynamic, Dynamic> A(3, 4);
       A <<
         -1, -2, 3, 3,
         1, 1, 7, 2,
         2, 2, 8, 1;
 
-      Matrix<Rational, Dynamic, 1> b(3, 1);
+      Matrix<rational_t, Dynamic, 1> b(3, 1);
       b <<
-        Rational(3, 2),
-        Rational(7, 2),
+        rational_t(3, 2),
+        rational_t(7, 2),
         4;
 
 //      testRational(c, A, b);
@@ -154,17 +156,17 @@ namespace Test
 
     //Example 2.1 - (28, 108, 0, 62) -> -38
     {
-      Matrix<Real, 1, Dynamic> c(1, 4);
+      Matrix<real_t, 1, Dynamic> c(1, 4);
       c <<
         -3, 1, -2, -1;
 
-      Matrix<Real, Dynamic, Dynamic> A(3, 4);
+      Matrix<real_t, Dynamic, Dynamic> A(3, 4);
       A <<
         2, -1, 4, 1,
         -3, 2, 1, -2,
         4, -1, 2, 0;
 
-      Matrix<Real, Dynamic, 1> b(3, 1);
+      Matrix<real_t, Dynamic, 1> b(3, 1);
       b <<
         10,
         8,
@@ -175,16 +177,16 @@ namespace Test
 
     //Example 4.5 - (7/3, 0, 0, 2/3) -> -3
     {
-      Matrix<Real, 1, Dynamic> c(1, 4);
+      Matrix<real_t, 1, Dynamic> c(1, 4);
       c <<
         -1, 5, 1, -1;
 
-      Matrix<Real, Dynamic, Dynamic> A(2, 4);
+      Matrix<real_t, Dynamic, Dynamic> A(2, 4);
       A <<
         1, 3, 3, 1,
         -2, 0, -3, 1;
 
-      Matrix<Real, Dynamic, 1> b(2, 1);
+      Matrix<real_t, Dynamic, 1> b(2, 1);
       b <<
         3,
         -4;
@@ -194,17 +196,17 @@ namespace Test
 
     //Example -1
     {
-      Matrix<Rational, 1, Dynamic> c(1, 4);
+      Matrix<rational_t, 1, Dynamic> c(1, 4);
       c <<
         -10, 57, 9, 24;
 
-      Matrix<Rational, Dynamic, Dynamic> A(3, 4);
+      Matrix<rational_t, Dynamic, Dynamic> A(3, 4);
       A <<
-        Rational(1, 2), Rational(-11, 2), Rational(-5, 2), 9,
-        Rational(1, 2), Rational(-3, 2), Rational(-1, 2), 1,
+        rational_t(1, 2), rational_t(-11, 2), rational_t(-5, 2), 9,
+        rational_t(1, 2), rational_t(-3, 2), rational_t(-1, 2), 1,
         1, 0, 0, 0;
 
-      Matrix<Rational, Dynamic, 1> b(3, 1);
+      Matrix<rational_t, Dynamic, 1> b(3, 1);
       b <<
         0,
         0,
@@ -215,17 +217,17 @@ namespace Test
 
     //Example -2
     {
-      Matrix<Real, 1, Dynamic> c(1, 4);
+      Matrix<real_t, 1, Dynamic> c(1, 4);
       c <<
         1, -7, -1, -2;
 
-      Matrix<Real, Dynamic, Dynamic> A(3, 4);
+      Matrix<real_t, Dynamic, Dynamic> A(3, 4);
       A <<
         1, 1, 1, 1,
         .5, -5.5, -2.5, 9,
         .5, -1.5, -.5, 1;
 
-      Matrix<Real, Dynamic, 1> b(3, 1);
+      Matrix<real_t, Dynamic, 1> b(3, 1);
       b <<
         1,
         0,
@@ -236,15 +238,15 @@ namespace Test
 
     //Example -3
     {
-      Matrix<Real, 1, Dynamic> c(1, 2);
+      Matrix<real_t, 1, Dynamic> c(1, 2);
       c <<
         1, 1;
 
-      Matrix<Real, Dynamic, Dynamic> A(1, 2);
+      Matrix<real_t, Dynamic, Dynamic> A(1, 2);
       A <<
         1, 0;
 
-      Matrix<Real, Dynamic, 1> b(1, 1);
+      Matrix<real_t, Dynamic, 1> b(1, 1);
       b <<
         1;
 
@@ -253,16 +255,16 @@ namespace Test
 
     //Example -4 - Infeasible
     {
-      Matrix<Real, 1, Dynamic> c(1, 2);
+      Matrix<real_t, 1, Dynamic> c(1, 2);
       c <<
         1, 0;
 
-      Matrix<Real, Dynamic, Dynamic> A(2, 2);
+      Matrix<real_t, Dynamic, Dynamic> A(2, 2);
       A <<
         1e-8 / 2., .5,
         1e-3, .1;
 
-      Matrix<Real, Dynamic, 1> b(2, 1);
+      Matrix<real_t, Dynamic, 1> b(2, 1);
       b <<
         0,
         10;
@@ -277,178 +279,267 @@ namespace Test
   {
     const uint16_t maxIterations(25);
 //    const Integer maxDenominator(1000000000);
-    const Integer maxDenominator(1000000);
-    const Real tolerance(1E-16);
-    const Real Pi(3.141592653589793238462643383279502884);
+    const integer_t maxDenominator(1000000);
+    const real_t tolerance(1E-16);
+    const real_t Pi(3.141592653589793238462643383279502884);
 
     {
-      const Real x(0.3);
+      const real_t x(0.3);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(0.33);
+      const real_t x(0.33);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(0.333);
+      const real_t x(0.333);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(0.3333);
+      const real_t x(0.3333);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(0.33333);
+      const real_t x(0.33333);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(0.333333);
+      const real_t x(0.333333);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(0.3333333);
+      const real_t x(0.3333333);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(0.33333333);
+      const real_t x(0.33333333);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(0.333333333);
+      const real_t x(0.333333333);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(0.3333333333);
+      const real_t x(0.3333333333);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(0.33333333333);
+      const real_t x(0.33333333333);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(0.333333333333);
+      const real_t x(0.333333333333);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(0.3333333333333);
+      const real_t x(0.3333333333333);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(0.33333333333333);
+      const real_t x(0.33333333333333);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(0.333333333333333);
+      const real_t x(0.333333333333333);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(0.3333333333333333);
+      const real_t x(0.3333333333333333);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
     }
 
     {
-      const Real x(Pi);
+      const real_t x(Pi);
       const auto rat (
-        MathUtils::rationalize<Integer, Real>(
+        MathUtils::rationalize<integer_t, real_t>(
           x, tolerance, maxDenominator, maxIterations
         )
       );
-      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / Real(rat.second));
+      LOG("x={0}, rat={1}, x={2}", x, rat, rat.first / real_t(rat.second));
+    }
+  }
+
+
+  void
+  testRREF()
+  {
+    {
+      Matrix<real_t, Dynamic, Dynamic> A(3, 4);
+      A <<
+        1, 2, -1, -4,
+        2, 3, -1, -11,
+        -2, 0, -3, 22;
+
+      LOG("A==\n{0}", A);
+
+      RREF<real_t> rref(reducedRowEchelonForm<real_t>(A));
+
+      LOG("A^==\n{0}\nrank=={1}", rref.rref, rref.rank);
+    }
+
+    {
+      Matrix<real_t, Dynamic, Dynamic> A(3, 4);
+      A <<
+        1, 2, -1, -4,
+        2, 3, -1, -11,
+        0, 0, 0, 0;
+
+      LOG("A==\n{0}", A);
+
+      RREF<real_t> rref(reducedRowEchelonForm<real_t>(A));
+
+      LOG("A^==\n{0}\nrank=={1}", rref.rref, rref.rank);
+    }
+
+    {
+      Matrix<real_t, Dynamic, Dynamic> A(3, 4);
+      A <<
+        1, 2, -1, -4,
+        2, 3, -1, -11,
+        2, 3, -1, -11;
+
+      LOG("A==\n{0}", A);
+
+      RREF<real_t> rref(reducedRowEchelonForm<real_t>(A));
+
+      LOG("A^==\n{0}\nrank=={1}", rref.rref, rref.rank);
+    }
+
+    {
+      Matrix<real_t, Dynamic, Dynamic> A(3, 4);
+      A <<
+        2, 3, -1, -11,
+        2, 3, -1, -11,
+        2, 3, -1, -11;
+
+      LOG("A==\n{0}", A);
+
+      RREF<real_t> rref(reducedRowEchelonForm<real_t>(A));
+
+      LOG("A^==\n{0}\nrank=={1}", rref.rref, rref.rank);
+    }
+
+    {
+      Matrix<real_t, Dynamic, Dynamic> A(3, 4);
+      A <<
+        0, 0, 0, 0,
+        0, 0, 0, 0,
+        0, 0, 0, 0;
+
+      LOG("A==\n{0}", A);
+
+      RREF<real_t> rref(reducedRowEchelonForm<real_t>(A));
+
+      LOG("A^==\n{0}\nrank=={1}", rref.rref, rref.rank);
+    }
+
+    {
+      Matrix<real_t, Dynamic, Dynamic> A(3, 4);
+      A <<
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0;
+
+      LOG("A==\n{0}", A);
+
+      RREF<real_t> rref(reducedRowEchelonForm<real_t>(A));
+
+      LOG("A^==\n{0}\nrank=={1}", rref.rref, rref.rank);
     }
   }
 }

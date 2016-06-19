@@ -14,11 +14,11 @@ namespace BoostQtInterop
 
 
   QDebug
-  operator <<(QDebug debug, const NumericTypes::BoostRational& x)
+  operator <<(QDebug debug, const NumericTypes::boost_rational_t& x)
   {
     QDebugStateSaver stateSaver(debug);
 
-    debug.nospace() << numericCast<QString, NumericTypes::BoostRational>(x);
+    debug.nospace() << numericCast<QString, NumericTypes::boost_rational_t>(x);
 
     return debug;
   }
@@ -26,11 +26,11 @@ namespace BoostQtInterop
 
 #ifdef LP_WITH_MULTIPRECISION
   QDebug
-  operator <<(QDebug debug, const NumericTypes::BoostReal& x)
+  operator <<(QDebug debug, const NumericTypes::boost_real_t& x)
   {
     QDebugStateSaver stateSaver(debug);
 
-    debug.nospace() << numericCast<QString, NumericTypes::BoostReal>(x);
+    debug.nospace() << numericCast<QString, NumericTypes::boost_real_t>(x);
 
     return debug;
   }

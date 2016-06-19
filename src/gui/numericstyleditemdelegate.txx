@@ -23,9 +23,9 @@
 
 namespace GUI
 {
-  using NumericTypes::Integer;
-  using NumericTypes::Rational;
-  using NumericTypes::Real;
+  using NumericTypes::integer_t;
+  using NumericTypes::rational_t;
+  using NumericTypes::real_t;
   using Utils::AlwaysFalse;
 
 
@@ -54,7 +54,7 @@ namespace GUI
 
   template<>
   inline QWidget*
-  NumericStyledItemDelegate<Real>::createEditor(
+  NumericStyledItemDelegate<real_t>::createEditor(
     QWidget* parent, const QStyleOptionViewItem& option,
     const QModelIndex& index
   ) const
@@ -70,7 +70,7 @@ namespace GUI
 
   template<>
   inline QWidget*
-  NumericStyledItemDelegate<Integer>::createEditor(
+  NumericStyledItemDelegate<integer_t>::createEditor(
     QWidget* parent, const QStyleOptionViewItem& option,
     const QModelIndex& index
   ) const
@@ -86,7 +86,7 @@ namespace GUI
 
   template<>
   inline QWidget*
-  NumericStyledItemDelegate<Rational>::createEditor(
+  NumericStyledItemDelegate<rational_t>::createEditor(
     QWidget* parent, const QStyleOptionViewItem& option,
     const QModelIndex& index
   ) const

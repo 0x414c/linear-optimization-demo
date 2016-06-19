@@ -17,7 +17,7 @@ namespace LinearProgramming
   using Eigen::DenseIndex;
   using Eigen::Dynamic;
   using Eigen::Matrix;
-  using NumericTypes::Real;
+  using NumericTypes::real_t;
 
 
   /**
@@ -45,7 +45,7 @@ namespace LinearProgramming
    *  `https://en.wikipedia.org/wiki/Linear_form',
    *  `https://en.wikipedia.org/wiki/Hyperplane'.
    */
-  template<typename TCoeff = Real, DenseIndex TDim = Dynamic>
+  template<typename TCoeff = real_t, DenseIndex TDim = Dynamic>
   class LinearFunction
   {
     public:

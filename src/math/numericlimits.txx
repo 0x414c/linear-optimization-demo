@@ -13,57 +13,57 @@
 
 namespace NumericLimits
 {
-  using NumericTypes::Integer;
-  using NumericTypes::Rational;
-  using NumericTypes::Real;
+  using NumericTypes::integer_t;
+  using NumericTypes::rational_t;
+  using NumericTypes::real_t;
   using std::numeric_limits;
 
 
   template<>
-  inline /*constexpr*/ Real
+  inline /*constexpr*/ real_t
   max()
   {
-    return numeric_limits<Real>::max();
+    return numeric_limits<real_t>::max();
   }
 
 
   template<>
-  inline /*constexpr*/ Real
+  inline /*constexpr*/ real_t
   min()
   {
-    return numeric_limits<Real>::min();
+    return numeric_limits<real_t>::min();
   }
 
 
   template<>
-  inline /*constexpr*/ Integer
+  inline /*constexpr*/ integer_t
   max()
   {
-    return numeric_limits<Integer>::max();
+    return numeric_limits<integer_t>::max();
   }
 
 
   template<>
-  inline /*constexpr*/ Integer
+  inline /*constexpr*/ integer_t
   min()
   {
-    return numeric_limits<Integer>::min();
+    return numeric_limits<integer_t>::min();
   }
 
 
   template<>
-  inline /*constexpr*/ Rational
+  inline /*constexpr*/ rational_t
   max()
   {
-    return Rational(max<Integer>());
+    return rational_t(max<integer_t>());
   }
 
 
   template<>
-  inline /*constexpr*/ Rational
+  inline /*constexpr*/ rational_t
   min()
   {
-    return Rational(min<Integer>());
+    return rational_t(min<integer_t>());
   }
 }
 

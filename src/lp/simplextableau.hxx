@@ -24,12 +24,12 @@ namespace LinearProgramming
   using Eigen::DenseIndex;
   using Eigen::Dynamic;
   using Eigen::Matrix;
-  using NumericTypes::Real;
+  using NumericTypes::real_t;
   using std::invalid_argument;
   using std::vector;
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   /**
    * @brief The SimplexTableau class
    */

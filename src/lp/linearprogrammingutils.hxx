@@ -20,12 +20,12 @@ namespace LinearProgrammingUtils
   using Eigen::DenseIndex;
   using Eigen::Dynamic;
   using Eigen::Matrix;
-  using NumericTypes::Real;
+  using NumericTypes::real_t;
   using std::list;
   using Utils::AlwaysFalse;
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   bool isSolutionFeasible(
     const Matrix<T, Dynamic, 1>& x,
     const Matrix<T, Dynamic, Dynamic>& A,
@@ -33,8 +33,8 @@ namespace LinearProgrammingUtils
   );
 
 
-  //TODO: ~ Move all the following functions to the `MathUtils' namespace
-  template<typename TCoeff = Real, DenseIndex TDim = 2>
+  //TODO: ~ Move all the following functions to the `MathUtils' namespace.
+  template<typename TCoeff = real_t, DenseIndex TDim = 2>
   struct findIntersectionImpl_
   {
     static optional<Matrix<TCoeff, TDim, 1>>
@@ -51,7 +51,7 @@ namespace LinearProgrammingUtils
   };
 
 
-  template<typename TCoeff = Real, DenseIndex TDim = 2>
+  template<typename TCoeff = real_t, DenseIndex TDim = 2>
   optional<Matrix<TCoeff, TDim, 1>> findIntersection(
     const Matrix<TCoeff, TDim, TDim>& A, const Matrix<TCoeff, TDim, 1>& b
   )
@@ -77,24 +77,24 @@ namespace LinearProgrammingUtils
   };
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   RREF<T> reducedRowEchelonForm(const Matrix<T, Dynamic, Dynamic>& A);
 
-  void sortPointsByPolarAngle(list<Matrix<Real, 2, 1>>& points);
+  void sortPointsByPolarAngle(list<Matrix<real_t, 2, 1>>& points);
 
-  Matrix<Real, 2, 1> perp(const Matrix<Real, 2, 1>& vec);
+  Matrix<real_t, 2, 1> perp(const Matrix<real_t, 2, 1>& vec);
 
-  Matrix<Real, 2, 1> norm(const Matrix<Real, 2, 1>& vec);
+  Matrix<real_t, 2, 1> norm(const Matrix<real_t, 2, 1>& vec);
 
-  Real lerp(Real x1, Real y1, Real x2, Real y2, Real x0);
+  real_t lerp(real_t x1, real_t y1, real_t x2, real_t y2, real_t x0);
 
-  Real blerp(
-    Real x1, Real y1, Real z11, Real z12,
-    Real x2, Real y2, Real z22, Real z21,
-    Real x0, Real y0
+  real_t blerp(
+    real_t x1, real_t y1, real_t z11, real_t z12,
+    real_t x2, real_t y2, real_t z22, real_t z21,
+    real_t x0, real_t y0
   );
 
-  template<typename T = Real>
+  template<typename T = real_t>
   Matrix<T, 2, 2> computeBoundingBox(const list<Matrix<T, 2, 1>>& points);
 }
 

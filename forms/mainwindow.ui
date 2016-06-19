@@ -1035,9 +1035,6 @@
    </property>
   </action>
   <action name="action_Fill_w_random_numbers">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
    <property name="icon">
     <iconset resource="../res/resources.qrc">
      <normaloff>:/icons/@16/document-revert.png</normaloff>:/icons/@16/document-revert.png</iconset>

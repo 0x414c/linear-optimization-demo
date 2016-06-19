@@ -44,8 +44,8 @@ namespace GUI
   using LinearProgramming::PlotData2D;
   using LinearProgramming::SolutionType;
   using NumericTypes::Field;
-  using NumericTypes::Rational;
-  using NumericTypes::Real;
+  using NumericTypes::rational_t;
+  using NumericTypes::real_t;
   using Utils::ResultType;
   using std::shared_ptr;
 
@@ -126,13 +126,26 @@ namespace GUI
 
     private:
       enum struct ProgramModel : int
-      { ObjFunc = 0, Constrs = 1, RHS = 2 };
+      {
+        ObjFunc = 0,
+        Constrs = 1,
+        RHS = 2
+      };
+
 
       enum struct SimplexModel : int
-      { Solution = 0, ObjectiveValue = 1, Tableau = 2 };
+      {
+        Solution = 0,
+        ObjectiveValue = 1,
+        Tableau = 2
+      };
+
 
       enum struct DetailsView : int
-      { Graphical = 0, Simplex = 1 };
+      {
+        Graphical = 0,
+        Simplex = 1
+      };
 
 
       Ui::MainWindow* ui = 0;
@@ -140,7 +153,7 @@ namespace GUI
       Field field_ = Field::Real;
 
       //TODO: ~ `_isDirty' <- `dataChanged' =>
-      //reload data only when it is needed
+      //reload data only when it is needed.
       bool isDirty_ = false;
 
       bool isLoaded_ = false;
@@ -148,14 +161,14 @@ namespace GUI
       QVector<StringTableModel*> programTableModels_;
       QVector<StringTableModel*> simplexTableModels_;
 
-      QVector<NumericStyledItemDelegate<Real>*> realNumericDelegates_;
-      QVector<NumericStyledItemDelegate<Rational>*> rationalNumericDelegates_;
+      QVector<NumericStyledItemDelegate<real_t>*> realNumericDelegates_;
+      QVector<NumericStyledItemDelegate<rational_t>*> rationalNumericDelegates_;
 
-      shared_ptr<SimplexSolver<Real>> realSimplexSolver_;
-      shared_ptr<SimplexSolver<Rational>> rationalSimplexSolver_;
+      shared_ptr<SimplexSolver<real_t>> realSimplexSolver_;
+      shared_ptr<SimplexSolver<rational_t>> rationalSimplexSolver_;
 
-      SimplexSolverController<Real> realSimplexSolverController_;
-      SimplexSolverController<Rational> rationalSimplexSolverController_;
+      SimplexSolverController<real_t> realSimplexSolverController_;
+      SimplexSolverController<rational_t> rationalSimplexSolverController_;
 
 
       void setupDefaults();
@@ -169,7 +182,7 @@ namespace GUI
       void enableGraphicalSolutionView(bool enabled = true);
       void clearGraphicalSolutionView(QCustomPlot* const customPlot);
 
-      template<typename T = Real>
+      template<typename T = real_t>
       void refreshGraphicalSolutionView(const PlotData2D<T>& plotData2D);
 
       void setupSimplexView();

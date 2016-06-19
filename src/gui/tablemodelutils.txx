@@ -21,14 +21,14 @@ namespace TableModelUtils
 {
   using DataConvertors::numericCast;
   using GUI::StringTableModel;
-  using NumericTypes::Rational;
-  using NumericTypes::Real;
+  using NumericTypes::rational_t;
+  using NumericTypes::real_t;
   using std::invalid_argument;
 
 
   template<>
   inline bool
-  convert<Real, Rational>(StringTableModel* const tableModel)
+  convert<real_t, rational_t>(StringTableModel* const tableModel)
   throw(invalid_argument)
   {
     if (tableModel == nullptr)
@@ -42,8 +42,8 @@ namespace TableModelUtils
         [](const QVariant& value)
         {
           return numericCast<QString>(
-            numericCast<Real>(
-              numericCast<Rational>(value.toString())
+            numericCast<real_t>(
+              numericCast<rational_t>(value.toString())
             )
           );
         }
@@ -56,7 +56,7 @@ namespace TableModelUtils
 
   template<>
   inline bool
-  convert<Rational, Real>(StringTableModel* const tableModel)
+  convert<rational_t, real_t>(StringTableModel* const tableModel)
   throw(invalid_argument)
   {
     if (tableModel == nullptr)
@@ -70,8 +70,8 @@ namespace TableModelUtils
         [](const QVariant& value)
         {
           return numericCast<QString>(
-            numericCast<Rational>(
-              numericCast<Real>(value.toString())
+            numericCast<rational_t>(
+              numericCast<real_t>(value.toString())
             )
           );
         }

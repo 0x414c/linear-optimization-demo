@@ -6,7 +6,7 @@
 
 /**
  * Include this header to all files that use
- * operations on `Eigen::Matrix<NumericTypes::Rational>' data type.
+ * operations on `Eigen::Matrix<NumericTypes::rational_t>' data type.
  * Contents of this header is not intended for end-user.
  * NOTE: For the reference see:
  *   `http://eigen.tuxfamily.org/dox/structEigen_1_1NumTraits.html'
@@ -26,7 +26,7 @@ namespace Eigen
 {
 #ifdef LP_WITH_MULTIPRECISION
   template<>
-  struct NumTraits<NumericTypes::BoostRational>
+  struct NumTraits<NumericTypes::boost_rational_t>
   {
     enum
     {
@@ -40,42 +40,42 @@ namespace Eigen
     };
 
 
-    typedef NumericTypes::BoostRational Real;
-    typedef NumericTypes::BoostRational NonInteger;
-    typedef NumericTypes::BoostRational Nested;
+    typedef NumericTypes::boost_rational_t Real;
+    typedef NumericTypes::boost_rational_t NonInteger;
+    typedef NumericTypes::boost_rational_t Nested;
 
 
     static inline Real
     epsilon()
     {
-      return std::numeric_limits<NumericTypes::BoostRational>::epsilon();
+      return std::numeric_limits<NumericTypes::boost_rational_t>::epsilon();
     }
 
 
     static inline Real
     dummy_precision()
     {
-      return Real(0);
+      return NumericTypes::boost_rational_t(0);
     }
 
 
-    static inline NumericTypes::BoostRational
+    static inline Real
     highest()
     {
-      return std::numeric_limits<NumericTypes::BoostRational>::max();
+      return std::numeric_limits<NumericTypes::boost_rational_t>::max();
     }
 
 
-    static inline NumericTypes::BoostRational
+    static inline Real
     lowest()
     {
-      return std::numeric_limits<NumericTypes::BoostRational>::min();
+      return std::numeric_limits<NumericTypes::boost_rational_t>::min();
     }
   };
-#else
+#else // LP_WITH_MULTIPRECISION
   template<>
-  struct NumTraits<NumericTypes::BoostRational> :
-    NumTraits<NumericTypes::BuiltinInteger>
+  struct NumTraits<NumericTypes::boost_rational_t> :
+    NumTraits<NumericTypes::builtin_integer_t>
   {
     enum
     {
@@ -89,9 +89,9 @@ namespace Eigen
     };
 
 
-    typedef NumericTypes::BoostRational Real;
-    typedef NumericTypes::BoostRational NonInteger;
-    typedef NumericTypes::BoostRational Nested;
+    typedef NumericTypes::boost_rational_t Real;
+    typedef NumericTypes::boost_rational_t NonInteger;
+    typedef NumericTypes::boost_rational_t Nested;
   };
 #endif // LP_WITH_MULTIPRECISION
 }

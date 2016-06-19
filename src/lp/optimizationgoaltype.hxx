@@ -8,7 +8,7 @@ namespace LinearProgramming
 {
   /**
    * @brief The OptimizationGoalType enum
-   * TODO: Use it...
+   * TODO: Use it in GUI.
    */
   enum struct OptimizationGoalType : int
   {

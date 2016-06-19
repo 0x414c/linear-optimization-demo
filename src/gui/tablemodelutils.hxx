@@ -28,8 +28,8 @@ namespace TableModelUtils
   using Eigen::Matrix;
   using GUI::StringTableModel;
   using LinearProgramming::SimplexTableau;
-  using NumericTypes::Rational;
-  using NumericTypes::Real;
+  using NumericTypes::rational_t;
+  using NumericTypes::real_t;
   using Utils::AlwaysFalse;
   using std::function;
   using std::invalid_argument;
@@ -43,7 +43,7 @@ namespace TableModelUtils
   };
 
 
-  //TODO: ~? Make these functions members of the `SimpleTableModel' class
+  //TODO: ~? Make these functions members of the `StringTableModel' class.
   bool fill(StringTableModel* const tableModel, FillMethod fillMethod)
   throw(invalid_argument);
 
@@ -56,7 +56,7 @@ namespace TableModelUtils
   ) throw(invalid_argument);
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   bool
   fill(
     StringTableModel* const tableModel,
@@ -93,7 +93,7 @@ namespace TableModelUtils
   }
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   bool
   fill(
     StringTableModel* const tableModel,
@@ -166,7 +166,7 @@ namespace TableModelUtils
   }
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   bool
   setFlags(
     StringTableModel* const tableModel,
@@ -216,7 +216,7 @@ namespace TableModelUtils
   }
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   Matrix<T, Dynamic, 1>
   makeColumnVector(StringTableModel* const tableModel) throw(invalid_argument)
   {
@@ -246,7 +246,7 @@ namespace TableModelUtils
   }
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   Matrix<T, 1, Dynamic>
   makeRowVector(StringTableModel* const tableModel) throw(invalid_argument)
   {
@@ -276,7 +276,7 @@ namespace TableModelUtils
   }
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   Matrix<T, Dynamic, Dynamic>
   makeMatrix(StringTableModel* const tableModel) throw(invalid_argument)
   {

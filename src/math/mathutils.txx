@@ -23,34 +23,94 @@
 namespace MathUtils
 {
   using namespace BoostQtInterop;
-  using MathUtils::isEqual;
-  using NumericTypes::Rational;
-  using NumericTypes::Real;
+#ifdef LP_WITH_MULTIPRECISION
+  namespace mp = NumericTypes::mp;
+#endif // LP_WITH_MULTIPRECISION
+  using NumericTypes::rational_t;
+  using NumericTypes::real_t;
   using std::fabs;
   using std::is_integral;
   using std::is_floating_point;
+  using std::isfinite;
   using std::make_pair;
   using std::max;
   using std::pair;
   using std::trunc;
 
 
+#ifdef LP_WITH_MULTIPRECISION
+  using NumericTypes::boost_integer_t;
+  using NumericTypes::boost_real_t;
+
+
+  template<>
+  /**
+   * @brief integerPart
+   * @param x
+   * TODO: !
+   * @return
+   */
+  inline boost_integer_t
+  integerPart(boost_real_t x)
+  {
+    return boost_integer_t(0);
+  }
+#endif // LP_WITH_MULTIPRECISION
+
+
+#ifdef LP_WITH_MULTIPRECISION
+  using NumericTypes::boost_real_t;
+
+
+  template<>
+  /**
+   * @brief isFinite
+   * @param x
+   * @return
+   */
+  inline bool
+  isFinite(boost_real_t x)
+  {
+    return true;
+  }
+#else // LP_WITH_MULTIPRECISION
+  using NumericTypes::builtin_real_t;
+
+
+  template<>
+  /**
+   * @brief isFinite
+   * @param x
+   * @return
+   */
+  inline bool
+  isFinite(builtin_real_t x)
+  {
+    return isfinite(x);
+  }
+#endif // LP_WITH_MULTIPRECISION
+
+
   template<typename R, typename T>
   /**
    * @brief MathUtils::rationalize
    * Finds the "best" rational approximation of the given real number `x'
-   * that satisfies given constraints (relative error (tolerance),
-   * maximal denominator and convergents (iterations) count)
+   * that satisfies given restrictions (relative error,
+   * maximal denominator value and maximal iterations count)
    * by using Continued Fractions method.
    * For the reference see:
    *   `http://mathworld.wolfram.com/ContinuedFraction.html'.
    * The absolute error value will be: |p./q - x|.
-   * TODO: check if `R' is integer type and break compilation if it isn't.
-   * @param x Number to approximate.
-   * @param tolerance Tolerance value (default is `Config::MathUtils::Epsilon').
+   * NOTE: This function doesn't throw any exceptions if the sequence
+   *         failed to converge due to too tight given restrictions.
+   * @param x Real number to approximate.
+   * @param tolerance Relative tolerance value
+   *          (default is `Config::MathUtils::Epsilon').
    * @param maxDenominator Maximum denominator value.
-   * @param maxIterations Maximum iterations (convergents) count allowed.
-   * @return Pair of integers 〈p; q〉 where (p./q ≈ x) ∧ (q <= maxDenominator).
+   *          (default is `NumericLimits::max<R>()').
+   * @param maxIterations Maximum iterations count allowed
+   *          (23 is enough for the worst case when (x == Sqrt[2])).
+   * @return Pair of integers 〈p; q〉 where (p./q ≈ x) ∧ (|q| <= maxDenominator).
    */
   pair<R, R>
   rationalize(T x, T tolerance, R maxDenominator, uint16_t maxIterations)
@@ -66,11 +126,15 @@ namespace MathUtils
     );
 
 
-    T r0(x); //See eq. (8): r[0] := x
-    const T r0_integerPart(trunc(r0));
+    T r1(x); //See eq. (8): r[0] := x
+#ifdef LP_WITH_MULTIPRECISION
+    const T r1_integerPart(mp::trunc(r1));
+#else // LP_WITH_MULTIPRECISION
+    const T r1_integerPart(trunc(r1));
+#endif // LP_WITH_MULTIPRECISION
 
     //Check for overflow (assuming that values range of `T' is larger than `R')
-    if (r0_integerPart > T(NumericLimits::max<R>()))
+    if (r1_integerPart > T(NumericLimits::max<R>()))
     {
       qWarning() << "MathUtils::rationalize<R, T>:"
                     " overflow at the upper bound of `R'";
@@ -79,7 +143,7 @@ namespace MathUtils
     }
     else
     {
-      if (r0_integerPart < T(NumericLimits::min<R>()))
+      if (r1_integerPart < T(NumericLimits::min<R>()))
       {
         qWarning() << "MathUtils::rationalize<R, T>:"
                       " overflow at the lower bound of `R'";
@@ -89,58 +153,66 @@ namespace MathUtils
       else
       {
         //Now we can safely cast ⌊r0⌋ from `T' to `R'
-        R a0(r0_integerPart); //See eq. (5): a[0] := ⌊x⌋
+#ifdef LP_WITH_MULTIPRECISION
+        R a1(integerPart<R, T>(r0_integerPart)); //See eq. (5): a[0] := ⌊x⌋
+#else // LP_WITH_MULTIPRECISION
+        R a1(r1_integerPart); //See eq. (5): a[0] := ⌊x⌋
+#endif // LP_WITH_MULTIPRECISION
 
         //If we got "almost integer" `x' or one of the trivial cases,
         //we should return 〈a0; 1〉
         //(or the loop will stuck at division by 0. later)
         if (
-          isEqual<T>(T(a0), x, tolerance) ||
+          isEqual<T>(T(a1), x, tolerance) ||
           maxDenominator == R(1) ||
           maxIterations == uint16_t(1)
         )
         {
-          return make_pair(a0, R(1));
+          return make_pair(a1, R(1));
         }
         else
         {
           uint16_t iterCount(1);
 
           R p0(1),  q0(0); //See eq. (25): p[-1] := 1,    q[-1] := 0
-          R p1(a0), q1(1); //See eq. (26): p[ 0] := a[0], q[ 0] := 1
-          R pn(0),  qn(1); //See eq. (24): p[-2] := 0,    q[-2] := 1
-          //We use only {p, q}[0] and {p, q}[1] as starting coeffs;
-          //p[n] (where n==2) will be the scratch place
-          //(we will "shift" and reuse the coeffs rather than storing they all)
+          R p1(a1), q1(1); //See eq. (26): p[ 0] := a[0], q[ 0] := 1
+          R p2(0),  q2(1);
+          //We use p[-1], q[-1] and p[0], q[0] as starting coeffs;
+          //p[1], q[1] will be the scratch place:
+          //we will "shift" and reuse the coeffs rather than storing they all.
 
           while (true)
           {
             ++iterCount;
 
-            const T rn(T(1) / (r0 - T(a0))); //See eq. (9): r[n] := 1 ./ (r[n-1] - a[n-1])
-            const R an(trunc(rn)); //See eq. (10): a[n] := ⌊r[n]⌋
+            const T r2(T(1) / (r1 - T(a1))); //See eq. (9): r[n] := 1 ./ (r[n-1] - a[n-1])
+#ifdef LP_WITH_MULTIPRECISION
+            const R a2(integerPart<R, T>(mp::trunc(r2))); //See eq. (10): a[n] := ⌊r[n]⌋
+#else // LP_WITH_MULTIPRECISION
+            const R a2(trunc(r2)); //See eq. (10): a[n] := ⌊r[n]⌋
+#endif // LP_WITH_MULTIPRECISION
 
-            pn = an * p1 + p0; //See eq. (27): p[n] == a[n] * p[n-1] + p[n-2]
-            qn = an * q1 + q0; //See eq. (28): q[n] == a[n] * q[n-1] + q[n-2]
+            p2 = a2 * p1 + p0; //See eq. (27): p[n] == a[n] * p[n-1] + p[n-2]
+            q2 = a2 * q1 + q0; //See eq. (28): q[n] == a[n] * q[n-1] + q[n-2]
 
             //Look at the n-th convergent (see eq. (11)): c[n] := p[n] ./ q[n]
-            const T cn(T(pn) / T(qn));
+            const T c2(T(p2) / T(q2));
 
             if (
-              !isEqual<T>(cn, x, tolerance) &&
-              qn < maxDenominator &&
+              !isEqual<T>(c2, x, tolerance) &&
+              absoluteValue<R>(q2) < maxDenominator &&
               iterCount < maxIterations
             )
             {
-              //Now "shift" all the coeffs to the left
+              //Now "shift" all the coeffs to the left: [0] := [1], [1] := [2]
               p0 = p1;
               q0 = q1;
 
-              p1 = pn;
-              q1 = qn;
+              p1 = p2;
+              q1 = q2;
 
-              r0 = rn;
-              a0 = an;
+              r1 = r2;
+              a1 = a2;
             }
             else
             {
@@ -148,17 +220,9 @@ namespace MathUtils
             }
           }
 
-          if (iterCount > maxIterations)
+          if (absoluteValue<R>(q2) <= maxDenominator)
           {
-            qWarning() << "MathUtils::rationalize<R, T>:"
-                          " iterations limit `maxIterations' exceeded:"
-                          " `iterCount' ==" << iterCount << ">" <<
-                          maxIterations << "; `tolerance' ==" << tolerance;
-          }
-
-          if (qn <= maxDenominator)
-          {
-            return make_pair(pn, qn);
+            return make_pair(p2, q2);
           }
           else
           {
@@ -173,16 +237,35 @@ namespace MathUtils
   }
 
 
+#ifdef LP_WITH_MULTIPRECISION
+  using NumericTypes::boost_real_t;
+
   template<>
   /**
    * @brief absoluteValue
    * @param x
    * @return |x|.
    */
-  inline Real
-  absoluteValue(Real x)
+  inline boost_real_t
+  absoluteValue(boost_real_t x)
   {
-    return Real(fabs(x));
+    return boost_real_t(mp::fabs(x));
+  }
+#else // LP_WITH_MULTIPRECISION
+  using NumericTypes::builtin_real_t;
+  using NumericTypes::builtin_integer_t;
+
+
+  template<>
+  /**
+   * @brief absoluteValue
+   * @param x
+   * @return |x|.
+   */
+  inline builtin_real_t
+  absoluteValue(builtin_real_t x)
+  {
+    return builtin_real_t(fabs(x));
   }
 
 
@@ -192,10 +275,24 @@ namespace MathUtils
    * @param x
    * @return |x|.
    */
-  inline Rational
-  absoluteValue(Rational x)
+  inline builtin_integer_t
+  absoluteValue(builtin_integer_t x)
   {
-    return ((x < Rational(0)) ? -x : x);
+    return ((x < builtin_integer_t(0)) ? x * builtin_integer_t(-1): x);
+  }
+#endif // LP_WITH_MULTIPRECISION
+
+
+  template<>
+  /**
+   * @brief absoluteValue
+   * @param x
+   * @return |x|.
+   */
+  inline rational_t
+  absoluteValue(rational_t x)
+  {
+    return ((x < rational_t(0)) ? x * rational_t(-1) : x);
   }
 
 
@@ -208,14 +305,22 @@ namespace MathUtils
    * @return `true' if (x ≊ y), `false' otherwise.
    */
   inline bool
-  isEqual(Real x, Real y, Real tolerance)
+  isEqual(real_t x, real_t y, real_t tolerance)
   {
-    return (
-      absoluteValue<Real>(x - y) <=
-      tolerance * max<Real>(
-        {Real(1), absoluteValue<Real>(x), absoluteValue<Real>(y)}
-      )
-    );
+
+    if (isFinite<real_t>(x) && isFinite<real_t>(y))
+    {
+      return (
+        absoluteValue<real_t>(x - y) <=
+        tolerance * max<real_t>(
+          {real_t(1), absoluteValue<real_t>(x), absoluteValue<real_t>(y)}
+        )
+      );
+    }
+    else
+    {
+      return (x == y);
+    }
   }
 
 
@@ -228,9 +333,9 @@ namespace MathUtils
    * @return `true' if (x == y), `false' otherwise.
    */
   inline bool
-  isEqual(Rational x, Rational y, Rational tolerance)
+  isEqual(rational_t x, rational_t y, rational_t tolerance)
   {
-    return (absoluteValue(x - y) <= tolerance);
+    return (absoluteValue<rational_t>(x - y) <= tolerance);
   }
 
 
@@ -242,14 +347,21 @@ namespace MathUtils
    * @return `true' if (x ≊ y), `false' otherwise.
    */
   inline bool
-  isEqual(Real x, Real y)
+  isEqual(real_t x, real_t y)
   {
-    return (
-      absoluteValue<Real>(x - y) <=
-      Epsilon * max<Real>(
-        {Real(1), absoluteValue<Real>(x), absoluteValue<Real>(y)}
-      )
-    );
+    if (isFinite<real_t>(x) && isFinite<real_t>(y))
+    {
+      return (
+        absoluteValue<real_t>(x - y) <=
+        Epsilon * max<real_t>(
+          {real_t(1), absoluteValue<real_t>(x), absoluteValue<real_t>(y)}
+        )
+      );
+    }
+    else
+    {
+      return (x == y);
+    }
   }
 
 
@@ -261,7 +373,7 @@ namespace MathUtils
    * @return `true' if (x == y), `false' otherwise.
    */
   inline bool
-  isEqual(Rational x, Rational y)
+  isEqual(rational_t x, rational_t y)
   {
     return (x == y);
   }
@@ -275,14 +387,21 @@ namespace MathUtils
    * @return `true' if (x ≲ y), `false' otherwise.
    */
   inline bool
-  isLessThan(Real x, Real y)
+  isLessThan(real_t x, real_t y)
   {
-    return (
-      (x - y) <
-      (-Epsilon) * max<Real>(
-        {Real(1), absoluteValue<Real>(x), absoluteValue<Real>(y)}
-      )
-    );
+    if (isFinite<real_t>(x) && isFinite<real_t>(y))
+    {
+      return (
+        (x - y) <
+        real_t(-1) * Epsilon * max<real_t>(
+          {real_t(1), absoluteValue<real_t>(x), absoluteValue<real_t>(y)}
+        )
+      );
+    }
+    else
+    {
+      return (x < y);
+    }
   }
 
 
@@ -294,7 +413,7 @@ namespace MathUtils
    * @return `true' if (x < y), `false' otherwise.
    */
   inline bool
-  isLessThan(Rational x, Rational y)
+  isLessThan(rational_t x, rational_t y)
   {
     return (x < y);
   }
@@ -308,14 +427,21 @@ namespace MathUtils
    * @return `true' if (x ≳ y), `false' otherwise.
    */
   inline bool
-  isGreaterThan(Real x, Real y)
+  isGreaterThan(real_t x, real_t y)
   {
-    return (
-      (x - y) >
-      Epsilon * max<Real>(
-        {Real(1), absoluteValue<Real>(x), absoluteValue<Real>(y)}
-      )
-    );
+    if (isFinite<real_t>(x) && isFinite<real_t>(y))
+    {
+      return (
+        (x - y) >
+        Epsilon * max<real_t>(
+          {real_t(1), absoluteValue<real_t>(x), absoluteValue<real_t>(y)}
+        )
+      );
+    }
+    else
+    {
+      return (x > y);
+    }
   }
 
 
@@ -327,7 +453,7 @@ namespace MathUtils
    * @return `true' if (x > y), `false' otherwise.
    */
   inline bool
-  isGreaterThan(Rational x, Rational y)
+  isGreaterThan(rational_t x, rational_t y)
   {
     return (x > y);
   }
@@ -340,12 +466,19 @@ namespace MathUtils
    * @return `true' if (x ~= 0), `false' otherwise.
    */
   inline bool
-  isEqualToZero(Real x)
+  isEqualToZero(real_t x)
   {
-    return (
-      absoluteValue<Real>(x) <=
-      Epsilon * max<Real>(Real(1), absoluteValue<Real>(x))
-    );
+    if (isFinite<real_t>(x))
+    {
+      return (
+        absoluteValue<real_t>(x) <=
+        Epsilon * max<real_t>(real_t(1), absoluteValue<real_t>(x))
+      );
+    }
+    else
+    {
+      return (x == real_t(0));
+    }
   }
 
 
@@ -356,9 +489,9 @@ namespace MathUtils
    * @return `true' if (x == 0), `false' otherwise.
    */
   inline bool
-  isEqualToZero(Rational x)
+  isEqualToZero(rational_t x)
   {
-    return (x == Rational(0));
+    return (x == rational_t(0));
   }
 
 
@@ -369,11 +502,18 @@ namespace MathUtils
    * @return `true' if (x ≳ 0), `false' otherwise.
    */
   inline bool
-  isGreaterThanZero(Real x)
+  isGreaterThanZero(real_t x)
   {
-    return (
-      x > Epsilon * max<Real>(Real(1), absoluteValue<Real>(x))
-    );
+    if (isFinite<real_t>(x))
+    {
+      return (
+        x > Epsilon * max<real_t>(real_t(1), absoluteValue<real_t>(x))
+      );
+    }
+    else
+    {
+      return (x > real_t(0));
+    }
   }
 
 
@@ -384,9 +524,9 @@ namespace MathUtils
    * @return `true' if (x > 0), `false' otherwise.
    */
   inline bool
-  isGreaterThanZero(Rational x)
+  isGreaterThanZero(rational_t x)
   {
-    return (x > Rational(0));
+    return (x > rational_t(0));
   }
 
 
@@ -397,11 +537,18 @@ namespace MathUtils
    * @return `true' if (x ≲ 0), `false' otherwise.
    */
   inline bool
-  isLessThanZero(Real x)
+  isLessThanZero(real_t x)
   {
-    return (
-      x < (-Epsilon) * max<Real>(Real(1), absoluteValue<Real>(x))
-    );
+    if (isFinite<real_t>(x))
+    {
+      return (
+        x < (-Epsilon) * max<real_t>(real_t(1), absoluteValue<real_t>(x))
+      );
+    }
+    else
+    {
+      return (x < real_t(0));
+    }
   }
 
 
@@ -412,9 +559,9 @@ namespace MathUtils
    * @return `true' if (x < 0), `false' otherwise.
    */
   inline bool
-  isLessThanZero(Rational x)
+  isLessThanZero(rational_t x)
   {
-    return (x < Rational(0));
+    return (x < rational_t(0));
   }
 
 
@@ -425,9 +572,9 @@ namespace MathUtils
    * @return `true' if (x >= 0), `false' otherwise.
    */
   inline bool
-  isGreaterThanOrEqualToZero(Real x)
+  isGreaterThanOrEqualToZero(real_t x)
   {
-    return (x >= Real(0));
+    return (x >= real_t(0));
   }
 
 
@@ -438,9 +585,9 @@ namespace MathUtils
    * @return `true' if (x >= 0), `false' otherwise.
    */
   inline bool
-  isGreaterThanOrEqualToZero(Rational x)
+  isGreaterThanOrEqualToZero(rational_t x)
   {
-    return (x >= Rational(0));
+    return (x >= rational_t(0));
   }
 }
 

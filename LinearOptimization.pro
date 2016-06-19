@@ -73,19 +73,20 @@ DEFINES += \
   FMT_HEADER_ONLY \
   LP_WITH_DEBUG_LOG \
   LP_WITH_BLAND_RULE
-#  LP_WITH_MULTIPRECISION #TODO: ~! Not yet implemented
+
+#DEFINES += LP_WITH_MULTIPRECISION #TODO: ~! Not yet implemented.
 
 DEFINES += LP_TEST_MODE
 
 INCLUDEPATH += \
   $$PWD/lib/boost \
-  $$PWD/lib/cppformat \
+  $$PWD/lib/cxx-prettyprint \
   $$PWD/lib/eigen \
-  $$PWD/lib/prettyprint \
+  $$PWD/lib/fmt \
   $$PWD/lib/qcustomplot
 
 #NOTE: Disabled due to `FMT_HEADER_ONLY' presence
-#LIBS += -L$$PWD/lib/cppformat/cppformat/build -lformat
+#LIBS += -L$$PWD/lib/fmt/build -lcppformat
 
 QMAKE_EXT_CPP += cxx
 

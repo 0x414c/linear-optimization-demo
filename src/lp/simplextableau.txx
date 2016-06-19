@@ -104,7 +104,7 @@ namespace LinearProgramming
   /**
    * @brief SimplexTableau<T>::entries
    * Provides read-write access to the tableau entries matrix.
-   * TODO: ~? Use `ColsBlockXpr' or `RowsBlockXpr'.
+   * TODO: ~? Use `ColsBlockXpr' or `RowsBlockXpr'
    * @return
    */
   Block<Matrix<T, Dynamic, Dynamic>, Dynamic, Dynamic>
@@ -515,7 +515,7 @@ namespace LinearProgramming
       {
         return (
           varIdx < phase1FreeVarsCount &&
-          ++varsCount <= phase2FreeVarsCount
+          ++varsCount <= size_t(phase2FreeVarsCount)
         );
       }
     );

@@ -29,15 +29,15 @@ namespace LinearProgramming
   using Eigen::DenseIndex;
   using Eigen::Dynamic;
   using Eigen::Matrix;
-  using NumericTypes::Rational;
-  using NumericTypes::Real;
+  using NumericTypes::rational_t;
+  using NumericTypes::real_t;
   using std::pair;
 
   using MaybeIndex2D = optional<pair<DenseIndex, DenseIndex>>;
   using MaybeIndex1D = optional<DenseIndex>;
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   class SimplexSolver :
     public ISolver<LinearProgramSolution<T>>
   {

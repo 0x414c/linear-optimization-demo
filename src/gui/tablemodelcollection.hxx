@@ -18,8 +18,8 @@
 namespace GUI
 {
   using NumericTypes::Field;
-  using NumericTypes::Rational;
-  using NumericTypes::Real;
+  using NumericTypes::rational_t;
+  using NumericTypes::real_t;
   using Utils::ResultType;
 
 

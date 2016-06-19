@@ -28,12 +28,12 @@ namespace LinearProgrammingUtils
   using MathUtils::isEqual;
   using MathUtils::isEqualToZero;
   using MathUtils::isGreaterThanOrEqualToZero;
-  using NumericTypes::Real;
+  using NumericTypes::real_t;
   using std::list;
   using std::ref;
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   /**
    * @brief isSolutionFeasible
    * Checks if the point lies inside of
@@ -196,9 +196,9 @@ namespace LinearProgrammingUtils
    *  a. While column `j' has all zero elements, set j ← j + 1.
    *     If (j > N) return `A^'.
    *  b. If element A^[i, j] is zero, then interchange row `i'
-   *     with a row (x > i) that has A^[x, j] ≠ 0.
+   *     with a row `x' where (x > i) that has A^[x, j] ≠ 0.
    *  c. Divide each element of row `i' by A^[i, j],
-   *     thus making the pivot a[i, j] equal to 1.
+   *     thus making the pivot A^[i, j] equal to 1.
    *  d. For each row `k' from 1 to `M', with (k ≠ i), subtract row `i'
    *     multiplied by A^[k, j] from row `k'.
    * 3. Return transformed matrix `A^'.
@@ -224,70 +224,49 @@ namespace LinearProgrammingUtils
     Matrix<T, Dynamic, Dynamic> A_(M, N);
     A_ << A;
 
-    DenseIndex i(0), j(0);
+    DenseIndex j(0);
     //1. Deal with each row `i' from 1 to `M' in turn, ...
-    while (true)
+    for (DenseIndex i(0); i < M; ++i)
     {
       //If we have reached the end
-      if (i >= M || j >= N) // TODO: (i == M || j == N)
+      if (j == N)
       {
-        return RREF<T>(std::move(A_), rank);
+        goto end;
       }
       else
       {
-        //3. Interchange rows, if necessary, so that the
-        //pivot element A^(i, j) is nonzero.
-        DenseIndex x(i);
-        DenseIndex xMax(i);
-        T maxValue(0);
-        bool isColNonZero(false);
         //... and work across the columns `j' from 1 to `N'
         //skipping any column of all zero entries.
+        //2. Find the next column `j' with a nonzero entry.
+        DenseIndex x(i);
         while (true)
         {
+          for (DenseIndex k(i + 1); k < M; ++k)
+          {
+            if (absoluteValue<T>(A_(k, j)) > absoluteValue<T>(A_(x, j)))
+            {
+              x = k;
+            }
+          }
+
           if (isEqualToZero<T>(A_(x, j)))
           {
-            ++x;
+            ++j;
+
+            //If we have reached the end
+            if (j == N)
+            {
+              goto end;
+            }
           }
           else
           {
-            if (absoluteValue<T>(A_(x, j)) > absoluteValue<T>(maxValue))
-            {
-              xMax = x;
-              maxValue = A_(x, j);
-            }
-            isColNonZero = true;
-            ++x;
-          }
-
-          if (x >= M)
-          {
-            if (isColNonZero)
-            {
-              x = xMax;
-
-              break;
-            }
-            else
-            {
-              ++j;
-              if (j >= N)
-              {
-                return RREF<T>(std::move(A_), rank);
-              }
-              else
-              {
-                x = i;
-                xMax = i;
-                maxValue = T(0);
-                isColNonZero = false;
-
-                continue;
-              }
-            }
+            break;
           }
         }
 
+        //3. Interchange rows, if necessary, so that the
+        //pivot element A^(i, j) is nonzero.
         if (x > i)
         {
           A_.row(x).swap(A_.row(i));
@@ -296,7 +275,6 @@ namespace LinearProgrammingUtils
         //4. Make the pivot equal to 1 by dividing each element
         //in the pivot row by the value of the pivot.
         const T pivot(A_(i, j));
-
         if (!isEqual<T>(pivot, T(1)))
         {
           A_.row(i) /= pivot; //!
@@ -324,17 +302,17 @@ namespace LinearProgrammingUtils
       }
       //Increase rank (now we have `1' as the leading element in the current row)
       ++rank;
-
-      //Jump to the next row
-      ++i;
     }
+
+  end:
+    return RREF<T>(std::move(A_), rank);
   }
 
 
   template<typename T>
   /**
    * @brief computeBoundingBox
-   * TODO: ~? Use `std::minmax_element'.
+   * TODO: ~? Use `std::minmax_element'
    * @param points
    * @return
    */

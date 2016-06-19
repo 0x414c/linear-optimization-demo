@@ -30,7 +30,7 @@ namespace LinearProgramming
   using Eigen::DenseIndex;
   using Eigen::Dynamic;
   using Eigen::Matrix;
-  using NumericTypes::Real;
+  using NumericTypes::real_t;
   using std::list;
   using std::make_shared;
   using std::shared_ptr;
@@ -38,7 +38,7 @@ namespace LinearProgramming
   using std::pair;
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   class SimplexSolverController
   {
     public:

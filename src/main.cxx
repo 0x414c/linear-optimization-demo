@@ -25,8 +25,9 @@ main(int argc, char** argv)
 {
 #ifdef LP_TEST_MODE
 //  Test::testSolvers();
-  Test::testUtilities();
-#else
+//  Test::testUtilities();
+  Test::testRREF();
+#else // LP_TEST_MODE
   using namespace Config::AppGlobal;
 
   std::setlocale(LC_ALL, LocaleIdentifier);

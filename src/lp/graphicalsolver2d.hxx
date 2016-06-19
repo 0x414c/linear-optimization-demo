@@ -18,11 +18,11 @@
 namespace LinearProgramming
 {
   using boost::optional;
-  using NumericTypes::Real;
+  using NumericTypes::real_t;
   using std::pair;
 
 
-  template<typename TCoeff = Real/*, DenseIndex TDim = 2*/>
+  template<typename TCoeff = real_t/*, DenseIndex TDim = 2*/>
   class GraphicalSolver2D :
     public ISolver<PlotData2D<TCoeff>>
   {

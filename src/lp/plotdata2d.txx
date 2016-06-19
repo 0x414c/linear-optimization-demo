@@ -18,7 +18,7 @@ namespace LinearProgramming
 {
   using Eigen::DenseIndex;
   using Eigen::Matrix;
-  using NumericTypes::Real;
+  using NumericTypes::real_t;
   using std::list;
   using std::vector;
 
@@ -26,12 +26,12 @@ namespace LinearProgramming
   template<typename TCoeff/*, DenseIndex TDim*/>
   PlotData2D<TCoeff>::PlotData2D(
     const LinearProgramSolution<TCoeff>& linearProgramSolution,
-    const list<Matrix<Real, 2, 1>>& extremePoints,
-    Real extremeValue,
-    const list<Matrix<Real, 2, 1>>& feasibleRegionExtremePoints,
-    const Matrix<Real, 2, 2>& feasibleRegionBoundingBox,
-    const Matrix<Real, 2, 2>& feasibleRegionBoundingBoxHeights,
-    const Matrix<Real, 1, 2>& gradientVector,
+    const list<Matrix<real_t, 2, 1>>& extremePoints,
+    real_t extremeValue,
+    const list<Matrix<real_t, 2, 1>>& feasibleRegionExtremePoints,
+    const Matrix<real_t, 2, 2>& feasibleRegionBoundingBox,
+    const Matrix<real_t, 2, 2>& feasibleRegionBoundingBoxHeights,
+    const Matrix<real_t, 1, 2>& gradientVector,
     const vector<DenseIndex>& decisionVariables
   ) :
     linearProgramSolution(linearProgramSolution),
@@ -48,12 +48,12 @@ namespace LinearProgramming
   template<typename TCoeff/*, DenseIndex TDim*/>
   PlotData2D<TCoeff>::PlotData2D(
     LinearProgramSolution<TCoeff>&& linearProgramSolution,
-    list<Matrix<Real, 2, 1>>&& extremePoints,
-    Real extremeValue,
-    list<Matrix<Real, 2, 1>>&& feasibleRegionExtremePoints,
-    Matrix<Real, 2, 2>&& feasibleRegionBoundingBox,
-    Matrix<Real, 2, 2>&& feasibleRegionBoundingBoxHeights,
-    Matrix<Real, 1, 2>&& gradientVector,
+    list<Matrix<real_t, 2, 1>>&& extremePoints,
+    real_t extremeValue,
+    list<Matrix<real_t, 2, 1>>&& feasibleRegionExtremePoints,
+    Matrix<real_t, 2, 2>&& feasibleRegionBoundingBox,
+    Matrix<real_t, 2, 2>&& feasibleRegionBoundingBoxHeights,
+    Matrix<real_t, 1, 2>&& gradientVector,
     vector<DenseIndex>&& decisionVariables
   ) :
     linearProgramSolution(std::move(linearProgramSolution)),

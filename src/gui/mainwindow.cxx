@@ -38,8 +38,8 @@
 #include <QWheelEvent>
 
 #include "boost/optional.hpp"
-#include "cppformat/format.h"
 #include "eigen3/Eigen/Core"
+#include "fmt/format.h"
 #include "qcustomplot/qcustomplot.h"
 
 #include "numericstyleditemdelegate.hxx"
@@ -131,7 +131,7 @@ GUI::MainWindow::~MainWindow()
 void
 GUI::MainWindow::closeEvent(QCloseEvent* ev)
 {
-  //TODO: ~ Check if the content is _really_ modified.
+  //TODO: ~ Check if the content was _really_ modified.
   if (isWindowModified()) {
   begin:
     const QMessageBox::StandardButton res(
@@ -351,16 +351,16 @@ void
 GUI::MainWindow::setupProgramView()
 {
   rationalNumericDelegates_ =
-    QVector<NumericStyledItemDelegate<Rational>*>(ProgramModelsCount);
+    QVector<NumericStyledItemDelegate<rational_t>*>(ProgramModelsCount);
 
   realNumericDelegates_ =
-    QVector<NumericStyledItemDelegate<Real>*>(ProgramModelsCount);
+    QVector<NumericStyledItemDelegate<real_t>*>(ProgramModelsCount);
 
   programTableModels_ = QVector<StringTableModel*>(ProgramModelsCount);
   for (int i(0); i < ProgramModelsCount; ++i)
   {
-    realNumericDelegates_[i] = new NumericStyledItemDelegate<Real>(this);
-    rationalNumericDelegates_[i] = new NumericStyledItemDelegate<Rational>(this);
+    realNumericDelegates_[i] = new NumericStyledItemDelegate<real_t>(this);
+    rationalNumericDelegates_[i] = new NumericStyledItemDelegate<rational_t>(this);
     programTableModels_[i] = new StringTableModel(this);
   }
 
@@ -547,8 +547,8 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotData2D<T>& plotData) {
 
   const int colorsCount(colors.count());
 
-  //TODO: ~ Avoid copying
-  const vector<Matrix<Real, 2, 1>> vertices(
+  //TODO: ~ Avoid copying.
+  const vector<Matrix<real_t, 2, 1>> vertices(
     plotData.feasibleRegionExtremePoints.cbegin(),
     plotData.feasibleRegionExtremePoints.cend()
   );
@@ -728,12 +728,13 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotData2D<T>& plotData) {
       QPen(QBrush(defaultColor), SelectedPenWidth)
     );
 //    customPlot->graph(i)->setSelectedBrush(QBrush(selectedBrushColor));
-    customPlot->graph(i)->setName(QString("Eq. (%1)").arg(i + 1)); //TODO: ~
+    customPlot->graph(i)->setName(QString("Eq. (%1)").arg(i + 1));
+    //TODO: ~ Use string representation (e.g. 2x + 3y = 0)
     customPlot->graph(i)->setSelectable(true);
   }
 
   //Add objective function level line...
-  const Matrix<Real, 2, 1> levelLine(perp(plotData.gradientVector));
+  const Matrix<real_t, 2, 1> levelLine(perp(plotData.gradientVector));
   QCPItemStraightLine* const objFuncPlotLine =
     new QCPItemStraightLine(customPlot);
   objFuncPlotLine->point1->setCoords(0., 0.);
@@ -942,26 +943,26 @@ GUI::MainWindow::refreshSimplexView()
         realSimplexSolverController_.stateChanged()
       )
       {
-        const SimplexTableau<Real> tableau(realSimplexSolverController_.current());
+        const SimplexTableau<real_t> tableau(realSimplexSolverController_.current());
 
         simplexTableModels_[int(SimplexModel::Tableau)]->resize(
           tableau.rows(), tableau.cols()
         );
 
-        TableModelUtils::fill<Real>(
+        TableModelUtils::fill<real_t>(
           simplexTableModels_[int(SimplexModel::Tableau)],
           tableau
         );
 
         ui->simplex_simplexTableauTableView->resizeColumnsToContents();
 
-        const Matrix<Real, Dynamic, 1> extremePoint(tableau.extremePoint());
+        const Matrix<real_t, Dynamic, 1> extremePoint(tableau.extremePoint());
 
         simplexTableModels_[int(SimplexModel::Solution)]->resize(
           1, extremePoint.rows()
         );
 
-        TableModelUtils::fill<Real>(
+        TableModelUtils::fill<real_t>(
           simplexTableModels_[int(SimplexModel::Solution)],
           extremePoint.transpose()
         );
@@ -970,7 +971,7 @@ GUI::MainWindow::refreshSimplexView()
 
         TableModelUtils::fill(
           simplexTableModels_[int(SimplexModel::ObjectiveValue)],
-          numericCast<QString, Real>(
+          numericCast<QString, real_t>(
             tableau.extremeValue()
           )
         );
@@ -978,19 +979,19 @@ GUI::MainWindow::refreshSimplexView()
         DenseIndex idx(0);
         const DenseIndex rows(tableau.rows());
         const DenseIndex cols(tableau.cols());
-        TableModelUtils::setFlags<Real>(
+        TableModelUtils::setFlags<real_t>(
           simplexTableModels_[int(SimplexModel::Tableau)],
           tableau.entries(),
           [rows, cols, &idx, &tableau]
-          (const Real& x) {
+          (const real_t& x) {
             const DenseIndex rowIdx(idx / cols);
             const DenseIndex colIdx(idx % cols);
             const bool ret(
               ((rowIdx < rows - 1) && (colIdx < cols - 1)) &&
-                MathUtils::isLessThanZero<Real>(
+                MathUtils::isLessThanZero<real_t>(
                   tableau.row(tableau.rows() - 1)(colIdx)
                 ) &&
-                MathUtils::isGreaterThanZero<Real>(x)
+                MathUtils::isGreaterThanZero<real_t>(x)
             );
             ++idx;
 
@@ -1030,7 +1031,7 @@ GUI::MainWindow::refreshSimplexView()
         rationalSimplexSolverController_.stateChanged()
       )
       {
-        const SimplexTableau<Rational> tableau(
+        const SimplexTableau<rational_t> tableau(
           rationalSimplexSolverController_.current()
         );
 
@@ -1038,20 +1039,20 @@ GUI::MainWindow::refreshSimplexView()
           tableau.rows(), tableau.cols()
         );
 
-        TableModelUtils::fill<Rational>(
+        TableModelUtils::fill<rational_t>(
           simplexTableModels_[int(SimplexModel::Tableau)],
           tableau
         );
 
         ui->simplex_simplexTableauTableView->resizeColumnsToContents();
 
-        const Matrix<Rational, Dynamic, 1> extremePoint(tableau.extremePoint());
+        const Matrix<rational_t, Dynamic, 1> extremePoint(tableau.extremePoint());
 
         simplexTableModels_[int(SimplexModel::Solution)]->resize(
           1, extremePoint.rows()
         );
 
-        TableModelUtils::fill<Rational>(
+        TableModelUtils::fill<rational_t>(
           simplexTableModels_[int(SimplexModel::Solution)],
           extremePoint.transpose()
         );
@@ -1060,7 +1061,7 @@ GUI::MainWindow::refreshSimplexView()
 
         TableModelUtils::fill(
           simplexTableModels_[int(SimplexModel::ObjectiveValue)],
-          numericCast<QString, Rational>(
+          numericCast<QString, rational_t>(
             tableau.extremeValue()
           )
         );
@@ -1068,19 +1069,19 @@ GUI::MainWindow::refreshSimplexView()
         DenseIndex idx(0);
         const DenseIndex rows(tableau.rows());
         const DenseIndex cols(tableau.cols());
-        TableModelUtils::setFlags<Rational>(
+        TableModelUtils::setFlags<rational_t>(
           simplexTableModels_[int(SimplexModel::Tableau)],
           tableau.entries(),
           [rows, cols, &idx, &tableau]
-          (const Rational& x) {
+          (const rational_t& x) {
             const DenseIndex rowIdx(idx / cols);
             const DenseIndex colIdx(idx % cols);
             const bool ret(
               ((rowIdx < rows - 1) && (colIdx < cols - 1)) &&
-                MathUtils::isLessThanZero<Rational>(
+                MathUtils::isLessThanZero<rational_t>(
                   tableau.row(tableau.rows() - 1)(colIdx)
                 ) &&
-                MathUtils::isGreaterThanZero<Rational>(x)
+                MathUtils::isGreaterThanZero<rational_t>(x)
             );
             ++idx;
 
@@ -1157,14 +1158,14 @@ GUI::MainWindow::convertTableModelsContents()
     case Field::Real:
       for (int i(0); i < ProgramModelsCount; ++i)
       {
-        TableModelUtils::convert<Real, Rational>(programTableModels_[i]);
+        TableModelUtils::convert<real_t, rational_t>(programTableModels_[i]);
       }
       break;
 
     case Field::Rational:
       for (int i(0); i < ProgramModelsCount; ++i)
       {
-        TableModelUtils::convert<Rational, Real>(programTableModels_[i]);
+        TableModelUtils::convert<rational_t, real_t>(programTableModels_[i]);
       }
       break;
 
@@ -1254,17 +1255,17 @@ GUI::MainWindow::setDirty(bool dirty)
 void
 GUI::MainWindow::setupNumericSolvers()
 {
-  realSimplexSolver_ = make_shared<SimplexSolver<Real>>();
-  rationalSimplexSolver_ = make_shared<SimplexSolver<Rational>>();
+  realSimplexSolver_ = make_shared<SimplexSolver<real_t>>();
+  rationalSimplexSolver_ = make_shared<SimplexSolver<rational_t>>();
 }
 
 
 void
 GUI::MainWindow::setupNumericSolversControllers()
 {
-  realSimplexSolverController_ = SimplexSolverController<Real>(realSimplexSolver_);
+  realSimplexSolverController_ = SimplexSolverController<real_t>(realSimplexSolver_);
   rationalSimplexSolverController_ =
-    SimplexSolverController<Rational>(rationalSimplexSolver_);
+    SimplexSolverController<rational_t>(rationalSimplexSolver_);
 }
 
 
@@ -1274,25 +1275,25 @@ void GUI::MainWindow::updateNumericSolversData()
   {
     case Field::Real:
       {
-        Matrix<Real, 1, Dynamic> objFuncCoeffs(
-          TableModelUtils::makeRowVector<Real>(
+        Matrix<real_t, 1, Dynamic> objFuncCoeffs(
+          TableModelUtils::makeRowVector<real_t>(
             programTableModels_[int(ProgramModel::ObjFunc)]
           )
         );
 
-        Matrix<Real, Dynamic, Dynamic> constrsCoeffs(
-          TableModelUtils::makeMatrix<Real>(
+        Matrix<real_t, Dynamic, Dynamic> constrsCoeffs(
+          TableModelUtils::makeMatrix<real_t>(
             programTableModels_[int(ProgramModel::Constrs)]
           )
         );
 
-        Matrix<Real, Dynamic, 1> constrsRHS(
-          TableModelUtils::makeColumnVector<Real>(
+        Matrix<real_t, Dynamic, 1> constrsRHS(
+          TableModelUtils::makeColumnVector<real_t>(
             programTableModels_[int(ProgramModel::RHS)]
           )
         );
 
-        LinearProgramData<Real> linearProgramData(
+        LinearProgramData<real_t> linearProgramData(
           std::move(objFuncCoeffs),
           std::move(constrsCoeffs),
           std::move(constrsRHS)
@@ -1305,25 +1306,25 @@ void GUI::MainWindow::updateNumericSolversData()
 
     case Field::Rational:
       {
-        Matrix<Rational, 1, Dynamic> objFuncCoeffs(
-          TableModelUtils::makeRowVector<Rational>(
+        Matrix<rational_t, 1, Dynamic> objFuncCoeffs(
+          TableModelUtils::makeRowVector<rational_t>(
             programTableModels_[int(ProgramModel::ObjFunc)]
           )
         );
 
-        Matrix<Rational, Dynamic, Dynamic> constrsCoeffs(
-          TableModelUtils::makeMatrix<Rational>(
+        Matrix<rational_t, Dynamic, Dynamic> constrsCoeffs(
+          TableModelUtils::makeMatrix<rational_t>(
             programTableModels_[int(ProgramModel::Constrs)]
           )
         );
 
-        Matrix<Rational, Dynamic, 1> constrsRHS(
-          TableModelUtils::makeColumnVector<Rational>(
+        Matrix<rational_t, Dynamic, 1> constrsRHS(
+          TableModelUtils::makeColumnVector<rational_t>(
             programTableModels_[int(ProgramModel::RHS)]
           )
         );
 
-        LinearProgramData<Rational> linearProgramData(
+        LinearProgramData<rational_t> linearProgramData(
           std::move(objFuncCoeffs),
           std::move(constrsCoeffs),
           std::move(constrsRHS)
@@ -1355,7 +1356,7 @@ GUI::MainWindow::solveSimplex()
   {
     case Field::Real:
       {
-        const pair<SolutionType, optional<LinearProgramSolution<Real>>>
+        const pair<SolutionType, optional<LinearProgramSolution<real_t>>>
         linearProgramSolution(realSimplexSolver_->solve());
 
         if (linearProgramSolution.second)
@@ -1364,14 +1365,14 @@ GUI::MainWindow::solveSimplex()
             1,
             (*linearProgramSolution.second).extremePoint.rows()
           );
-          TableModelUtils::fill<Real>(
+          TableModelUtils::fill<real_t>(
             simplexTableModels_[int(SimplexModel::Solution)],
             (*linearProgramSolution.second).extremePoint.transpose()
           );
 
           TableModelUtils::fill(
             simplexTableModels_[int(SimplexModel::ObjectiveValue)],
-            numericCast<QString, Real>(
+            numericCast<QString, real_t>(
               (*linearProgramSolution.second).extremeValue
             )
           );
@@ -1397,7 +1398,7 @@ GUI::MainWindow::solveSimplex()
 
     case Field::Rational:
       {
-        const pair<SolutionType, optional<LinearProgramSolution<Rational>>>
+        const pair<SolutionType, optional<LinearProgramSolution<rational_t>>>
         linearProgramSolution(rationalSimplexSolver_->solve());
 
         if (linearProgramSolution.second)
@@ -1406,14 +1407,14 @@ GUI::MainWindow::solveSimplex()
             1,
             (*linearProgramSolution.second).extremePoint.rows()
           );
-          TableModelUtils::fill<Rational>(
+          TableModelUtils::fill<rational_t>(
             simplexTableModels_[int(SimplexModel::Solution)],
             (*linearProgramSolution.second).extremePoint.transpose()
           );
 
           TableModelUtils::fill(
             simplexTableModels_[int(SimplexModel::ObjectiveValue)],
-            numericCast<QString, Rational>(
+            numericCast<QString, rational_t>(
               (*linearProgramSolution.second).extremeValue
             )
           );
@@ -1461,35 +1462,35 @@ GUI::MainWindow::solveGraphical()
   {
     case Field::Real:
       {
-        Matrix<Real, 1, Dynamic> objFuncCoeffs(
-          TableModelUtils::makeRowVector<Real>(
+        Matrix<real_t, 1, Dynamic> objFuncCoeffs(
+          TableModelUtils::makeRowVector<real_t>(
             programTableModels_[int(ProgramModel::ObjFunc)]
           )
         );
 
-        Matrix<Real, Dynamic, Dynamic> constrsCoeffs(
-          TableModelUtils::makeMatrix<Real>(
+        Matrix<real_t, Dynamic, Dynamic> constrsCoeffs(
+          TableModelUtils::makeMatrix<real_t>(
             programTableModels_[int(ProgramModel::Constrs)]
           )
         );
 
-        Matrix<Real, Dynamic, 1> constrsRHS(
-          TableModelUtils::makeColumnVector<Real>(
+        Matrix<real_t, Dynamic, 1> constrsRHS(
+          TableModelUtils::makeColumnVector<real_t>(
             programTableModels_[int(ProgramModel::RHS)]
           )
         );
 
-        LinearProgramData<Real> linearProgramData(
+        LinearProgramData<real_t> linearProgramData(
           std::move(objFuncCoeffs),
           std::move(constrsCoeffs),
           std::move(constrsRHS)
         );
 
-        GraphicalSolver2D<Real> graphicalSolver2D(
+        GraphicalSolver2D<real_t> graphicalSolver2D(
           std::move(linearProgramData)
         );
 
-        pair<SolutionType, optional<PlotData2D<Real>>> plotData2D(
+        pair<SolutionType, optional<PlotData2D<real_t>>> plotData2D(
           graphicalSolver2D.solve()
         );
 
@@ -1515,35 +1516,35 @@ GUI::MainWindow::solveGraphical()
 
     case Field::Rational:
       {
-        Matrix<Rational, 1, Dynamic> objFuncCoeffs(
-          TableModelUtils::makeRowVector<Rational>(
+        Matrix<rational_t, 1, Dynamic> objFuncCoeffs(
+          TableModelUtils::makeRowVector<rational_t>(
             programTableModels_[int(ProgramModel::ObjFunc)]
           )
         );
 
-        Matrix<Rational, Dynamic, Dynamic> constrsCoeffs(
-          TableModelUtils::makeMatrix<Rational>(
+        Matrix<rational_t, Dynamic, Dynamic> constrsCoeffs(
+          TableModelUtils::makeMatrix<rational_t>(
             programTableModels_[int(ProgramModel::Constrs)]
           )
         );
 
-        Matrix<Rational, Dynamic, 1> constrsRHS(
-          TableModelUtils::makeColumnVector<Rational>(
+        Matrix<rational_t, Dynamic, 1> constrsRHS(
+          TableModelUtils::makeColumnVector<rational_t>(
             programTableModels_[int(ProgramModel::RHS)]
           )
         );
 
-        LinearProgramData<Rational> linearProgramData(
+        LinearProgramData<rational_t> linearProgramData(
           std::move(objFuncCoeffs),
           std::move(constrsCoeffs),
           std::move(constrsRHS)
         );
 
-        GraphicalSolver2D<Rational> graphicalSolver2D(
+        GraphicalSolver2D<rational_t> graphicalSolver2D(
           std::move(linearProgramData)
         );
 
-        pair<SolutionType, optional<PlotData2D<Rational>>> plotData2D(
+        pair<SolutionType, optional<PlotData2D<rational_t>>> plotData2D(
           graphicalSolver2D.solve()
         );
 
@@ -1847,7 +1848,7 @@ GUI::MainWindow::saveDataToFile(const QString& filename)
     else
     {
       QJsonObject jsonObject;
-      //TODO: ~? Use pointers here
+      //TODO: ~? Use pointers here.
       TableModelCollection tableModels(
         QVector<StringTableModel>{
           (*programTableModels_[int(ProgramModel::ObjFunc)]),
@@ -2418,7 +2419,7 @@ GUI::MainWindow::on_simplex_pivotHintPushButton_clicked()
 void
 GUI::MainWindow::on_action_Open_triggered()
 {
-  //TODO: ~ Check for unsaved changes
+  //TODO: ~ Check for unsaved changes.
   const QString filename(
     QFileDialog::getOpenFileName(
       this,
@@ -2472,14 +2473,14 @@ GUI::MainWindow::on_action_Quit_triggered()
 void
 GUI::MainWindow::on_action_Undo_triggered()
 {
-  //TODO: ~ Undo action
+  //TODO: ~ Undo action.
 }
 
 
 void
 GUI::MainWindow::on_action_Redo_triggered()
 {
-  //TODO: ~ Redo action
+  //TODO: ~ Redo action.
 }
 
 
@@ -2506,14 +2507,14 @@ GUI::MainWindow::on_action_Fill_w_random_numbers_triggered()
 void
 GUI::MainWindow::on_action_Zoom_in_triggered()
 {
-  //TODO: ~ Connect to QCP
+  //TODO: ~ Connect to QCP.
 }
 
 
 void
 GUI::MainWindow::on_action_Zoom_out_triggered()
 {
-  //TODO: ~ Connect to QCP
+  //TODO: ~ Connect to QCP.
 }
 
 
@@ -2533,7 +2534,7 @@ GUI::MainWindow::on_action_Zoom_reset_triggered()
 //  );
 
 //  ui->graphical_solutionPlotQCustomPlot->replot();
-  //TODO: ~ Connect to QCP
+  //TODO: ~ Connect to QCP.
 }
 
 
@@ -2554,7 +2555,7 @@ GUI::MainWindow::on_action_Plot_triggered()
 void
 GUI::MainWindow::on_action_How_to_triggered()
 {
-  //TODO: ~ Add how-to guide
+  //TODO: ~ Add how-to guide.
 }
 
 

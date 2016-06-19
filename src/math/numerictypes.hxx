@@ -6,71 +6,48 @@
 
 #ifdef LP_WITH_MULTIPRECISION
 #include <memory>
+#endif // LP_WITH_MULTIPRECISION
 
+#ifdef LP_WITH_MULTIPRECISION
 #include "boost/multiprecision/cpp_bin_float.hpp"
 #include "boost/multiprecision/cpp_int.hpp"
-#else
+#else // LP_WITH_MULTIPRECISION
 #include "boost/rational.hpp"
 #endif // LP_WITH_MULTIPRECISION
 
 
 namespace NumericTypes
 {
-  enum struct Field : int { Real = 1, Rational = 2 };
+  enum struct Field : int
+  {
+    Real = 1, Rational = 2
+  };
 
-  //TODO: ~! Multiprecision mode
+
+  //TODO: ~! Multiprecision mode.
 #ifdef LP_WITH_MULTIPRECISION
-  //NOTE: `Boost*' aliases is for specializations only.
-  namespace mprec = boost::multiprecision;
+  //NOTE: `boost_*' aliases is for specializations only (just for clarity).
+  namespace mp = boost::multiprecision;
 
-//  using BoostReal = mprec::number<
-//    mprec::backends::cpp_bin_float<
-//      113,
-//      mprec::backends::digit_base_2,
-//      void,
-//      boost::int16_t,
-//      -16382,
-//      16383
-//    >,
-//    mprec::et_off
-//  >;
-//  using Real = BoostReal;
+  using boost_real_t = mp::cpp_bin_float_quad;
+  using real_t = boost_real_t;
 
-//  using BoostIntegerBackend = mprec::cpp_int_backend<
-//    128u,
-//    128u,
-//    mprec::cpp_integer_type::signed_magnitude,
-//    mprec::cpp_int_check_type::unchecked,
-//    void
-//  >;
-//  using BoostInteger = mprec::number<BoostIntegerBackend, mprec::et_off>;
-//  using Integer = BoostInteger;
+  using boost_integer_t = mp::int128_t;
+  using integer_t = boost_integer_t;
 
-//  using BoostRational = mprec::number<
-//    mprec::rational_adaptor<BoostIntegerBackend>,
-//    mprec::et_off
-//  >;
-//  using Rational = BoostRational;
+  using boost_rational_t = mp::cpp_rational;
+  using rational_t = boost_rational_t;
+#else // LP_WITH_MULTIPRECISION
+  //NOTE: `builtin_*' and `boost_*' aliases is for specializations only (just for clarity).
 
-  using BoostReal = mprec::cpp_bin_float_quad;
-  using Real = BoostReal;
+  using builtin_real_t = double;
+  using real_t = builtin_real_t;
 
-  using BoostInteger = mprec::cpp_int;
-  using Integer = BoostInteger;
+  using builtin_integer_t = long long;
+  using integer_t = builtin_integer_t;
 
-  using BoostRational = mprec::cpp_rational;
-  using Rational = BoostRational;
-#else
-  //NOTE: `Builtin*' and `Boost*' aliases is for specializations only.
-
-  using BuiltinReal = double;
-  using Real = BuiltinReal;
-
-  using BuiltinInteger = long long;
-  using Integer = BuiltinInteger;
-
-  using BoostRational = boost::rational<Integer>;
-  using Rational = BoostRational;
+  using boost_rational_t = boost::rational<integer_t>;
+  using rational_t = boost_rational_t;
 #endif // LP_WITH_MULTIPRECISION
 }
 

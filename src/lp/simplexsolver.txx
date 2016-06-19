@@ -42,8 +42,8 @@ namespace LinearProgramming
   using MathUtils::isGreaterThanZero;
   using MathUtils::isLessThan;
   using MathUtils::isLessThanZero;
-  using NumericTypes::Rational;
-  using NumericTypes::Real;
+  using NumericTypes::rational_t;
+  using NumericTypes::real_t;
   using std::list;
   using std::make_pair;
   using std::pair;
@@ -475,7 +475,6 @@ namespace LinearProgramming
     DenseIndex minCoeffColIdx(0);
     bool haveNegativeCoeffs(false);
 
-
 #ifdef LP_WITH_BLAND_RULE
     //Find min{s} for all `s' where (∃s: P[s] < 0)
     DenseIndex minVarIdx(
@@ -500,7 +499,7 @@ namespace LinearProgramming
         }
       }
     }
-#else
+#else // LP_WITH_BLAND_RULE
     //Find argmin{P[s]} for all `s' where (P[s] < 0)
     T minCoeff(0);
 
@@ -521,7 +520,6 @@ namespace LinearProgramming
       }
     }
 #endif // LP_WITH_BLAND_RULE
-
 
     if (haveNegativeCoeffs)
     {
@@ -550,13 +548,11 @@ namespace LinearProgramming
   {
     MaybeIndex1D ret;
 
-
 #ifdef LP_WITH_BLAND_RULE
     list<DenseIndex> minRatioRowsIndices;
-#else
+#else // LP_WITH_BLAND_RULE
     DenseIndex minRatioRowIdx(0);
 #endif // LP_WITH_BLAND_RULE
-
 
     T minRatio(NumericLimits::max<T>());
     bool havePositiveCoeffs(false);
@@ -576,7 +572,6 @@ namespace LinearProgramming
           tableau(rowIdx, pivotColIdx)
         );
 
-
 #ifdef LP_WITH_BLAND_RULE
         if (isEqual<T>(currRatio, minRatio))
         {
@@ -591,7 +586,7 @@ namespace LinearProgramming
             minRatio = currRatio;
           }
         }
-#else
+#else // LP_WITH_BLAND_RULE
         //Update w/ new found minimum
         if (isLessThan<T>(currRatio, minRatio))
         {
@@ -599,11 +594,8 @@ namespace LinearProgramming
           minRatioRowIdx = rowIdx;
         }
 #endif // LP_WITH_BLAND_RULE
-
-
       }
     }
-
 
 #ifdef LP_WITH_BLAND_RULE
     if (havePositiveCoeffs)
@@ -634,13 +626,12 @@ namespace LinearProgramming
         }
       }
     }
-#else
+#else // LP_WITH_BLAND_RULE
     if (havePositiveCoeffs)
     {
       ret = minRatioRowIdx;
     }
 #endif // LP_WITH_BLAND_RULE
-
 
     return ret;
   }
@@ -759,6 +750,8 @@ namespace LinearProgramming
         }
       }
     }
+
+    return SolutionType::Unknown;
   }
 
 

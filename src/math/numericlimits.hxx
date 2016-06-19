@@ -8,15 +8,15 @@
 #include "../misc/utils.hxx"
 
 
-//TODO: ~? Convert to struct w/ static members
-//TODO: ~? Remove this and use `std::numeric_limits' directly
-//TODO: ~? Check stdlib support for `boost::rational'
+//TODO: ~? Convert to struct w/ static members.
+//TODO: ~? Remove this and use `std::numeric_limits' directly.
+//TODO: ~? Check for stdlib support for `boost::rational'
 namespace NumericLimits
 {
-  using NumericTypes::Real;
+  using NumericTypes::real_t;
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   T
   max()
   {
@@ -30,7 +30,7 @@ namespace NumericLimits
   }
 
 
-  template<typename T = Real>
+  template<typename T = real_t>
   T
   min()
   {

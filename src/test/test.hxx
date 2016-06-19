@@ -15,28 +15,30 @@ namespace Test
 {
   using Eigen::Matrix;
   using Eigen::Dynamic;
-  using NumericTypes::Rational;
-  using NumericTypes::Real;
+  using NumericTypes::rational_t;
+  using NumericTypes::real_t;
   using std::logic_error;
 
 
   void testReal(
-    const Matrix<Real, 1, Dynamic>& c,
-    const Matrix<Real, Dynamic, Dynamic>& A,
-    const Matrix<Real, Dynamic, 1>& b,
-    Real F_ = 0
+    const Matrix<real_t, 1, Dynamic>& c,
+    const Matrix<real_t, Dynamic, Dynamic>& A,
+    const Matrix<real_t, Dynamic, 1>& b,
+    real_t F_ = 0
   ) throw(logic_error);
 
   void testRational(
-    const Matrix<Rational, 1, Dynamic>& c,
-    const Matrix<Rational, Dynamic, Dynamic>& A,
-    const Matrix<Rational, Dynamic, 1>& b,
-    Rational F_ = 0
+    const Matrix<rational_t, 1, Dynamic>& c,
+    const Matrix<rational_t, Dynamic, Dynamic>& A,
+    const Matrix<rational_t, Dynamic, 1>& b,
+    rational_t F_ = 0
   ) throw(logic_error);
 
   void testSolvers();
 
   void testUtilities();
+
+  void testRREF();
 }
 
 

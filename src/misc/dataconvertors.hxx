@@ -16,7 +16,7 @@ namespace DataConvertors
 
 
   template<typename R>
-  //TODO: ~? Use the second template only
+  //TODO: ~? Use the second template only.
   R numericCast(const QString& from)
   {
     static_assert(

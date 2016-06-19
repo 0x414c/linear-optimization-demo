@@ -124,16 +124,16 @@ namespace Config
   namespace MathUtils
   {
 #ifdef LP_WITH_MULTIPRECISION
-    const NumericTypes::BoostReal Epsilon = 1E-8; //TODO: Decrease
+    const NumericTypes::boost_real_t Epsilon = 1E-8; //TODO: Decrease value
 
-    const NumericTypes::BoostInteger MaxRationalizeDenominator = 100;
-#else
-    constexpr NumericTypes::BuiltinReal Epsilon = 1E-8;
+    const NumericTypes::boost_integer_t MaxRationalizeDenominator = 100;
+#else // LP_WITH_MULTIPRECISION
+    constexpr NumericTypes::builtin_real_t Epsilon = 1E-9;
 
-    constexpr NumericTypes::BuiltinInteger MaxRationalizeDenominator = 100;
+    constexpr NumericTypes::builtin_integer_t MaxRationalizeDenominator = 100;
 #endif // LP_WITH_MULTIPRECISION
 
-    constexpr uint16_t MaxRationalizeIterations = 25;
+    constexpr uint16_t MaxRationalizeIterations = 23;
   }
 
 

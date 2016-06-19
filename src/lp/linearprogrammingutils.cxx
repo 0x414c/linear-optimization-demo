@@ -12,7 +12,7 @@
 namespace LinearProgrammingUtils
 {
   using Eigen::Matrix;
-  using NumericTypes::Real;
+  using NumericTypes::real_t;
   using std::atan2;
   using std::list;
 
@@ -24,11 +24,11 @@ namespace LinearProgrammingUtils
    * @param points Points container to sort.
    */
   void
-  sortPointsByPolarAngle(list<Matrix<Real, 2, 1>>& points)
+  sortPointsByPolarAngle(list<Matrix<real_t, 2, 1>>& points)
   {
     //Centroid of a convex region will always
     //lie inside of that region
-    Matrix<Real, 2, 1> centroid(Matrix<Real, 2, 1>::Zero());
+    Matrix<real_t, 2, 1> centroid(Matrix<real_t, 2, 1>::Zero());
 
     for (auto it(points.cbegin()); it != points.cend(); ++it)
     {
@@ -44,7 +44,7 @@ namespace LinearProgrammingUtils
     //use the polar angles (relative to centroid) to sort
     //all the vertices clockwise.
     points.sort(
-      [&centroid](const Matrix<Real, 2, 1>& lhs, const Matrix<Real, 2, 1>& rhs)
+      [&centroid](const Matrix<real_t, 2, 1>& lhs, const Matrix<real_t, 2, 1>& rhs)
       {
         return (
           atan2(lhs.y() - centroid.y(), lhs.x() - centroid.x()) <
@@ -61,13 +61,13 @@ namespace LinearProgrammingUtils
    * @param point
    * @return
    */
-  Matrix<Real, 2, 1>
-  perp(const Matrix<Real, 2, 1>& vec)
+  Matrix<real_t, 2, 1>
+  perp(const Matrix<real_t, 2, 1>& vec)
   {
-    Matrix<Real, 2, 1> perp(2, 1);
+    Matrix<real_t, 2, 1> perp(2, 1);
 
     perp <<
-      vec.y() * Real(-1),
+      vec.y() * real_t(-1),
       vec.x();
 
     return perp;
@@ -80,8 +80,8 @@ namespace LinearProgrammingUtils
    * @param vec
    * @return
    */
-  Matrix<Real, 2, 1>
-  norm(const Matrix<Real, 2, 1>& vec)
+  Matrix<real_t, 2, 1>
+  norm(const Matrix<real_t, 2, 1>& vec)
   {
     return vec.normalized();
   }
@@ -98,8 +98,8 @@ namespace LinearProgrammingUtils
    * @param x0
    * @return y0
    */
-  Real
-  lerp(Real x1, Real y1, Real x2, Real y2, Real x0)
+  real_t
+  lerp(real_t x1, real_t y1, real_t x2, real_t y2, real_t x0)
   {
     return (y1 + (y2 - y1) * ((x0 - x1) / (x2 - x1)));
   }
@@ -125,16 +125,16 @@ namespace LinearProgrammingUtils
    * @param y0
    * @return z00
    */
-  Real
+  real_t
   blerp(
-    Real x1, Real y1, Real z11, Real z12,
-    Real x2, Real y2, Real z22, Real z21,
-    Real x0, Real y0
+    real_t x1, real_t y1, real_t z11, real_t z12,
+    real_t x2, real_t y2, real_t z22, real_t z21,
+    real_t x0, real_t y0
   )
   {
-    const Real z01(lerp(x1, z11, x2, z21, x0));
-    const Real z02(lerp(x1, z12, x2, z22, x0));
-    const Real z00(lerp(y1, z01, y2, z02, y0));
+    const real_t z01(lerp(x1, z11, x2, z21, x0));
+    const real_t z02(lerp(x1, z12, x2, z22, x0));
+    const real_t z00(lerp(y1, z01, y2, z02, y0));
 
     return z00;
   }

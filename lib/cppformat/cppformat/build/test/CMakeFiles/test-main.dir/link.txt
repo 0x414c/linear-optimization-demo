@@ -1,2 +1,0 @@
-C:/msys64/mingw64/bin/ar.exe cq libtest-main.a  CMakeFiles/test-main.dir/test-main.cc.obj CMakeFiles/test-main.dir/gtest-extra.cc.obj CMakeFiles/test-main.dir/util.cc.obj
-C:/msys64/mingw64/bin/ranlib.exe libtest-main.a

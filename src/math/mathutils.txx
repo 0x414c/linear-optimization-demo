@@ -103,6 +103,7 @@ namespace MathUtils
    * The absolute error value will be: |p./q - x|.
    * NOTE: This function doesn't throw any exceptions if the sequence
    *         failed to converge due to too tight given restrictions.
+   * TODO: Check for isFinite<T>(x).
    * @param x Real number to approximate.
    * @param tolerance Relative tolerance value
    *          (default is `Config::MathUtils::Epsilon').
@@ -160,7 +161,7 @@ namespace MathUtils
 #endif // LP_WITH_MULTIPRECISION
 
         //If we got "almost integer" `x' or one of the trivial cases,
-        //we should return 〈a0; 1〉
+        //we should return pair 〈a0; 1〉
         //(or the loop will stuck at division by 0. later)
         if (
           isEqual<T>(T(a1), x, tolerance) ||
@@ -176,10 +177,12 @@ namespace MathUtils
 
           R p0(1),  q0(0); //See eq. (25): p[-1] := 1,    q[-1] := 0
           R p1(a1), q1(1); //See eq. (26): p[ 0] := a[0], q[ 0] := 1
-          R p2(0),  q2(1);
-          //We use p[-1], q[-1] and p[0], q[0] as starting coeffs;
-          //p[1], q[1] will be the scratch place:
-          //we will "shift" and reuse the coeffs rather than storing they all.
+          R p2(0),  q2(1); //              p[ 1] := 0,    q[ 1] := 1
+          //NOTE: Indices in variables' names is shifted by 1.
+          //We use only p[-1], q[-1] and p[0], q[0] as starting coeffs.
+          //Rather than keeping entire sequence of p's and q's
+          //we will keep and reuse coeffs computed on current iteration
+          //(p[1] and q[1]) to compute new coeffs on next iteration.
 
           while (true)
           {
@@ -200,11 +203,14 @@ namespace MathUtils
 
             if (
               !isEqual<T>(c2, x, tolerance) &&
-              absoluteValue<R>(q2) < maxDenominator &&
+              absoluteValue<R>(q2) <= maxDenominator &&
               iterCount < maxIterations
             )
             {
-              //Now "shift" all the coeffs to the left: [0] := [1], [1] := [2]
+              //Now "shift" all the coeffs to the left:
+              //p[-1] := p[0], q[-1] := q[0],
+              //p[ 0] := p[1], q[ 0] := q[1],
+              //r[ 0] := r[1], a[ 0] := a[1]
               p0 = p1;
               q0 = q1;
 
@@ -307,7 +313,6 @@ namespace MathUtils
   inline bool
   isEqual(real_t x, real_t y, real_t tolerance)
   {
-
     if (isFinite<real_t>(x) && isFinite<real_t>(y))
     {
       return (

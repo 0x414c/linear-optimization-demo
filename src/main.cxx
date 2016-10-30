@@ -28,7 +28,7 @@ main(int argc, char** argv)
 //  Test::testUtilities();
   Test::testRREF();
 #else // LP_TEST_MODE
-  using namespace Config::AppGlobal;
+  using namespace Config::App;
 
   std::setlocale(LC_ALL, LocaleIdentifier);
   QLocale::setDefault(Locale);
@@ -38,7 +38,7 @@ main(int argc, char** argv)
     Utils::makeApplication(argc, argv)
   );
 
-  GUI::MainWindow mainWindow;
+  Gui::MainWindow mainWindow;
   mainWindow.show();
 
   return application->exec();

@@ -31,13 +31,7 @@
 #include "../misc/utils.hxx"
 
 
-namespace Ui
-{
-  class MainWindow;
-}
-
-
-namespace GUI
+namespace Gui
 {
   using LinearProgramming::SimplexSolver;
   using LinearProgramming::SimplexSolverController;
@@ -48,6 +42,12 @@ namespace GUI
   using NumericTypes::real_t;
   using Utils::ResultType;
   using std::shared_ptr;
+
+
+  namespace Ui
+  {
+    class MainWindow;
+  }
 
 
   class MainWindow :
@@ -67,6 +67,10 @@ namespace GUI
       virtual void dragMoveEvent(QDragMoveEvent* ev) override;
       virtual void dragLeaveEvent(QDragLeaveEvent* ev) override;
       virtual void dropEvent(QDropEvent* ev) override;
+
+
+    protected:
+      virtual void changeEvent (QEvent* ev) override;
 
 
     private Q_SLOTS:
@@ -178,9 +182,9 @@ namespace GUI
       void clearProgramView();
       void destroyProgramView();
 
-      void setupGraphicalSolutionView(QCustomPlot* const customPlot);
+      void setupGraphicalSolutionView(QCustomPlot* customPlot);
       void enableGraphicalSolutionView(bool enabled = true);
-      void clearGraphicalSolutionView(QCustomPlot* const customPlot);
+      void clearGraphicalSolutionView(QCustomPlot* customPlot);
 
       template<typename T = real_t>
       void refreshGraphicalSolutionView(const PlotData2D<T>& plotData2D);

@@ -2,8 +2,9 @@
 
 #include "ui_mainwindow.h"
 
-#include <cstdlib>
 #include <cmath>
+#include <cstddef>
+
 #include <functional>
 #include <iostream>
 #include <limits>
@@ -60,11 +61,11 @@
 #include "../globaldefinitions.hxx"
 
 
-namespace GUI
+namespace Gui
 {
   using boost::optional;
-  using namespace Config::AppGlobal;
-  using namespace Config::GUI;
+  using namespace Config::App;
+  using namespace Config::Gui;
   using DataConvertors::numericCast;
   using Eigen::DenseIndex;
   using Eigen::Dynamic;
@@ -86,7 +87,7 @@ namespace GUI
 
 #pragma region ctors/dtors
 
-GUI::MainWindow::MainWindow(QWidget* parent) :
+Gui::MainWindow::MainWindow(QWidget* parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow)
 {
@@ -113,7 +114,7 @@ GUI::MainWindow::MainWindow(QWidget* parent) :
 }
 
 
-GUI::MainWindow::~MainWindow()
+Gui::MainWindow::~MainWindow()
 {
   saveSettings();
 
@@ -129,7 +130,7 @@ GUI::MainWindow::~MainWindow()
 #pragma region event handlers
 
 void
-GUI::MainWindow::closeEvent(QCloseEvent* ev)
+Gui::MainWindow::closeEvent(QCloseEvent* ev)
 {
   //TODO: ~ Check if the content was _really_ modified.
   if (isWindowModified()) {
@@ -183,7 +184,7 @@ GUI::MainWindow::closeEvent(QCloseEvent* ev)
 
 
 void
-GUI::MainWindow::dragEnterEvent(QDragEnterEvent* ev)
+Gui::MainWindow::dragEnterEvent(QDragEnterEvent* ev)
 {
   if (ev->mimeData()->hasUrls())
   {
@@ -197,7 +198,7 @@ GUI::MainWindow::dragEnterEvent(QDragEnterEvent* ev)
 
 
 void
-GUI::MainWindow::dragMoveEvent(QDragMoveEvent* ev)
+Gui::MainWindow::dragMoveEvent(QDragMoveEvent* ev)
 {
   if (ev->mimeData()->hasUrls())
   {
@@ -211,14 +212,14 @@ GUI::MainWindow::dragMoveEvent(QDragMoveEvent* ev)
 
 
 void
-GUI::MainWindow::dragLeaveEvent(QDragLeaveEvent* ev)
+Gui::MainWindow::dragLeaveEvent(QDragLeaveEvent* ev)
 {
   ev->accept();
 }
 
 
 void
-GUI::MainWindow::dropEvent(QDropEvent* ev)
+Gui::MainWindow::dropEvent(QDropEvent* ev)
 {
   const QMimeData* const mimeData = ev->mimeData();
 
@@ -257,13 +258,29 @@ GUI::MainWindow::dropEvent(QDropEvent* ev)
   }
 }
 
+
+void
+Gui::MainWindow::changeEvent(QEvent* ev)
+{
+  QMainWindow::changeEvent(ev);
+  switch (ev->type())
+  {
+    case QEvent::LanguageChange:
+      ui->retranslateUi(this);
+      break;
+
+    default:
+      break;
+  }
+}
+
 #pragma endregion // event handlers
 
 
 #pragma region private methods
 
 void
-GUI::MainWindow::setupDefaults()
+Gui::MainWindow::setupDefaults()
 {
   ui->program_constrsSpinBox->setMinimum(MinConstraints);
   ui->program_constrsSpinBox->setMaximum(MaxConstraints);
@@ -292,7 +309,7 @@ GUI::MainWindow::setupDefaults()
 
 
 void
-GUI::MainWindow::setupSignals()
+Gui::MainWindow::setupSignals()
 {
   for (int i(0); i < ProgramModelsCount; ++i)
   {
@@ -348,7 +365,7 @@ GUI::MainWindow::setupSignals()
 
 
 void
-GUI::MainWindow::setupProgramView()
+Gui::MainWindow::setupProgramView()
 {
   rationalNumericDelegates_ =
     QVector<NumericStyledItemDelegate<rational_t>*>(ProgramModelsCount);
@@ -393,7 +410,7 @@ GUI::MainWindow::setupProgramView()
 
 
 void
-GUI::MainWindow::clearProgramView()
+Gui::MainWindow::clearProgramView()
 {
   for (int i(0); i < ProgramModelsCount; ++i)
   {
@@ -403,7 +420,7 @@ GUI::MainWindow::clearProgramView()
 
 
 void
-GUI::MainWindow::destroyProgramView()
+Gui::MainWindow::destroyProgramView()
 {
   for (int i(0); i < ProgramModelsCount; ++i)
   {
@@ -415,7 +432,7 @@ GUI::MainWindow::destroyProgramView()
 
 
 void
-GUI::MainWindow::setupGraphicalSolutionView(QCustomPlot* const customPlot)
+Gui::MainWindow::setupGraphicalSolutionView(QCustomPlot* customPlot)
 {
   clearGraphicalSolutionView(customPlot);
 
@@ -497,7 +514,7 @@ GUI::MainWindow::setupGraphicalSolutionView(QCustomPlot* const customPlot)
 
 
 void
-GUI::MainWindow::enableGraphicalSolutionView(bool enabled)
+Gui::MainWindow::enableGraphicalSolutionView(bool enabled)
 {
   if (enabled)
   {
@@ -513,7 +530,7 @@ GUI::MainWindow::enableGraphicalSolutionView(bool enabled)
 
 
 void
-GUI::MainWindow::clearGraphicalSolutionView(QCustomPlot* const customPlot)
+Gui::MainWindow::clearGraphicalSolutionView(QCustomPlot* customPlot)
 {
   customPlot->clearFocus();
   customPlot->clearGraphs();
@@ -532,7 +549,7 @@ GUI::MainWindow::clearGraphicalSolutionView(QCustomPlot* const customPlot)
 
 template<typename T>
 void
-GUI::MainWindow::refreshGraphicalSolutionView(const PlotData2D<T>& plotData) {
+Gui::MainWindow::refreshGraphicalSolutionView(const PlotData2D<T>& plotData) {
   QCustomPlot* const customPlot = ui->graphical_solutionPlotQCustomPlot;
 
   setupGraphicalSolutionView(customPlot);
@@ -861,7 +878,7 @@ GUI::MainWindow::refreshGraphicalSolutionView(const PlotData2D<T>& plotData) {
 
 
 void
-GUI::MainWindow::setupSimplexView()
+Gui::MainWindow::setupSimplexView()
 {
   simplexTableModels_ = QVector<StringTableModel*>(SimplexModelsCount);
   for (int i(0); i < SimplexModelsCount; ++i)
@@ -895,7 +912,7 @@ GUI::MainWindow::setupSimplexView()
 
 
 void
-GUI::MainWindow::enableStepByStepSimplexView(bool enabled)
+Gui::MainWindow::enableStepByStepSimplexView(bool enabled)
 {
   ui->simplex_startPushButton->setEnabled(enabled);
   ui->simplex_stepBackPushButton->setEnabled(enabled);
@@ -908,7 +925,7 @@ GUI::MainWindow::enableStepByStepSimplexView(bool enabled)
 
 
 void
-GUI::MainWindow::enableCurrentSolutionSimplexView(bool enabled)
+Gui::MainWindow::enableCurrentSolutionSimplexView(bool enabled)
 {
   ui->simplex_solutionVectorTableView->setEnabled(enabled);
   ui->simplex_objectiveValueTableView->setEnabled(enabled);
@@ -916,14 +933,14 @@ GUI::MainWindow::enableCurrentSolutionSimplexView(bool enabled)
 
 
 void
-GUI::MainWindow::updateSimplexSelectionRules()
+Gui::MainWindow::updateSimplexSelectionRules()
 {
   //TODO: ~
 }
 
 
 void
-GUI::MainWindow::clearSimplexView()
+Gui::MainWindow::clearSimplexView()
 {
   for (int i(0); i < SimplexModelsCount; ++i)
   {
@@ -933,7 +950,7 @@ GUI::MainWindow::clearSimplexView()
 
 
 void
-GUI::MainWindow::refreshSimplexView()
+Gui::MainWindow::refreshSimplexView()
 {
   switch (field_)
   {
@@ -1122,7 +1139,7 @@ GUI::MainWindow::refreshSimplexView()
 
 
 void
-GUI::MainWindow::destroySimplexView()
+Gui::MainWindow::destroySimplexView()
 {
   for (int i(0); i < SimplexModelsCount; ++i)
   {
@@ -1132,7 +1149,7 @@ GUI::MainWindow::destroySimplexView()
 
 
 void
-GUI::MainWindow::assignTableModelsHeaders()
+Gui::MainWindow::assignTableModelsHeaders()
 {
   programTableModels_[int(ProgramModel::ObjFunc)]->setHeaderData(
     0, Qt::Vertical, QStringLiteral("c")
@@ -1151,7 +1168,7 @@ GUI::MainWindow::assignTableModelsHeaders()
 
 
 void
-GUI::MainWindow::convertTableModelsContents()
+Gui::MainWindow::convertTableModelsContents()
 {
   switch (field_)
   {
@@ -1176,7 +1193,7 @@ GUI::MainWindow::convertTableModelsContents()
 
 
 void
-GUI::MainWindow::toggleTableViewsDelegates()
+Gui::MainWindow::toggleTableViewsDelegates()
 {
   switch (field_)
   {
@@ -1217,7 +1234,7 @@ GUI::MainWindow::toggleTableViewsDelegates()
 
 
 void
-GUI::MainWindow::toggleField()
+Gui::MainWindow::toggleField()
 {
   convertTableModelsContents();
   toggleTableViewsDelegates();
@@ -1229,7 +1246,7 @@ GUI::MainWindow::toggleField()
 
 
 void
-GUI::MainWindow::setField(Field field)
+Gui::MainWindow::setField(Field field)
 {
   if (field_ != field)
   {
@@ -1241,7 +1258,7 @@ GUI::MainWindow::setField(Field field)
 
 
 void
-GUI::MainWindow::setDirty(bool dirty)
+Gui::MainWindow::setDirty(bool dirty)
 {
   if (isDirty_ != dirty)
   {
@@ -1253,7 +1270,7 @@ GUI::MainWindow::setDirty(bool dirty)
 
 
 void
-GUI::MainWindow::setupNumericSolvers()
+Gui::MainWindow::setupNumericSolvers()
 {
   realSimplexSolver_ = make_shared<SimplexSolver<real_t>>();
   rationalSimplexSolver_ = make_shared<SimplexSolver<rational_t>>();
@@ -1261,7 +1278,7 @@ GUI::MainWindow::setupNumericSolvers()
 
 
 void
-GUI::MainWindow::setupNumericSolversControllers()
+Gui::MainWindow::setupNumericSolversControllers()
 {
   realSimplexSolverController_ = SimplexSolverController<real_t>(realSimplexSolver_);
   rationalSimplexSolverController_ =
@@ -1269,7 +1286,7 @@ GUI::MainWindow::setupNumericSolversControllers()
 }
 
 
-void GUI::MainWindow::updateNumericSolversData()
+void Gui::MainWindow::updateNumericSolversData()
 {
   switch (field_)
   {
@@ -1342,7 +1359,7 @@ void GUI::MainWindow::updateNumericSolversData()
 
 
 void
-GUI::MainWindow::solveSimplex()
+Gui::MainWindow::solveSimplex()
 {
   updateNumericSolversData();
 
@@ -1451,7 +1468,7 @@ GUI::MainWindow::solveSimplex()
 
 
 void
-GUI::MainWindow::solveGraphical()
+Gui::MainWindow::solveGraphical()
 {
   ui->detailsTabWidget->setCurrentIndex(int(DetailsView::Graphical));
   ui->graphicalMethodTab->setEnabled(true);
@@ -1580,7 +1597,7 @@ GUI::MainWindow::solveGraphical()
 
 
 void
-GUI::MainWindow::solutionErrorHandler(
+Gui::MainWindow::solutionErrorHandler(
   const QString& description, LinearProgramming::SolutionType type
 )
 {
@@ -1631,7 +1648,7 @@ GUI::MainWindow::solutionErrorHandler(
 
 
 void
-GUI::MainWindow::pivotingErrorHandler(
+Gui::MainWindow::pivotingErrorHandler(
   const QString& description, LinearProgramming::SolutionType type
 )
 {
@@ -1672,7 +1689,7 @@ GUI::MainWindow::pivotingErrorHandler(
 
 
 void
-GUI::MainWindow::openFile(const QString& filename)
+Gui::MainWindow::openFile(const QString& filename)
 {
   const ResultType result(loadDataFromFile(filename));
   switch (result)
@@ -1705,7 +1722,7 @@ GUI::MainWindow::openFile(const QString& filename)
 
 
 void
-GUI::MainWindow::saveFile(const QString& filename)
+Gui::MainWindow::saveFile(const QString& filename)
 {
   const ResultType result(saveDataToFile(filename));
   switch (result)
@@ -1736,7 +1753,7 @@ GUI::MainWindow::saveFile(const QString& filename)
 
 
 Utils::ResultType
-GUI::MainWindow::loadDataFromFile(const QString& filename)
+Gui::MainWindow::loadDataFromFile(const QString& filename)
 {
   if (!filename.isEmpty())
   {
@@ -1833,7 +1850,7 @@ GUI::MainWindow::loadDataFromFile(const QString& filename)
 
 
 Utils::ResultType
-GUI::MainWindow::saveDataToFile(const QString& filename)
+Gui::MainWindow::saveDataToFile(const QString& filename)
 {
   if (!filename.isEmpty())
   {
@@ -1892,10 +1909,10 @@ GUI::MainWindow::saveDataToFile(const QString& filename)
 
 
 void
-GUI::MainWindow::loadSettings()
+Gui::MainWindow::loadSettings()
 {
   QSettings settings(
-    QSettings::IniFormat, QSettings::UserScope, OrgName, AppName
+    QSettings::IniFormat, QSettings::UserScope, OrgName, Name
   );
 
   settings.beginGroup(QStringLiteral("mainWindow"));
@@ -1910,10 +1927,10 @@ GUI::MainWindow::loadSettings()
 
 
 void
-GUI::MainWindow::saveSettings()
+Gui::MainWindow::saveSettings()
 {
   QSettings settings(
-    QSettings::IniFormat, QSettings::UserScope, OrgName, AppName
+    QSettings::IniFormat, QSettings::UserScope, OrgName, Name
   );
 
   settings.beginGroup(QStringLiteral("mainWindow"));
@@ -1928,7 +1945,7 @@ GUI::MainWindow::saveSettings()
 #pragma region public slots
 
 void
-GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_selectionChangedByUser()
+Gui::MainWindow::on_graphical_solutionPlotQCustomPlot_selectionChangedByUser()
 {
   if (
     ui->graphical_solutionPlotQCustomPlot->xAxis->selectedParts().
@@ -1988,7 +2005,7 @@ GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_selectionChangedByUser()
 
 
 void
-GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_mousePress(QMouseEvent* ev)
+Gui::MainWindow::on_graphical_solutionPlotQCustomPlot_mousePress(QMouseEvent* ev)
 {
   if (
     ui->graphical_solutionPlotQCustomPlot->xAxis->selectedParts().
@@ -2021,7 +2038,7 @@ GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_mousePress(QMouseEvent* ev
 
 
 void
-GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_mouseWheel(QWheelEvent* ev)
+Gui::MainWindow::on_graphical_solutionPlotQCustomPlot_mouseWheel(QWheelEvent* ev)
 {
   if (
     ui->graphical_solutionPlotQCustomPlot->xAxis->selectedParts().
@@ -2054,7 +2071,7 @@ GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_mouseWheel(QWheelEvent* ev
 
 
 void
-GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_mouseMove(QMouseEvent* ev)
+Gui::MainWindow::on_graphical_solutionPlotQCustomPlot_mouseMove(QMouseEvent* ev)
 {
   const double x(
     ui->graphical_solutionPlotQCustomPlot->xAxis->pixelToCoord(
@@ -2074,7 +2091,7 @@ GUI::MainWindow::on_graphical_solutionPlotQCustomPlot_mouseMove(QMouseEvent* ev)
 
 
 void
-GUI::MainWindow::on_anyProgramModel_dataChanged(
+Gui::MainWindow::on_anyProgramModel_dataChanged(
   const QModelIndex& topLeft,
   const QModelIndex& bottomRight, const QVector<int>& roles)
 {
@@ -2090,7 +2107,7 @@ GUI::MainWindow::on_anyProgramModel_dataChanged(
 
 
 void
-GUI::MainWindow::on_anyProgramModel_dimensionsChanged(
+Gui::MainWindow::on_anyProgramModel_dimensionsChanged(
   const QModelIndex& parent, int start, int end
 )
 {
@@ -2102,7 +2119,7 @@ GUI::MainWindow::on_anyProgramModel_dimensionsChanged(
 
 
 void
-GUI::MainWindow::on_anyProgramModel_modelReset()
+Gui::MainWindow::on_anyProgramModel_modelReset()
 {
   if (isLoaded_)
   {
@@ -2116,7 +2133,7 @@ GUI::MainWindow::on_anyProgramModel_modelReset()
 
 
 void
-GUI::MainWindow::on_program_constrsSpinBox_valueChanged(int arg1)
+Gui::MainWindow::on_program_constrsSpinBox_valueChanged(int arg1)
 {
   if (arg1 >= MinConstraints && arg1 <= MaxConstraints)
   {
@@ -2146,7 +2163,7 @@ GUI::MainWindow::on_program_constrsSpinBox_valueChanged(int arg1)
 
 
 void
-GUI::MainWindow::on_program_varsSpinBox_valueChanged(int arg1)
+Gui::MainWindow::on_program_varsSpinBox_valueChanged(int arg1)
 {
   if (arg1 >= MinVariables && arg1 <= MaxVariables)
   {
@@ -2176,7 +2193,7 @@ GUI::MainWindow::on_program_varsSpinBox_valueChanged(int arg1)
 
 
 void
-GUI::MainWindow::on_program_realRadioButton_toggled(bool checked)
+Gui::MainWindow::on_program_realRadioButton_toggled(bool checked)
 {
   if (checked)
   {
@@ -2186,7 +2203,7 @@ GUI::MainWindow::on_program_realRadioButton_toggled(bool checked)
 
 
 void
-GUI::MainWindow::on_program_rationalRadioButton_toggled(bool checked)
+Gui::MainWindow::on_program_rationalRadioButton_toggled(bool checked)
 {
   if (checked)
   {
@@ -2196,21 +2213,21 @@ GUI::MainWindow::on_program_rationalRadioButton_toggled(bool checked)
 
 
 void
-GUI::MainWindow::on_control_solveSimplexPushButton_clicked()
+Gui::MainWindow::on_control_solveSimplexPushButton_clicked()
 {
   solveSimplex();
 }
 
 
 void
-GUI::MainWindow::on_control_solveGraphicalPushButton_clicked()
+Gui::MainWindow::on_control_solveGraphicalPushButton_clicked()
 {
   solveGraphical();
 }
 
 
 void
-GUI::MainWindow::on_control_clearPushButton_clicked()
+Gui::MainWindow::on_control_clearPushButton_clicked()
 {
   clearProgramView();
 }
@@ -2218,7 +2235,7 @@ GUI::MainWindow::on_control_clearPushButton_clicked()
 
 [[deprecated("To be removed in release version!")]]
 void
-GUI::MainWindow::on_control_testPushButton_clicked()
+Gui::MainWindow::on_control_testPushButton_clicked()
 {
   {
     loadDataFromFile(QStringLiteral("data7.json"));
@@ -2229,7 +2246,7 @@ GUI::MainWindow::on_control_testPushButton_clicked()
 
 
 void
-GUI::MainWindow::on_simplex_startPushButton_clicked()
+Gui::MainWindow::on_simplex_startPushButton_clicked()
 {
   //NOTE: `Start' button is only accessible by clicking `Solve' button so
   //we don't need to force updating of program data
@@ -2259,7 +2276,7 @@ GUI::MainWindow::on_simplex_startPushButton_clicked()
 
 
 void
-GUI::MainWindow::on_simplex_stepBackPushButton_clicked()
+Gui::MainWindow::on_simplex_stepBackPushButton_clicked()
 {
   switch (field_)
   {
@@ -2286,7 +2303,7 @@ GUI::MainWindow::on_simplex_stepBackPushButton_clicked()
 
 
 void
-GUI::MainWindow::on_simplex_stepForwardPushButton_clicked()
+Gui::MainWindow::on_simplex_stepForwardPushButton_clicked()
 {
   optional<pair<DenseIndex, DenseIndex>> pivotIdx;
 
@@ -2327,7 +2344,7 @@ GUI::MainWindow::on_simplex_stepForwardPushButton_clicked()
 
 
 void
-GUI::MainWindow::on_simplex_manualPivotCheckBox_toggled(bool checked)
+Gui::MainWindow::on_simplex_manualPivotCheckBox_toggled(bool checked)
 {
   if (!checked)
   {
@@ -2338,7 +2355,7 @@ GUI::MainWindow::on_simplex_manualPivotCheckBox_toggled(bool checked)
 
 
 void
-GUI::MainWindow::on_simplex_pivotHintPushButton_clicked()
+Gui::MainWindow::on_simplex_pivotHintPushButton_clicked()
 {
   switch (field_)
   {
@@ -2417,7 +2434,7 @@ GUI::MainWindow::on_simplex_pivotHintPushButton_clicked()
 
 
 void
-GUI::MainWindow::on_action_Open_triggered()
+Gui::MainWindow::on_action_Open_triggered()
 {
   //TODO: ~ Check for unsaved changes.
   const QString filename(
@@ -2440,7 +2457,7 @@ GUI::MainWindow::on_action_Open_triggered()
 
 
 void
-GUI::MainWindow::on_action_Save_as_triggered()
+Gui::MainWindow::on_action_Save_as_triggered()
 {
   const QString filename(
     QFileDialog::getSaveFileName(
@@ -2464,35 +2481,35 @@ GUI::MainWindow::on_action_Save_as_triggered()
 
 
 void
-GUI::MainWindow::on_action_Quit_triggered()
+Gui::MainWindow::on_action_Quit_triggered()
 {
   QApplication::quit();
 }
 
 
 void
-GUI::MainWindow::on_action_Undo_triggered()
+Gui::MainWindow::on_action_Undo_triggered()
 {
   //TODO: ~ Undo action.
 }
 
 
 void
-GUI::MainWindow::on_action_Redo_triggered()
+Gui::MainWindow::on_action_Redo_triggered()
 {
   //TODO: ~ Redo action.
 }
 
 
 void
-GUI::MainWindow::on_action_Clear_triggered()
+Gui::MainWindow::on_action_Clear_triggered()
 {
   clearProgramView();
 }
 
 
 void
-GUI::MainWindow::on_action_Fill_w_random_numbers_triggered()
+Gui::MainWindow::on_action_Fill_w_random_numbers_triggered()
 {
   for (int i(0); i < ProgramModelsCount; ++i)
   {
@@ -2505,21 +2522,21 @@ GUI::MainWindow::on_action_Fill_w_random_numbers_triggered()
 
 
 void
-GUI::MainWindow::on_action_Zoom_in_triggered()
+Gui::MainWindow::on_action_Zoom_in_triggered()
 {
   //TODO: ~ Connect to QCP.
 }
 
 
 void
-GUI::MainWindow::on_action_Zoom_out_triggered()
+Gui::MainWindow::on_action_Zoom_out_triggered()
 {
   //TODO: ~ Connect to QCP.
 }
 
 
 void
-GUI::MainWindow::on_action_Zoom_reset_triggered()
+Gui::MainWindow::on_action_Zoom_reset_triggered()
 {
 //  ui->graphical_solutionPlotQCustomPlot->xAxis->setRange(
 //    1.,
@@ -2539,28 +2556,28 @@ GUI::MainWindow::on_action_Zoom_reset_triggered()
 
 
 void
-GUI::MainWindow::on_action_Solve_triggered()
+Gui::MainWindow::on_action_Solve_triggered()
 {
   solveSimplex();
 }
 
 
 void
-GUI::MainWindow::on_action_Plot_triggered()
+Gui::MainWindow::on_action_Plot_triggered()
 {
   solveGraphical();
 }
 
 
 void
-GUI::MainWindow::on_action_How_to_triggered()
+Gui::MainWindow::on_action_How_to_triggered()
 {
   //TODO: ~ Add how-to guide.
 }
 
 
 /**
- * @brief GUI::MainWindow::on_action_About_triggered
+ * @brief Gui::MainWindow::on_action_About_triggered
  * NOTE: See
  *   http://www.gnome.org
  *   http://wiki.gnome.org/Design
@@ -2569,7 +2586,7 @@ GUI::MainWindow::on_action_How_to_triggered()
  *   http://github.com/GNOME/adwaita-icon-theme'
  */
 void
-GUI::MainWindow::on_action_About_triggered()
+Gui::MainWindow::on_action_About_triggered()
 {
   QMessageBox::about(
     this,
@@ -2577,7 +2594,11 @@ GUI::MainWindow::on_action_About_triggered()
     QStringLiteral(
       "<h3><b>Linear Programming ver. "
       LP_APP_VERSION
-      "</b></h3>"
+      " (build date: "
+      __DATE__
+      " "
+      __TIME__
+      ")</b></h3>"
       "Application demonstrating some methods of solving some types of "
       "linear optimization problems."
       "<hr>"
@@ -2633,7 +2654,7 @@ GUI::MainWindow::on_action_About_triggered()
 
 
 void
-GUI::MainWindow::on_action_About_Qt_triggered()
+Gui::MainWindow::on_action_About_Qt_triggered()
 {
   QApplication::aboutQt();
 }

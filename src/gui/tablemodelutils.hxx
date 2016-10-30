@@ -26,7 +26,7 @@ namespace TableModelUtils
   using Eigen::DenseIndex;
   using Eigen::Dynamic;
   using Eigen::Matrix;
-  using GUI::StringTableModel;
+  using Gui::StringTableModel;
   using LinearProgramming::SimplexTableau;
   using NumericTypes::rational_t;
   using NumericTypes::real_t;
@@ -44,14 +44,14 @@ namespace TableModelUtils
 
 
   //TODO: ~? Make these functions members of the `StringTableModel' class.
-  bool fill(StringTableModel* const tableModel, FillMethod fillMethod)
+  bool fill(StringTableModel* tableModel, FillMethod fillMethod)
   throw(invalid_argument);
 
-  bool fill(StringTableModel* const tableModel, const QString& value)
+  bool fill(StringTableModel* tableModel, const QString& value)
   throw(invalid_argument);
 
   bool fill(
-    StringTableModel* const tableModel,
+    StringTableModel* tableModel,
     const function<QVariant(const QVariant&)>& callback
   ) throw(invalid_argument);
 
@@ -59,7 +59,7 @@ namespace TableModelUtils
   template<typename T = real_t>
   bool
   fill(
-    StringTableModel* const tableModel,
+    StringTableModel* tableModel,
     const Matrix<T, Dynamic, Dynamic>& matrix
   ) throw(invalid_argument)
   {
@@ -96,7 +96,7 @@ namespace TableModelUtils
   template<typename T = real_t>
   bool
   fill(
-    StringTableModel* const tableModel,
+    StringTableModel* tableModel,
     const SimplexTableau<T>& tableau
   ) throw(invalid_argument)
   {
@@ -154,7 +154,7 @@ namespace TableModelUtils
 
   template<typename R, typename T>
   bool
-  convert(StringTableModel* const tableModel) throw(invalid_argument)
+  convert(StringTableModel* tableModel) throw(invalid_argument)
   {
     static_assert(
       AlwaysFalse<R, T>::value,
@@ -169,7 +169,7 @@ namespace TableModelUtils
   template<typename T = real_t>
   bool
   setFlags(
-    StringTableModel* const tableModel,
+    StringTableModel* tableModel,
     const Matrix<T, Dynamic, Dynamic>& matrix,
     const function<bool(const T&)>& callback,
     Qt::ItemFlags flags) throw(invalid_argument)
@@ -218,7 +218,7 @@ namespace TableModelUtils
 
   template<typename T = real_t>
   Matrix<T, Dynamic, 1>
-  makeColumnVector(StringTableModel* const tableModel) throw(invalid_argument)
+  makeColumnVector(StringTableModel* tableModel) throw(invalid_argument)
   {
     if (tableModel == nullptr)
     {
@@ -248,7 +248,7 @@ namespace TableModelUtils
 
   template<typename T = real_t>
   Matrix<T, 1, Dynamic>
-  makeRowVector(StringTableModel* const tableModel) throw(invalid_argument)
+  makeRowVector(StringTableModel* tableModel) throw(invalid_argument)
   {
     if (tableModel == nullptr)
     {
@@ -278,7 +278,7 @@ namespace TableModelUtils
 
   template<typename T = real_t>
   Matrix<T, Dynamic, Dynamic>
-  makeMatrix(StringTableModel* const tableModel) throw(invalid_argument)
+  makeMatrix(StringTableModel* tableModel) throw(invalid_argument)
   {
     if (tableModel == nullptr)
     {

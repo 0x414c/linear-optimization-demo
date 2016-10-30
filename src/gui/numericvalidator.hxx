@@ -9,7 +9,7 @@
 #include <QValidator>
 
 
-namespace GUI
+namespace Gui
 {
   class NumericValidator :
     public QValidator

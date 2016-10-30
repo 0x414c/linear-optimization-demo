@@ -6,7 +6,7 @@
 
 #include "simplextableau.hxx"
 
-#include <cstdlib>
+#include <cstddef>
 
 #include <algorithm>
 #include <ostream>

@@ -4,14 +4,14 @@
 #include <QString>
 
 
-GUI::NumericValidator::NumericValidator(QObject* parent) :
+Gui::NumericValidator::NumericValidator(QObject* parent) :
   QValidator(parent)
 { }
 
 
 //Just example usage of `QValidator::validate'
 QValidator::State
-GUI::NumericValidator::validate(QString& input, int& pos) const
+Gui::NumericValidator::validate(QString& input, int& pos) const
 {
   if (input.isEmpty()) {
     return Acceptable;

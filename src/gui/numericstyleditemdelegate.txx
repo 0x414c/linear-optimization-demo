@@ -21,7 +21,7 @@
 #include "../misc/utils.hxx"
 
 
-namespace GUI
+namespace Gui
 {
   using NumericTypes::integer_t;
   using NumericTypes::rational_t;
@@ -140,7 +140,7 @@ namespace GUI
 
   //template<typename T>
   //QSize
-  //GUI::NumericStyledItemDelegate<T>::sizeHint(
+  //NumericStyledItemDelegate<T>::sizeHint(
   //  const QStyleOptionViewItem& option, const QModelIndex& index
   //) const
   //{

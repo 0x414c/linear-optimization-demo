@@ -4,7 +4,7 @@
 #define SIMPLEXTABLEAU_HXX
 
 
-#include <cstdlib>
+#include <cstddef>
 
 #include <vector>
 

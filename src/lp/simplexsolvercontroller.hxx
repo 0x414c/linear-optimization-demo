@@ -4,8 +4,8 @@
 #define SIMPLEXSOLVERCONTROLLER_HXX
 
 
+#include <cstddef>
 #include <cstdint>
-#include <cstdlib>
 
 #include <list>
 #include <memory>
@@ -26,7 +26,7 @@
 namespace LinearProgramming
 {
   using namespace Config::LinearProgramming;
-  using boost::optional;  
+  using boost::optional;
   using Eigen::DenseIndex;
   using Eigen::Dynamic;
   using Eigen::Matrix;

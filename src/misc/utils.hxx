@@ -4,6 +4,8 @@
 #define UTILS_HXX
 
 
+#include <cstddef>
+
 #include <algorithm>
 #include <iostream>
 #include <iterator>
@@ -151,8 +153,12 @@ namespace Utils
   template <typename... Args>
   /**
    * @brief printDebugLog
-   * TODO: ~? Use `Q_FUNC_INFO' or
-   *   `BOOST_CURRENT_FUNCTION' (<boost/current_function.hpp>)
+   * TODO: ~? Use
+   *   `Q_FUNC_INFO' (from `QtGlobal') or
+   *   `BOOST_CURRENT_FUNCTION' (from `boost/current_function.hpp') or
+   *   `__PRETTY_FUNCTION__' or
+   *   `__FUNCTION__' or
+   *   `__func__'?
    * TODO: ~? Use `std::clog'
    * @param func
    * @param file
@@ -162,8 +168,8 @@ namespace Utils
    */
   void
   printDebugLog(
-    const char* const func, const char* const file, int line,
-    const char* const format, const Args&... args
+    const char* func, const char* file, size_t line,
+    const char* format, const Args&... args
   )
   {
     print(cerr, "\n|*** {0}  {1}  {2}\n|    ", func, file, line);

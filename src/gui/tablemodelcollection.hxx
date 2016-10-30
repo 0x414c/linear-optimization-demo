@@ -15,7 +15,7 @@
 #include "../misc/utils.hxx"
 
 
-namespace GUI
+namespace Gui
 {
   using NumericTypes::Field;
   using NumericTypes::rational_t;

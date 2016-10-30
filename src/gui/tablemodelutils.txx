@@ -20,7 +20,7 @@
 namespace TableModelUtils
 {
   using DataConvertors::numericCast;
-  using GUI::StringTableModel;
+  using Gui::StringTableModel;
   using NumericTypes::rational_t;
   using NumericTypes::real_t;
   using std::invalid_argument;
@@ -28,7 +28,7 @@ namespace TableModelUtils
 
   template<>
   inline bool
-  convert<real_t, rational_t>(StringTableModel* const tableModel)
+  convert<real_t, rational_t>(StringTableModel* tableModel)
   throw(invalid_argument)
   {
     if (tableModel == nullptr)
@@ -56,7 +56,7 @@ namespace TableModelUtils
 
   template<>
   inline bool
-  convert<rational_t, real_t>(StringTableModel* const tableModel)
+  convert<rational_t, real_t>(StringTableModel* tableModel)
   throw(invalid_argument)
   {
     if (tableModel == nullptr)

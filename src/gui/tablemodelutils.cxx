@@ -16,7 +16,7 @@
 namespace TableModelUtils
 {
   using namespace Config::TableModelUtils;
-  using GUI::StringTableModel;
+  using Gui::StringTableModel;
   using std::function;
   using std::invalid_argument;
   using std::minstd_rand;
@@ -24,7 +24,7 @@ namespace TableModelUtils
 
 
   bool
-  fill(StringTableModel* const tableModel, FillMethod fillMethod)
+  fill(StringTableModel* tableModel, FillMethod fillMethod)
   throw(invalid_argument)
   {
     if (tableModel == nullptr)
@@ -70,7 +70,7 @@ namespace TableModelUtils
 
 
   bool
-  fill(StringTableModel* const tableModel, const QString& value)
+  fill(StringTableModel* tableModel, const QString& value)
   throw(invalid_argument)
   {
     if (tableModel == nullptr)

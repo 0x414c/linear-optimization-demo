@@ -25,7 +25,7 @@
 QApplication*
 Utils::makeApplication(int& argc, char** argv)
 {
-  using namespace Config::AppGlobal;
+  using namespace Config::App;
 
 
   QStringList args;
@@ -36,12 +36,12 @@ Utils::makeApplication(int& argc, char** argv)
 
   qDebug() << "Utils::makeApplication: `args' ==" << args;
 
-  QApplication* const app = new QApplication(argc, argv);
-  QCoreApplication::setApplicationName(AppName);
+  QApplication* const app (new QApplication(argc, argv));
+  QCoreApplication::setApplicationName(Name);
+  QCoreApplication::setApplicationVersion(Version);
   QCoreApplication::setOrganizationName(OrgName);
-  QCoreApplication::setOrganizationDomain(AppDomain);
-  QCoreApplication::setApplicationVersion(AppVersion);
-  QApplication::setApplicationDisplayName(AppDisplayName);
+  QCoreApplication::setOrganizationDomain(OrgDomain);
+  QApplication::setApplicationDisplayName(DisplayName);
 
   const QCommandLineOption styleOption(
     QStringLiteral("style"),
@@ -91,7 +91,7 @@ Utils::makeApplication(int& argc, char** argv)
   QCommandLineParser parser;
 
   parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
-  parser.setApplicationDescription(AppDescription);
+  parser.setApplicationDescription(Description);
   parser.addVersionOption();
   parser.addHelpOption();
   parser.addOption(styleOption);

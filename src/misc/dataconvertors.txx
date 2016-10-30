@@ -34,7 +34,7 @@
 namespace DataConvertors
 {
   using namespace Config::MathUtils;
-  using Config::AppGlobal::Locale;
+  using Config::App::Locale;
   using fmt::format;
   using MathUtils::rationalize;
   using NumericTypes::rational_t;

@@ -13,18 +13,18 @@
 #include "../misc/utils.hxx"
 
 
-namespace GUI
+namespace Gui
 {
   using NumericTypes::Field;
   using Utils::ResultType;
 }
 
 
-GUI::TableModelCollection::TableModelCollection()
+Gui::TableModelCollection::TableModelCollection()
 { }
 
 
-GUI::TableModelCollection::TableModelCollection(
+Gui::TableModelCollection::TableModelCollection(
   const QVector<StringTableModel>& items, Field field
 ) :
   items_(items),
@@ -32,50 +32,50 @@ GUI::TableModelCollection::TableModelCollection(
 { }
 
 
-GUI::StringTableModel&
-GUI::TableModelCollection::operator [](int idx)
+Gui::StringTableModel&
+Gui::TableModelCollection::operator [](int idx)
 {
   return items_[idx];
 }
 
 
 int
-GUI::TableModelCollection::count() const
+Gui::TableModelCollection::count() const
 {
   return items_.count();
 }
 
 
-const QVector<GUI::StringTableModel>&
-GUI::TableModelCollection::items()
+const QVector<Gui::StringTableModel>&
+Gui::TableModelCollection::items()
 {
   return items_;
 }
 
 
-const GUI::StringTableModel&
-GUI::TableModelCollection::at(int idx) const
+const Gui::StringTableModel&
+Gui::TableModelCollection::at(int idx) const
 {
   return items_.at(idx);
 }
 
 
 NumericTypes::Field
-GUI::TableModelCollection::field() const
+Gui::TableModelCollection::field() const
 {
   return field_;
 }
 
 
 QString
-GUI::TableModelCollection::metadata() const
+Gui::TableModelCollection::metadata() const
 {
   return (fileMetadataHeader_ + QString("%1").arg(int(field_)));
 }
 
 
 Utils::ResultType
-GUI::TableModelCollection::read(const QJsonObject& jsonObject)
+Gui::TableModelCollection::read(const QJsonObject& jsonObject)
 {
   const QJsonValue metadataValue(jsonObject[QStringLiteral("metadata")]);
   if (metadataValue.type() != QJsonValue::Undefined)
@@ -159,7 +159,7 @@ GUI::TableModelCollection::read(const QJsonObject& jsonObject)
 
 
 Utils::ResultType
-GUI::TableModelCollection::write(QJsonObject& jsonObject) const
+Gui::TableModelCollection::write(QJsonObject& jsonObject) const
 {
   QJsonArray itemsArray;
   for (const StringTableModel& item : items_)

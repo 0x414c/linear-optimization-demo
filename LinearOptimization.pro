@@ -1,33 +1,33 @@
-#--------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #
 # Project created by QtCreator 2015-09-18T22:28:37
 #
-#--------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 QT += core gui
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
+greaterThan(QT_MAJOR_VERSION, 4) {
+  QT += widgets printsupport
+}
 
 CONFIG += c++14 warn_on no_keywords
 
 QMAKE_CXX = ccache g++
 
-CONFIG(release, debug|release) {
-  message("Building `release' target")
+CONFIG(release, release|debug) {
+  message("Using `release' config")
   QMAKE_CXXFLAGS_RELEASE += -O3 -mtune=generic
-}
-
-CONFIG(debug, debug|release) {
-  message("Building `debug' target")
+} else {
+  message("Using `debug' config")
   QMAKE_CXXFLAGS_DEBUG += -O0 -march=native
 }
 
 equals(QT_ARCH, x86_64) {
-  message("Building for `x86_64' target")
+  message("Building for `x86_64' target arch")
   QMAKE_CXXFLAGS += -m64 -mno-fp-ret-in-387
 } else {
   equals(QT_ARCH, i386) {
-    message("Building for `i386' target")
+    message("Building for `i386' target arch")
     QMAKE_CXXFLAGS += -m32
   }
 }
@@ -48,21 +48,31 @@ TEMPLATE = app
 VERSION = 0.0.1
 
 win32 {
-  RC_ICONS += $$PWD/res/@256/accessories-calculator.ico
+  message("Windows platform detected")
+  ## 1200 : Unicode UTF-16, little endian byte order (BMP of ISO 10646);
+  ## available only to managed applications
+  RC_CODEPAGE = 1200
+  RC_ICONS = $$PWD/res/@256/accessories-calculator.ico
+  ## English (United States)
+  RC_LANG = 1033
   QMAKE_TARGET_COMPANY = "0x414c!"
   QMAKE_TARGET_PRODUCT = "Linear Programming"
   QMAKE_TARGET_DESCRIPTION = "Linear Programming Demonstrational Tool"
   QMAKE_TARGET_COPYRIGHT = "Copyright (C) 2015  Alexey Gorishny"
 }
 
-#NOTE: Temporarily disabled
+QMAKE_EXT_CPP += cxx
+
+QMAKE_EXT_H += hxx txx
+
+## NOTE: Temporarily disabled
 #CONFIG(release, debug|release) {
 #  DEFINES += QT_NO_DEBUG_OUTPUT QT_NO_INFO_OUTPUT QT_NO_WARNING_OUTPUT
 #}
 
-#NOTE: This quickly resolves many problems when targeting `i386' arch,
-#but can (and will) lead to the performance degradation. For the reference see:
-#`http://eigen.tuxfamily.org/dox-devel/group__TopicUnalignedArrayAssert.html'
+## NOTE: This quickly resolves many problems when targeting `i386' arch,
+## but can (and will) lead to the performance degradation. For the reference see:
+## `http://eigen.tuxfamily.org/dox-devel/group__TopicUnalignedArrayAssert.html'
 equals(QT_ARCH, i386) {
 #  DEFINES += EIGEN_DONT_ALIGN_STATICALLY
   DEFINES += EIGEN_DONT_VECTORIZE EIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT
@@ -76,21 +86,17 @@ DEFINES += \
 
 #DEFINES += LP_WITH_MULTIPRECISION #TODO: ~! Not yet implemented.
 
-DEFINES += LP_TEST_MODE
+#DEFINES += LP_TEST_MODE
 
 INCLUDEPATH += \
   $$PWD/lib/boost \
   $$PWD/lib/cxx-prettyprint \
-  $$PWD/lib/eigen \
+  $$PWD/lib/eigen3 \
   $$PWD/lib/fmt \
   $$PWD/lib/qcustomplot
 
-#NOTE: Disabled due to `FMT_HEADER_ONLY' presence
+## NOTE: Disabled due to `FMT_HEADER_ONLY' presence
 #LIBS += -L$$PWD/lib/fmt/build -lcppformat
-
-QMAKE_EXT_CPP += cxx
-
-QMAKE_EXT_H += hxx txx
 
 SOURCES += \
   lib/qcustomplot/qcustomplot/qcustomplot.cpp \
@@ -157,6 +163,6 @@ HEADERS += \
   src/test/test.hxx \
   src/globaldefinitions.hxx
 
-FORMS += forms/mainwindow.ui
+FORMS += ui/mainwindow.ui
 
 RESOURCES += res/resources.qrc

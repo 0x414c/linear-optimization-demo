@@ -15,7 +15,7 @@
 #include "../math/numerictypes.hxx"
 
 
-namespace GUI
+namespace Gui
 {
   using NumericTypes::real_t;
 

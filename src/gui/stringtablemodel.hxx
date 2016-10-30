@@ -16,7 +16,7 @@
 #include "../misc/utils.hxx"
 
 
-namespace GUI
+namespace Gui
 {
   using Utils::ResultType;
 

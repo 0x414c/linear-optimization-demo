@@ -158,7 +158,7 @@ Gui::StringTableModel::data(const QModelIndex& index, int role) const
       switch (role)
       {
 //        case Qt::SizeHintRole:
-//          return QSize(10, 5); //TODO: ~ Auto-resize.
+//          return QSize(10, 5); //TODO: [1;?] Auto-resize.
 
         case Qt::DisplayRole:
         case Qt::EditRole:
@@ -193,7 +193,7 @@ Gui::StringTableModel::setData(
         if (index.row() < rows_ && index.column() < cols_)
         {
           values_[index.row()][index.column()] = value.toString();
-           //TODO: ~? Do we need to add `DisplayRole' too?
+           //TODO: [1;?] Do we need to add `DisplayRole' too?
           Q_EMIT dataChanged(index, index, QVector<int>{role});
 
           return true;
@@ -220,7 +220,7 @@ Gui::StringTableModel::headerData(
 //    case Qt::SizeHintRole:
 //      switch (orientation) {
 //        case Qt::Horizontal:
-//          return QSize(16, 18); //TODO: ~ Auto-resize.
+//          return QSize(16, 18); //TODO: [1;?] Auto-resize.
 //        case Qt::Vertical:
 //          return QSize(12, 16);
 //        default:

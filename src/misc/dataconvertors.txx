@@ -106,7 +106,7 @@ namespace DataConvertors
   inline QString
   numericCast<QString, boost_rational_t>(const boost_rational_t& from)
   {
-    QString value; //TODO: ~ Remove assignment, just construct-and-return.
+    QString value; //TODO: [0;0] Remove assignment, just construct-and-return.
 
     if (denominator(from) == boost_integer_t(1))
     {
@@ -227,7 +227,7 @@ namespace DataConvertors
   inline QString
   numericCast<QString, boost_rational_t>(const boost_rational_t& from)
   {
-    QString value; //TODO: ~ Remove assignment, just construct-and-return
+    QString value; //TODO: [0;0] Remove assignment, just construct-and-return.
 
     if (from.denominator() == builtin_integer_t(1))
     {

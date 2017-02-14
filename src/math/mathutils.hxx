@@ -73,7 +73,7 @@ namespace MathUtils
   }
 
 
-  //TODO: ~? Replace all the `is*' funcs w/ single comparison func.
+  //TODO: [0;1] Replace all the `is*' funcs w/ single comparison function.
   template<typename T = real_t>
   bool
   isEqual(T x, T y, T tolerance)

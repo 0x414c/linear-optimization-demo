@@ -9,14 +9,14 @@
 #include "utils.hxx"
 
 
-//TODO: ~? Merge w/ `NumericTypes'
+//TODO: [0;1] Merge w/ `NumericTypes'.
 namespace DataConvertors
 {
   using Utils::AlwaysFalse;
 
 
   template<typename R>
-  //TODO: ~? Use the second template only.
+  //TODO: [0;1] Use the second template only.
   R numericCast(const QString& from)
   {
     static_assert(

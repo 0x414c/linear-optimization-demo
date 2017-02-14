@@ -43,7 +43,7 @@ namespace TableModelUtils
   };
 
 
-  //TODO: ~? Make these functions members of the `StringTableModel' class.
+  //TODO: [0;1] Make these functions members of the `StringTableModel' class.
   bool fill(StringTableModel* tableModel, FillMethod fillMethod)
   throw(invalid_argument);
 

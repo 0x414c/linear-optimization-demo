@@ -8,7 +8,7 @@
  * Include this header to all files that use
  * operations on `NumericTypes::rational_t' data type.
  * Contents of this header is not intended for end-user.
- * TODO: ! Unused file.
+ * TODO: [0;0] Unused file.
  */
 
 

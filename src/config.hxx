@@ -61,17 +61,17 @@ namespace Config
 
     //NOTE: Generated w/ `http://tristen.ca/hcl-picker'
     const QMap<double, QColor> ColorMap_BlGrYe = QMap<double, QColor>{
-      make_pair(0., QColor( 14,  30,  38, ColorMapAlpha)),
-      make_pair(.1, QColor( 18,  50,  57, ColorMapAlpha)),
-      make_pair(.2, QColor( 21,  72,  75, ColorMapAlpha)),
-      make_pair(.3, QColor( 25,  96,  91, ColorMapAlpha)),
-      make_pair(.4, QColor( 38, 119, 102, ColorMapAlpha)),
-      make_pair(.5, QColor( 59, 143, 109, ColorMapAlpha)),
-      make_pair(.6, QColor( 88, 168, 113, ColorMapAlpha)),
-      make_pair(.7, QColor(120, 191, 114, ColorMapAlpha)),
-      make_pair(.8, QColor(160, 214, 114, ColorMapAlpha)),
-      make_pair(.9, QColor(204, 235, 111, ColorMapAlpha)),
-      make_pair(1., QColor(254, 255, 112, ColorMapAlpha))
+      make_pair(0.0, QColor( 14,  30,  38, ColorMapAlpha)),
+      make_pair(0.1, QColor( 18,  50,  57, ColorMapAlpha)),
+      make_pair(0.2, QColor( 21,  72,  75, ColorMapAlpha)),
+      make_pair(0.3, QColor( 25,  96,  91, ColorMapAlpha)),
+      make_pair(0.4, QColor( 38, 119, 102, ColorMapAlpha)),
+      make_pair(0.5, QColor( 59, 143, 109, ColorMapAlpha)),
+      make_pair(0.6, QColor( 88, 168, 113, ColorMapAlpha)),
+      make_pair(0.7, QColor(120, 191, 114, ColorMapAlpha)),
+      make_pair(0.8, QColor(160, 214, 114, ColorMapAlpha)),
+      make_pair(0.9, QColor(204, 235, 111, ColorMapAlpha)),
+      make_pair(1.0, QColor(254, 255, 112, ColorMapAlpha))
     };
 
     const QMap<double, QColor> ColorMap_PuBlGrYe = QMap<double, QColor>{
@@ -124,7 +124,7 @@ namespace Config
   namespace MathUtils
   {
 #ifdef LP_WITH_MULTIPRECISION
-    const NumericTypes::boost_real_t Epsilon = 1E-8; //TODO: Decrease value
+    const NumericTypes::boost_real_t Epsilon = 1E-8; //TODO: [?;?] Decrease value
 
     const NumericTypes::boost_integer_t MaxRationalizeDenominator = 100;
 #else // LP_WITH_MULTIPRECISION

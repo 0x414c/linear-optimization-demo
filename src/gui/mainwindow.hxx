@@ -156,7 +156,7 @@ namespace Gui
 
       Field field_ = Field::Real;
 
-      //TODO: ~ `_isDirty' <- `dataChanged' =>
+      //TODO: [1;2] `_isDirty' <- `dataChanged' =>
       //reload data only when it is needed.
       bool isDirty_ = false;
 

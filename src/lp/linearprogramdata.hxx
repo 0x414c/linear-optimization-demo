@@ -49,7 +49,7 @@ namespace LinearProgramming
 
     DenseIndex variablesCount() const;
 
-//    static LinearProgramData<T> make(???); //TODO: ~?
+//    static LinearProgramData<T> make(???); //TODO: [0;?] Do we really need this?
 
 
     Matrix<T, 1, Dynamic> objectiveFunctionCoeffs;

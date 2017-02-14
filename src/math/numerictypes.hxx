@@ -24,7 +24,7 @@ namespace NumericTypes
   };
 
 
-  //TODO: ~! Multiprecision mode.
+  //TODO: [1;2] Multiprecision mode.
 #ifdef LP_WITH_MULTIPRECISION
   //NOTE: `boost_*' aliases is for specializations only (just for clarity).
   namespace mp = boost::multiprecision;

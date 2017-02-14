@@ -153,13 +153,13 @@ namespace Utils
   template <typename... Args>
   /**
    * @brief printDebugLog
-   * TODO: ~? Use
+   * TODO: [1;0] Use
    *   `Q_FUNC_INFO' (from `QtGlobal') or
    *   `BOOST_CURRENT_FUNCTION' (from `boost/current_function.hpp') or
    *   `__PRETTY_FUNCTION__' or
    *   `__FUNCTION__' or
    *   `__func__'?
-   * TODO: ~? Use `std::clog'
+   * TODO: [1;0] Use `std::clog'.
    * @param func
    * @param file
    * @param line

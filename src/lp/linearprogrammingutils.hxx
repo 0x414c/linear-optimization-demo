@@ -33,7 +33,7 @@ namespace LinearProgrammingUtils
   );
 
 
-  //TODO: ~ Move all the following functions to the `MathUtils' namespace.
+  //TODO: [0;0] Move all the following functions to the `MathUtils' namespace.
   template<typename TCoeff = real_t, DenseIndex TDim = 2>
   struct findIntersectionImpl_
   {

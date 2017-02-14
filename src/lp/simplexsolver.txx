@@ -201,7 +201,7 @@ namespace LinearProgramming
       makeString(phase1Tableau.freeVars())
     );
 
-    //TODO: !
+    //TODO: [2;2] Workaround.
     if (iterCount_ == 0)
     {
       return make_pair(SolutionType::Unknown, ret);

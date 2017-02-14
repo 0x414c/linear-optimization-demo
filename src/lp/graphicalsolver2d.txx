@@ -93,7 +93,7 @@ namespace LinearProgramming
   /**
    * @brief GraphicalSolver2D::solve
    * Naïve algorithm for solving two-dimensional linear programs.
-   * TODO: Handle three-dimensional case (use `TDim' parameter)
+   * TODO: [1;2] Handle three-dimensional case (use `TDim' parameter).
    * @return
    */
   template<typename TCoeff/*, DenseIndex TDim = 2*/>
@@ -254,7 +254,7 @@ namespace LinearProgramming
     vector<uint16_t> intersectionCounters(M_ + 2, 0);
 
     //For each constraint equation
-    //TODO: ~! Use `std::next_permutation'
+    //TODO: [0;0] Use `std::next_permutation'.
     for (DenseIndex r(0); r < (M_ + 2) - 1; ++r)
     {
       //For each other constraint equation
@@ -276,7 +276,7 @@ namespace LinearProgramming
         //Obtain basic solution `y': solve matrix equation {Cy == d}
         //& check solution correctness
         const optional<Matrix<TCoeff, 2, 1>> y(
-//          findIntersection<TCoeff/*, TDim*/>(C, d) //TODO: ~!
+//          findIntersection<TCoeff/*, TDim*/>(C, d) //TODO: [1;2] Multidimensionsal case.
           findIntersection<TCoeff, 2>(C, d)
         );
 

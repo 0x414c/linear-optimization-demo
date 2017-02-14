@@ -47,7 +47,7 @@ namespace MathUtils
   /**
    * @brief integerPart
    * @param x
-   * TODO: !
+   * TODO: [2;2] Implement this.
    * @return
    */
   inline boost_integer_t
@@ -103,7 +103,7 @@ namespace MathUtils
    * The absolute error value will be: |p./q - x|.
    * NOTE: This function doesn't throw any exceptions if the sequence
    *         failed to converge due to too tight given restrictions.
-   * TODO: Check for isFinite<T>(x).
+   * TODO: [1;1] Check for isFinite<T>(x).
    * @param x Real number to approximate.
    * @param tolerance Relative tolerance value
    *          (default is `Config::MathUtils::Epsilon').

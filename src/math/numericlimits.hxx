@@ -8,9 +8,9 @@
 #include "../misc/utils.hxx"
 
 
-//TODO: ~? Convert to struct w/ static members.
-//TODO: ~? Remove this and use `std::numeric_limits' directly.
-//TODO: ~? Check for stdlib support for `boost::rational'
+//TODO: [0;1] Convert to struct w/ static members.
+//TODO: [0;1] Remove this and use `std::numeric_limits' directly.
+//TODO: [0;2] Check for stdlib support for `boost::rational'.
 namespace NumericLimits
 {
   using NumericTypes::real_t;

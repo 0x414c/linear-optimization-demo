@@ -104,7 +104,7 @@ namespace LinearProgramming
   /**
    * @brief SimplexTableau<T>::entries
    * Provides read-write access to the tableau entries matrix.
-   * TODO: ~? Use `ColsBlockXpr' or `RowsBlockXpr'
+   * TODO: [0;1] Use `ColsBlockXpr' or `RowsBlockXpr'.
    * @return
    */
   Block<Matrix<T, Dynamic, Dynamic>, Dynamic, Dynamic>
@@ -460,7 +460,7 @@ namespace LinearProgramming
    * by dropping all the columns corresponding to the basic artificial
    * variables that was forced out of the basis at the Phase-1 of
    * the Simplex algorithm.
-   * TODO: ! Add support for degenerate cases.
+   * TODO: [2;2] Add support for degenerate cases.
    * @param linearProgramData
    * @param phase1Tableau
    * @return

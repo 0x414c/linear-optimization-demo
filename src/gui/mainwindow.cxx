@@ -132,7 +132,7 @@ Gui::MainWindow::~MainWindow()
 void
 Gui::MainWindow::closeEvent(QCloseEvent* ev)
 {
-  //TODO: ~ Check if the content was _really_ modified.
+  //TODO: [1;2] Check if the content was _really_ modified.
   if (isWindowModified()) {
   begin:
     const QMessageBox::StandardButton res(
@@ -564,7 +564,7 @@ Gui::MainWindow::refreshGraphicalSolutionView(const PlotData2D<T>& plotData) {
 
   const int colorsCount(colors.count());
 
-  //TODO: ~ Avoid copying.
+  //TODO: [0;1] Avoid copying.
   const vector<Matrix<real_t, 2, 1>> vertices(
     plotData.feasibleRegionExtremePoints.cbegin(),
     plotData.feasibleRegionExtremePoints.cend()
@@ -746,7 +746,7 @@ Gui::MainWindow::refreshGraphicalSolutionView(const PlotData2D<T>& plotData) {
     );
 //    customPlot->graph(i)->setSelectedBrush(QBrush(selectedBrushColor));
     customPlot->graph(i)->setName(QString("Eq. (%1)").arg(i + 1));
-    //TODO: ~ Use string representation (e.g. 2x + 3y = 0)
+    //TODO: [1;1] Use string representation (e.g. 2x + 3y = 0)
     customPlot->graph(i)->setSelectable(true);
   }
 
@@ -860,7 +860,7 @@ Gui::MainWindow::refreshGraphicalSolutionView(const PlotData2D<T>& plotData) {
     customPlot->addItem(objectiveValueArrow);
   }
 
-  //TODO: !? We can't use `Tracer' on a `Curve'
+  //TODO: [1;2] We can't use `Tracer' on a `Curve'.
 //  QCPItemTracer* const phaseTracer = new QCPItemTracer(customPlot);
 //  phaseTracer->setGraph(customPlot->graph(1));
 //  phaseTracer->setGraphKey(0.);
@@ -935,7 +935,7 @@ Gui::MainWindow::enableCurrentSolutionSimplexView(bool enabled)
 void
 Gui::MainWindow::updateSimplexSelectionRules()
 {
-  //TODO: ~
+  //TODO: [?;?]
 }
 
 
@@ -1865,7 +1865,7 @@ Gui::MainWindow::saveDataToFile(const QString& filename)
     else
     {
       QJsonObject jsonObject;
-      //TODO: ~? Use pointers here.
+      //TODO: [0;0] Use pointers here.
       TableModelCollection tableModels(
         QVector<StringTableModel>{
           (*programTableModels_[int(ProgramModel::ObjFunc)]),
@@ -2368,7 +2368,7 @@ Gui::MainWindow::on_simplex_pivotHintPushButton_clicked()
 
         if (pivot.second)
         {
-          //TODO: ~ Depending on the specified command, the index can also
+          //TODO: [?;?] Depending on the specified command, the index can also
           //become part of the current selection.
           const QModelIndex idx(
             simplexTableModels_[int(SimplexModel::Tableau)]->index(
@@ -2402,7 +2402,7 @@ Gui::MainWindow::on_simplex_pivotHintPushButton_clicked()
 
         if (pivot.second)
         {
-          //TODO: ~ Depending on the specified command, the index can also
+          //TODO: [?;?] Depending on the specified command, the index can also
           //become part of the current selection.
           const QModelIndex idx(
             simplexTableModels_[int(SimplexModel::Tableau)]->index(
@@ -2436,7 +2436,7 @@ Gui::MainWindow::on_simplex_pivotHintPushButton_clicked()
 void
 Gui::MainWindow::on_action_Open_triggered()
 {
-  //TODO: ~ Check for unsaved changes.
+  //TODO: [1;1] Check for unsaved changes.
   const QString filename(
     QFileDialog::getOpenFileName(
       this,
@@ -2490,14 +2490,14 @@ Gui::MainWindow::on_action_Quit_triggered()
 void
 Gui::MainWindow::on_action_Undo_triggered()
 {
-  //TODO: ~ Undo action.
+  //TODO: [1;2] Undo action.
 }
 
 
 void
 Gui::MainWindow::on_action_Redo_triggered()
 {
-  //TODO: ~ Redo action.
+  //TODO: [1;2] Redo action.
 }
 
 
@@ -2524,14 +2524,14 @@ Gui::MainWindow::on_action_Fill_w_random_numbers_triggered()
 void
 Gui::MainWindow::on_action_Zoom_in_triggered()
 {
-  //TODO: ~ Connect to QCP.
+  //TODO: [1;0] Connect to QCP.
 }
 
 
 void
 Gui::MainWindow::on_action_Zoom_out_triggered()
 {
-  //TODO: ~ Connect to QCP.
+  //TODO: [1;0] Connect to QCP.
 }
 
 
@@ -2551,7 +2551,7 @@ Gui::MainWindow::on_action_Zoom_reset_triggered()
 //  );
 
 //  ui->graphical_solutionPlotQCustomPlot->replot();
-  //TODO: ~ Connect to QCP.
+  //TODO: [1;0] Connect to QCP.
 }
 
 
@@ -2572,7 +2572,7 @@ Gui::MainWindow::on_action_Plot_triggered()
 void
 Gui::MainWindow::on_action_How_to_triggered()
 {
-  //TODO: ~ Add how-to guide.
+  //TODO: [1;0] Add how-to guide.
 }
 
 

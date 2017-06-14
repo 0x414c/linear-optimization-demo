@@ -116,6 +116,8 @@ Gui::MainWindow::MainWindow(QWidget* parent) :
 
 Gui::MainWindow::~MainWindow()
 {
+  // TODO: [1;0] [QSettings] The readSettings() and writeSettings() functions must be
+  // called from the main window's constructor and close event handler.
   saveSettings();
 
   destroySimplexView();
@@ -135,7 +137,7 @@ Gui::MainWindow::closeEvent(QCloseEvent* ev)
   //TODO: [1;2] Check if the content was _really_ modified.
   if (isWindowModified()) {
   begin:
-    const QMessageBox::StandardButton res(
+    const QMessageBox::StandardButton res( // TODO [1;0] Use QMessageBox::StandardButtons
       QMessageBox::question(
         this,
         QStringLiteral("Unsaved Changes"),
@@ -1738,6 +1740,7 @@ Gui::MainWindow::saveFile(const QString& filename)
         QStringLiteral("File Writing Error"),
         QStringLiteral("Could not write contents to the selected location.")
       );
+      break;
 
     case ResultType::Nothing:
       QMessageBox::critical(
@@ -1745,6 +1748,7 @@ Gui::MainWindow::saveFile(const QString& filename)
         QStringLiteral("File Writing Error"),
         QStringLiteral("Could not save file to the selected location.")
       );
+      break;
 
     default:
       break;
@@ -1774,7 +1778,7 @@ Gui::MainWindow::loadDataFromFile(const QString& filename)
         TableModelCollection tableModels;
         const ResultType res(tableModels.read(jsonDocument.object()));
 
-        file.flush();
+        file.flush(); // TODO: [1;0] Do we need this?
         file.close();
 
         if (res == ResultType::Success)
@@ -1880,13 +1884,13 @@ Gui::MainWindow::saveDataToFile(const QString& filename)
       {
         const QJsonDocument jsonDocument(jsonObject);
 
-        const qint64 bytesCount(
+        const quint64 bytesCount(
           file.write(jsonDocument.toJson(QJsonDocument::Indented))
         );
-        file.flush();
+        file.flush(); // TODO: [1;0] Do we need this?
         file.close();
 
-        if (bytesCount == -1)
+        if (bytesCount == quint64 (-1))
         {
           return ResultType::Fail;
         }
@@ -2440,11 +2444,11 @@ Gui::MainWindow::on_action_Open_triggered()
   const QString filename(
     QFileDialog::getOpenFileName(
       this,
-      QStringLiteral("Open Linear Program..."),
+      QStringLiteral("Open Linear Program"),
       QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) +
         "/linearProgram.json",
       QStringLiteral("JSON file (*.json);;Plain text document (*.txt)"),
-      0,
+      nullptr,
       QFileDialog::DontUseNativeDialog
     )
   );
@@ -2468,7 +2472,7 @@ Gui::MainWindow::on_action_Save_as_triggered()
           QDateTime::currentDateTime().toString(QStringLiteral("dMMMyy_h-m-s"))
         ),
       QStringLiteral("JSON file (*.json);;Plain text document (*.txt)"),
-      0,
+      nullptr,
       QFileDialog::DontUseNativeDialog
     )
   );

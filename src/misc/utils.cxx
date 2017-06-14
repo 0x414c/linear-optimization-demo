@@ -18,6 +18,9 @@
  * but will stick to Qt5's `Fusion' style by default.
  * TODO: [1;1] Replace this parser w/ dummy options w/ smth cleaner.
  * (maybe just check for presence of "style" in `argv').
+ * TODO: [1;0]  [QStyle] You can call `QApplication::setStyle()' at any time,
+ * but by calling it before the constructor, you ensure that the user's
+ * preference, set using the -style command-line option, is respected.
  * @param argc Command-line arguments count.
  * @param argv Command-line arguments values.
  * @return Pointer to the QAplication object created using `argc' and `argv'.

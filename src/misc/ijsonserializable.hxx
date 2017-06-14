@@ -17,7 +17,7 @@ class IJsonSerializable
 
 
   protected:
-    virtual ~IJsonSerializable() = 0;
+    ~IJsonSerializable();
 };
 
 
